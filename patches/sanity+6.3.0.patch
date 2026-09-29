@@ -1,0 +1,80 @@
+diff --git a/node_modules/sanity/lib/_chunks-es/PostMessageSchema.js b/node_modules/sanity/lib/_chunks-es/PostMessageSchema.js
+index 25b103f..9f7db39 100644
+--- a/node_modules/sanity/lib/_chunks-es/PostMessageSchema.js
++++ b/node_modules/sanity/lib/_chunks-es/PostMessageSchema.js
+@@ -409,12 +409,18 @@ function extractSchema(workspace) {
+     const {
+       name,
+       title,
+-      value
++      value,
++      icon
+     } = of[0];
+     return {
+       type: "array",
+       of: {
++        // PATCH: carry the member's icon onto the single-type arrayItem. Upstream
++        // only keeps name/title/value here, so a block nested in a single-type
++        // array (e.g. a button inside buttonWrapper.buttons) loses its icon and
++        // the Presentation overlay falls back to the document (page) icon.
+         type: "arrayItem",
++        icon,
+         name,
+         title: typeof title == "string" ? title : void 0,
+         value
+@@ -496,7 +502,11 @@ function _temp2(item) {
+   return item !== null;
+ }
+ function _temp(path, i) {
+-  return `"${i}": ${path}[0]._type`;
++  // PATCH: insert [0] after EVERY [_key==…] filter, not just at the end, so
++  // nested paths traverse correctly in GROQ. `sections[_key=="s"]` is an array,
++  // so `.content` needs `[0]` first. Without this, only top-level union types
++  // resolve and nested blocks show "Unknown type" in Presentation.
++  return `"${i}": ${path.replace(/\]\./g, "][0].")}[0]._type`;
+ }
+ var PostMessageSchema_default = memo(PostMessageSchema);
+ export {
+diff --git a/node_modules/sanity/lib/_chunks-es/index2.js b/node_modules/sanity/lib/_chunks-es/index2.js
+index 6be2b41..aa44bf5 100644
+--- a/node_modules/sanity/lib/_chunks-es/index2.js
++++ b/node_modules/sanity/lib/_chunks-es/index2.js
+@@ -30965,7 +30965,7 @@ const RootStack$1 = styled(Stack).withConfig({
+   let t10;
+   $[36] !== t8 || $[37] !== t9 ? (t10 = /* @__PURE__ */ jsx(Fragment, { children: t9 }, t8), $[36] = t8, $[37] = t9, $[38] = t10) : t10 = $[38];
+   let t11;
+-  return $[39] !== handleFocus || $[40] !== renderedUnknownFields || $[41] !== t10 || $[42] !== t6 || $[43] !== t7 ? (t11 = /* @__PURE__ */ jsxs(RootStack$1, { space: 6, tabIndex: t6, onFocus: handleFocus, ref: wrapperRef, children: [
++  return $[39] !== handleFocus || $[40] !== renderedUnknownFields || $[41] !== t10 || $[42] !== t6 || $[43] !== t7 ? (t11 = /* @__PURE__ */ jsxs(RootStack$1, { space: 4, tabIndex: t6, onFocus: handleFocus, ref: wrapperRef, children: [
+     t7,
+     t10,
+     renderedUnknownFields
+@@ -32297,17 +32297,17 @@ const DefaultComponent$1 = (props2) => {
+ }, Root$i = styled(Card).withConfig({
+   displayName: "Root",
+   componentId: "sc-1r30gnh-0"
+-})`&[data-fullscreen='true']{height:100%;}&[data-fullscreen='false']{min-height:5em;resize:${({
++})`&[data-fullscreen='true']{height:100%;}&[data-fullscreen='false']{min-height:5em;max-height:24em;resize:${({
+   $isOneLine
+ }) => $isOneLine ? "none" : "vertical"};overflow:auto;height:${({
+   $isOneLine
+-}) => $isOneLine ? "auto" : "19em"};}&:not([hidden]){display:flex;}flex-direction:column;`, ToolbarCard = styled(Card).withConfig({
++}) => $isOneLine ? "auto" : "auto"};}&:not([hidden]){display:flex;}flex-direction:column;`, ToolbarCard = styled(Card).withConfig({
+   displayName: "ToolbarCard",
+   componentId: "sc-1r30gnh-1"
+ })`z-index:10;line-height:0;`, EditableCard = styled(Card).withConfig({
+   displayName: "EditableCard",
+   componentId: "sc-1r30gnh-2"
+-})`position:relative;overflow:hidden;overflow:clip;& > [data-portal]{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;& > *{pointer-events:initial;}}&::selection,*::selection{background-color:transparent;}`, Scroller = styled(ScrollContainer).withConfig({
++})`flex:1 1 auto!important;min-height:0;position:relative;overflow:hidden;overflow:clip;& > [data-portal]{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;& > *{pointer-events:initial;}}&::selection,*::selection{background-color:transparent;}`, Scroller = styled(ScrollContainer).withConfig({
+   displayName: "Scroller",
+   componentId: "sc-1r30gnh-3"
+ })`position:relative;overflow:auto;height:100%;display:flex;flex-direction:column;& > *{flex:1;min-height:auto;}`, EditableWrapper = styled(Card).withConfig({
+@@ -33123,7 +33123,7 @@ const MenuButtonMemo = memo(MenuButton), StyledMenuItem = styled(MenuItem$1).wit
+     onToggleFullscreen
+   } = t0, {
+     t
+-  } = useTranslation(), showActionMenu = actionGroups.reduce(_temp$2r, 0) > 0, showInsertMenu = insertMenuItems.length > 0, [rootElement, setRootElement] = useState(null), rootElementRect = useElementRect(rootElement), collapsed = collapsible && rootElementRect ? rootElementRect?.width < 400 : !1, showBlockStyleSelect = blockStyles.length > 1;
++  } = useTranslation(), showActionMenu = actionGroups.reduce(_temp$2r, 0) > 0, showInsertMenu = insertMenuItems.length > 0, [rootElement, setRootElement] = useState(null), rootElementRect = useElementRect(rootElement), collapsed = collapsible && rootElementRect ? rootElementRect?.width < 120 : !1, showBlockStyleSelect = blockStyles.length > 1;
+   let t1;
+   $[0] !== rootElement ? (t1 = {
+     rootElement

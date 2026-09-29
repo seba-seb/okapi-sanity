@@ -1,0 +1,8 @@
+node_modules
+dist
+.astro
+.vercel
+.sanity
+.env
+.env.*
+!.env.example

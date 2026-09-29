@@ -1,0 +1,45 @@
+---
+import "@/styles/globals.css";
+import { urlForImage } from "@/sanity/image";
+import { clean } from "@/lib/clean";
+
+type Meta = {
+  title?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImage?: unknown;
+} | null;
+
+interface Props {
+  meta?: Meta;
+  noindex?: boolean;
+}
+
+const { meta, noindex = false } = Astro.props as Props;
+const SITE = "Remarkable";
+const pageTitle = clean(meta?.metaTitle || meta?.title);
+const title = pageTitle ? `${pageTitle} · ${SITE}` : `${SITE} — Creative Agency`;
+const description = clean(meta?.metaDescription) || "A creative agency, built block by block.";
+const ogImage = meta?.ogImage
+  ? urlForImage(meta.ogImage as never).width(1200).height(630).fit("crop").url()
+  : undefined;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+    {noindex && <meta name="robots" content="noindex" />}
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

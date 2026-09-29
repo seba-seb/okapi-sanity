@@ -1,0 +1,264 @@
+diff --git a/node_modules/@sanity/visual-editing/dist/_chunks-es/SharedStateContext.js b/node_modules/@sanity/visual-editing/dist/_chunks-es/SharedStateContext.js
+index 4882b0c..ef8363e 100644
+--- a/node_modules/@sanity/visual-editing/dist/_chunks-es/SharedStateContext.js
++++ b/node_modules/@sanity/visual-editing/dist/_chunks-es/SharedStateContext.js
+@@ -729,6 +729,21 @@ function createOverlayController({
+   const elementIdMap = /* @__PURE__ */ new Map(), elementsMap = /* @__PURE__ */ new WeakMap(), elementSet = /* @__PURE__ */ new Set(), measureElements = /* @__PURE__ */ new WeakMap(), cursorMap = /* @__PURE__ */ new WeakMap();
+   let ro, io, mo, activeDragSequence = !1, hoverStack = [];
+   const getHoveredElement = () => hoverStack[hoverStack.length - 1];
++  globalThis.__sanityChipDragPatched = !0, overlayElement.addEventListener("mousedown", (event) => {
++    const t = event.target;
++    if (!(t instanceof Element) || !t.closest(".drag-handle")) return;
++    const hovered = getHoveredElement();
++    hovered && (event.preventDefault(), event.stopPropagation(), hovered.dispatchEvent(new MouseEvent("mousedown", {
++      bubbles: !0,
++      cancelable: !0,
++      clientX: event.clientX,
++      clientY: event.clientY,
++      button: 0,
++      view: window
++    })));
++  }, {
++    capture: !0
++  });
+   function addEventHandlers(el, handlers) {
+     el.addEventListener("click", handlers.click, {
+       capture: !0
+diff --git a/node_modules/@sanity/visual-editing/dist/_chunks-es/VisualEditing.js b/node_modules/@sanity/visual-editing/dist/_chunks-es/VisualEditing.js
+index 2846be0..3ba22bc 100644
+--- a/node_modules/@sanity/visual-editing/dist/_chunks-es/VisualEditing.js
++++ b/node_modules/@sanity/visual-editing/dist/_chunks-es/VisualEditing.js
+@@ -643,7 +643,7 @@ const ElementOverlayInner = (props) => {
+       break bb0;
+     }
+     let t32;
+-    $[5] !== node || $[6] !== previewSnapshots ? (t32 = previewSnapshots.find((snapshot) => snapshot._id === node.id)?.title, $[5] = node, $[6] = previewSnapshots, $[7] = t32) : t32 = $[7], t2 = t32;
++    t32 = element?.getAttribute?.("data-sanity-title") || previewSnapshots.find((snapshot) => snapshot._id === node.id)?.title, t2 = t32;
+   }
+   const title = t2;
+   let t3;
+@@ -682,9 +682,18 @@ const ElementOverlayInner = (props) => {
+   }, $[22] = t4, $[23] = t5, $[24] = t6) : t6 = $[24];
+   const resolverContexts = t6, customComponents = useCustomComponents(resolverContexts.legacyComponentContext, componentResolver), nodePluginCollections = useResolvedNodePlugins(resolverContexts.pluginContexts, props.plugins);
+   let t7;
+-  $[25] !== schemaType ? (t7 = schemaType?.icon ? /* @__PURE__ */ jsx("div", { dangerouslySetInnerHTML: {
+-    __html: schemaType.icon
+-  } }) : /* @__PURE__ */ jsx(DocumentIcon, {}), $[25] = schemaType, $[26] = t7) : t7 = $[26];
++  {
++    let __iconHtml;
++    try {
++      __iconHtml = "path" in node ? getField(node)?.field?.icon : void 0;
++    } catch {
++      __iconHtml = void 0;
++    }
++    __iconHtml = __iconHtml || schemaType?.icon;
++    t7 = __iconHtml ? /* @__PURE__ */ jsx("div", { dangerouslySetInnerHTML: {
++      __html: __iconHtml
++    } }) : /* @__PURE__ */ jsx(DocumentIcon, {});
++  }
+   const icon = t7, menuId = useId();
+   let t8;
+   $[27] !== nodePluginCollections ? (t8 = nodePluginCollections?.some(_temp2$6), $[27] = nodePluginCollections, $[28] = t8) : t8 = $[28];
+@@ -1366,7 +1375,12 @@ const SchemaProvider = function(props) {
+             parent
+           };
+         if (schemaType_1.type === "union") {
+-          const name_0 = next.startsWith("[_key==") ? resolvedTypes?.get(node_0.id)?.get([prevPath.join("."), next].filter(Boolean).join("")) : next;
++          // PATCH: join path segments so array-key segments ([_key==…]) attach
++          // WITHOUT a leading dot, matching the key format the Studio returns
++          // (e.g. sections[_key=="s"].content[_key=="c"]). The upstream
++          // `[prevPath.join("."), next].join("")` inserted stray dots.
++          const __join = (segs) => segs.reduce((a, s) => a === "" ? s : s.startsWith("[") ? a + s : a + "." + s, "");
++          const name_0 = next.startsWith("[_key==") ? resolvedTypes?.get(node_0.id)?.get(__join([...prevPath, next])) : next;
+           return fieldFromPath(schemaType_1.of.find((item) => item.type === "unionOption" ? item.name === name_0 : item), rest, schemaType_1, [...prevPath, next]);
+         } else {
+           if (schemaType_1.type === "unionOption")
+diff --git a/node_modules/@sanity/visual-editing/dist/_chunks-es/mutations.js b/node_modules/@sanity/visual-editing/dist/_chunks-es/mutations.js
+index 0250368..5121228 100644
+--- a/node_modules/@sanity/visual-editing/dist/_chunks-es/mutations.js
++++ b/node_modules/@sanity/visual-editing/dist/_chunks-es/mutations.js
+@@ -273,12 +273,35 @@ function getArrayRemovePatches(node, snapshot) {
+   } = getArrayItemKeyAndParentPath(node), currentIndex = get(snapshot, arrayPath).findIndex((item) => item._key === itemKey);
+   return [at(arrayPath, truncate(currentIndex, currentIndex + 1))];
+ }
++function __reKeyInsert(value) {
++  if (Array.isArray(value)) return value.map(__reKeyInsert);
++  if (value && typeof value === "object") {
++    const out = {};
++    for (const k in value) out[k] = k === "_key" ? randomKey() : __reKeyInsert(value[k]);
++    return out;
++  }
++  return value;
++}
+ function getArrayInsertPatches(node, insertType, position) {
+   const {
+     path: arrayPath,
+     key: itemKey
+   } = getArrayItemKeyAndParentPath(node), insertKey = randomKey();
++  // PATCH: seed the new item with the front-end's insert defaults. Upstream
++  // inserts a bare {_type,_key} without resolving the schema initialValue, so
++  // new text blocks arrive empty and render null (invisible on canvas). The app
++  // publishes `__sanityInsertDefaults` (a _type -> () => fields factory map) on
++  // globalThis from the preview (see VisualEditingBridge). Re-key nested array
++  // items so a default's keys never collide across inserts.
++  let __fields = {};
++  try {
++    const __factory = globalThis.__sanityInsertDefaults?.[insertType];
++    if (__factory) __fields = __reKeyInsert(__factory()) || {};
++  } catch {
++    __fields = {};
++  }
+   return [at(arrayPath, insert([{
++    ...__fields,
+     _type: insertType,
+     _key: insertKey
+   }], position, {
+diff --git a/node_modules/@sanity/visual-editing/dist/react/index.js b/node_modules/@sanity/visual-editing/dist/react/index.js
+index 2b31f37..b28c49a 100644
+--- a/node_modules/@sanity/visual-editing/dist/react/index.js
++++ b/node_modules/@sanity/visual-editing/dist/react/index.js
+@@ -90,7 +90,7 @@ function usePresentationQuery(props) {
+     };
+   }, $[12] = comlink2, $[13] = handleQueryChange, $[14] = handleQueryHeartbeat, $[15] = t5) : t5 = $[15];
+   let t6;
+-  $[16] !== comlink2 ? (t6 = [comlink2], $[16] = comlink2, $[17] = t6) : t6 = $[17], useEffect(t5, t6);
++  $[16] !== comlink2 ? (t6 = [comlink2], $[16] = comlink2, $[17] = t6) : t6 = $[17], useEffect(t5, [comlink2, perspective]);
+   let t7;
+   bb0: {
+     if (stega && state.sourceMap) {
+diff --git a/node_modules/@sanity/visual-editing/src/controller.ts b/node_modules/@sanity/visual-editing/src/controller.ts
+index 28c3449..15a4a75 100644
+--- a/node_modules/@sanity/visual-editing/src/controller.ts
++++ b/node_modules/@sanity/visual-editing/src/controller.ts
+@@ -63,6 +63,37 @@ export function createOverlayController({
+   let hoverStack: Array<ElementNode> = []
+   const getHoveredElement = () => hoverStack[hoverStack.length - 1] as ElementNode | undefined
+ 
++  // PATCH: make the overlay chip's drag handle actually start a drag. Upstream
++  // renders a DragHandleIcon (className "drag-handle") when an element is
++  // draggable, but never wires any pointer handler to it -- drags only start
++  // from mousedown on the underlying content element, so grabbing the visible
++  // handle silently does nothing. Forward mousedown from the handle to the
++  // hovered element; every existing guard (drag-disable attr, optimistic actor,
++  // array path, drag group) still runs in the element's own handler.
++  ;(globalThis as {__sanityChipDragPatched?: boolean}).__sanityChipDragPatched = true
++  overlayElement.addEventListener(
++    'mousedown',
++    (event) => {
++      const t = event.target
++      if (!(t instanceof Element) || !t.closest('.drag-handle')) return
++      const hovered = getHoveredElement()
++      if (!hovered) return
++      event.preventDefault()
++      event.stopPropagation()
++      hovered.dispatchEvent(
++        new MouseEvent('mousedown', {
++          bubbles: true,
++          cancelable: true,
++          clientX: event.clientX,
++          clientY: event.clientY,
++          button: 0,
++          view: window,
++        }),
++      )
++    },
++    {capture: true},
++  )
++
+   function addEventHandlers(el: ElementNode, handlers: EventHandlers) {
+     el.addEventListener('click', handlers.click as EventListener, {
+       capture: true,
+diff --git a/node_modules/@sanity/visual-editing/src/ui/ElementOverlay.tsx b/node_modules/@sanity/visual-editing/src/ui/ElementOverlay.tsx
+index 99923b3..783206f 100644
+--- a/node_modules/@sanity/visual-editing/src/ui/ElementOverlay.tsx
++++ b/node_modules/@sanity/visual-editing/src/ui/ElementOverlay.tsx
+@@ -269,8 +269,14 @@ const ElementOverlayInner: FunctionComponent<ElementOverlayProps> = (props) => {
+ 
+   const title = useMemo(() => {
+     if (!('path' in node)) return undefined
+-    return previewSnapshots.find((snapshot) => snapshot._id === node.id)?.title
+-  }, [node, previewSnapshots])
++    // Show the element's own name (e.g. "Heading"), which the front-end stamps
++    // onto the editable element as `data-sanity-title`. Falls back to the
++    // document's preview title when the attribute is absent.
++    return (
++      element?.getAttribute?.('data-sanity-title') ||
++      previewSnapshots.find((snapshot) => snapshot._id === node.id)?.title
++    )
++  }, [node, previewSnapshots, element])
+ 
+   const resolverContexts = useMemo<{
+     legacyComponentContext: OverlayComponentResolverContext | undefined
+@@ -314,8 +320,20 @@ const ElementOverlayInner: FunctionComponent<ElementOverlayProps> = (props) => {
+     props.plugins,
+   )
+ 
+-  const icon = schemaType?.icon ? (
+-    <div dangerouslySetInnerHTML={{__html: schemaType.icon}} />
++  // Prefer the block's own icon (its union-option icon in the serialized
++  // schema, e.g. a Heading's icon) over the document's icon, so overlays for
++  // nested blocks show the component's icon instead of the generic page icon.
++  let blockIcon: string | undefined
++  if ('path' in node) {
++    try {
++      blockIcon = (getField(node)?.field as {icon?: string} | undefined)?.icon
++    } catch {
++      blockIcon = undefined
++    }
++  }
++  const iconHtml = blockIcon || schemaType?.icon
++  const icon = iconHtml ? (
++    <div dangerouslySetInnerHTML={{__html: iconHtml}} />
+   ) : (
+     <DocumentIcon />
+   )
+diff --git a/node_modules/@sanity/visual-editing/src/util/mutations.ts b/node_modules/@sanity/visual-editing/src/util/mutations.ts
+index bd542ab..d2f9203 100644
+--- a/node_modules/@sanity/visual-editing/src/util/mutations.ts
++++ b/node_modules/@sanity/visual-editing/src/util/mutations.ts
+@@ -77,6 +77,20 @@ export function getArrayRemovePatches(
+   return [at(arrayPath, truncate(currentIndex, currentIndex + 1))]
+ }
+ 
++// PATCH: re-key every nested array item so a seeded default's keys never
++// collide across repeated inserts.
++function reKeyInsert(value: unknown): unknown {
++  if (Array.isArray(value)) return value.map(reKeyInsert)
++  if (value && typeof value === 'object') {
++    const out: Record<string, unknown> = {}
++    for (const k in value as Record<string, unknown>) {
++      out[k] = k === '_key' ? randomKey() : reKeyInsert((value as Record<string, unknown>)[k])
++    }
++    return out
++  }
++  return value
++}
++
+ export function getArrayInsertPatches(
+   node: SanityNode,
+   insertType: string,
+@@ -85,7 +99,23 @@ export function getArrayInsertPatches(
+   const {path: arrayPath, key: itemKey} = getArrayItemKeyAndParentPath(node)
+   const insertKey = randomKey()
+   const referenceItem = {_key: itemKey}
+-  return [at(arrayPath, insert([{_type: insertType, _key: insertKey}], position, referenceItem))]
++  // PATCH: seed the new item with the front-end's insert defaults. Upstream
++  // inserts a bare {_type,_key} without resolving the schema initialValue, so
++  // new text blocks arrive empty and render null (invisible on canvas). The app
++  // publishes `__sanityInsertDefaults` (a _type -> () => fields factory map) on
++  // globalThis from the preview (see VisualEditingBridge).
++  let fields: Record<string, unknown> = {}
++  try {
++    const factory = (
++      globalThis as {__sanityInsertDefaults?: Record<string, () => Record<string, unknown>>}
++    ).__sanityInsertDefaults?.[insertType]
++    if (factory) fields = (reKeyInsert(factory()) as Record<string, unknown>) || {}
++  } catch {
++    fields = {}
++  }
++  return [
++    at(arrayPath, insert([{...fields, _type: insertType, _key: insertKey}], position, referenceItem)),
++  ]
+ }
+ 
+ export async function getArrayMovePatches(

@@ -1,0 +1,29 @@
+---
+import Base from "@/layouts/Base.astro";
+import { PageBuilder } from "@/components/PageBuilder";
+import { PreviewTools } from "@/components/PreviewTools";
+import { loadQuery } from "@/sanity/client";
+import { PAGE_QUERY } from "@/sanity/queries";
+import { isDraftMode } from "@/sanity/draftMode";
+import type { Page } from "@/lib/types";
+
+// Mirrors the public routes under /preview: /preview ↔ /, /preview/about ↔ /about.
+export const prerender = false;
+
+if (!isDraftMode(Astro.cookies)) {
+  return new Response("Preview is locked. Open it from the Studio's Presentation tool.", {
+    status: 401,
+  });
+}
+
+const params = { slug: Astro.params.slug || "home" };
+const page = await loadQuery<Page>(PAGE_QUERY, params, { drafts: true });
+Astro.response.headers.set("Cache-Control", "private, no-store");
+---
+
+<Base meta={page} noindex>
+  {page
+    ? <PageBuilder client:load page={page} query={PAGE_QUERY} params={params} />
+    : <main style="padding:48px 24px">No page with slug “{params.slug}” yet.</main>}
+  <PreviewTools client:only="react" />
+</Base>

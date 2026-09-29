@@ -1,0 +1,721 @@
+/* ------------------------------------------------------------------ *
+ * Base + design tokens
+ * ------------------------------------------------------------------ */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  --maxw-page: 1200px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-main: 16px;
+  --radius-pill: 999px;
+
+  --transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Fluid heading scale */
+  --h-sm: 1.25rem;
+  --h-md: 1.5rem;
+  --h-lg: 2rem;
+  --h-xl: clamp(2rem, 1.4rem + 2.6vw, 3rem);
+  --h-2xl: clamp(2.4rem, 1.6rem + 3.4vw, 3.75rem);
+  --h-3xl: clamp(2.8rem, 1.8rem + 4.6vw, 4.5rem);
+  --h-4xl: clamp(3.2rem, 1.8rem + 6.4vw, 6rem);
+
+  /* T-shirt spacing scale — used for the gap between blocks in a section. */
+  --space-xs: 0.5rem; /* 8px */
+  --space-sm: 1rem; /* 16px */
+  --space-md: 1.5rem; /* 24px */
+  --space-lg: 2.5rem; /* 40px */
+  --space-xl: 4rem; /* 64px */
+  --space-2xl: 6rem; /* 96px */
+  --space-3xl: 9rem; /* 144px */
+
+  /* Section horizontal inset. Reused as the "even" vertical padding so a
+   * section can have matching space on all four sides. */
+  --section-px: clamp(20px, 5vw, 48px);
+
+  /* Space reserved for a fixed site nav — used by the "Page top" padding so a
+   * section at the very top of the page clears the nav. */
+  --nav-h: 72px;
+
+  /* Section vertical padding scale (top / bottom). */
+  --section-pad-sm: clamp(2.5rem, 5vw, 3.5rem); /* 40–56px */
+  --section-pad-md: clamp(4rem, 8vw, 6rem); /* 64–96px (default) */
+  --section-pad-lg: clamp(6rem, 12vw, 9rem); /* 96–144px */
+  --section-pad-page-top: calc(var(--nav-h) + var(--section-pad-md));
+}
+
+/* ------------------------------------------------------------------ *
+ * Theme palettes — set via [data-theme] on each <section>.
+ * Everything inside reads these variables, so buttons, cards and text
+ * restyle automatically when the section theme changes.
+ * ------------------------------------------------------------------ */
+[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f5f5f7;
+  --surface-2: #ececed;
+  --fg: #0b0b0f;
+  --muted: #5b5b66;
+  --border: #e4e4e9;
+  --brand: #4f46e5;
+  --brand-contrast: #ffffff;
+  --shadow: 0 10px 30px -12px rgba(15, 15, 30, 0.25);
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0f;
+  --surface: #15151d;
+  --surface-2: #20202b;
+  --fg: #f5f5f7;
+  --muted: #a2a2b0;
+  --border: #272730;
+  --brand: #8b83ff;
+  --brand-contrast: #0a0a0f;
+  --shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="brand"] {
+  --bg: #4f46e5;
+  --surface: rgba(255, 255, 255, 0.1);
+  --surface-2: rgba(255, 255, 255, 0.18);
+  --fg: #ffffff;
+  --muted: rgba(255, 255, 255, 0.74);
+  --border: rgba(255, 255, 255, 0.24);
+  --brand: #ffffff;
+  --brand-contrast: #4f46e5;
+  --shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  color: #0b0b0f;
+  background: #ffffff;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Section
+ * ------------------------------------------------------------------ */
+.section {
+  position: relative;
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+}
+
+.section__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.section__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.section__overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+}
+
+.section__container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--maxw-page);
+  margin-inline: auto;
+  padding-inline: var(--section-px);
+  display: flex;
+  flex-direction: column;
+}
+
+.section--fullheight {
+  min-height: 100svh;
+  display: flex;
+}
+.section--fullheight .section__container {
+  flex: 1;
+}
+
+/* ------------------------------------------------------------------ *
+ * Text blocks
+ * ------------------------------------------------------------------ */
+
+/* Wraps a single text block so its horizontal alignment is driven by the
+   section's --alignment custom property, not a per-block control. Full-width
+   within the section; the child (heading / paragraph) keeps its own max-width. */
+.align-block {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  align-items: var(--alignment, start);
+  text-align: var(--alignment, start);
+}
+
+/* Default vertical rhythm for text blocks. The margin lives on the align-block
+   (the block's outer element) so a content wrapper / container can trim it at
+   the edges, and adjacent block margins collapse to the larger of the two. */
+.align-block--space-lg {
+  margin-bottom: var(--space-lg);
+}
+.align-block--space-md {
+  margin-bottom: var(--space-md);
+}
+.align-block--space-sm {
+  margin-bottom: var(--space-sm);
+}
+
+/* At the top level, spacing between blocks is the section's flex `gap`, so a
+   direct child of the container never contributes its own margin (the
+   vertical-rhythm margins above are for blocks nested in a plain container,
+   where there's no gap to collapse against). Declared after those rules so it
+   wins on equal specificity — no !important needed. */
+.section__container > * {
+  margin: 0;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.eyebrow--xs {
+  font-size: 0.75rem;
+}
+.eyebrow--sm {
+  font-size: 0.8125rem;
+}
+.eyebrow--md {
+  font-size: 0.9375rem;
+}
+
+.heading {
+  margin: 0;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.heading--sm {
+  font-size: var(--h-sm);
+}
+.heading--md {
+  font-size: var(--h-md);
+}
+.heading--lg {
+  font-size: var(--h-lg);
+}
+.heading--xl {
+  font-size: var(--h-xl);
+}
+.heading--2xl {
+  font-size: var(--h-2xl);
+}
+.heading--3xl {
+  font-size: var(--h-3xl);
+}
+.heading--4xl {
+  font-size: var(--h-4xl);
+}
+.heading--regular {
+  font-weight: 400;
+}
+.heading--medium {
+  font-weight: 500;
+}
+.heading--semibold {
+  font-weight: 600;
+}
+.heading--bold {
+  font-weight: 700;
+}
+
+.paragraph {
+  margin: 0;
+  line-height: 1.6;
+}
+.paragraph--sm {
+  font-size: 0.9375rem;
+}
+.paragraph--md {
+  font-size: 1.0625rem;
+}
+.paragraph--lg {
+  font-size: 1.25rem;
+}
+.paragraph--xl {
+  font-size: 1.5rem;
+  line-height: 1.5;
+}
+
+/* Shared color tokens for text */
+.c-default {
+  color: var(--fg);
+}
+.c-muted {
+  color: var(--muted);
+}
+.c-brand {
+  color: var(--brand);
+}
+
+/* ------------------------------------------------------------------ *
+ * Layout wrapper — Content wrapper
+ *
+ * Trims the outer edge margins of its children so a block's default rhythm
+ * (heading/paragraph/eyebrow bottom margins, button-group top margin) never
+ * leaks past the wrapper. Spacing between children then comes from those
+ * margins (collapsing to the larger of two adjacent ones).
+ * ------------------------------------------------------------------ */
+
+/* Groups eyebrow / heading / paragraph / button-group as one prose stack.
+   `flow-root` contains the child margins; block flow lets them collapse. */
+.content-wrapper {
+  display: flow-root;
+  align-self: center;
+  width: 100%;
+}
+.content-wrapper > :first-child {
+  margin-top: 0;
+}
+.content-wrapper > :last-child {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Buttons
+ * ------------------------------------------------------------------ */
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  /* Default rhythm: space the button group away from the text above it. Trimmed
+     at the edges by the content wrapper / container. */
+  margin-top: var(--space-lg);
+}
+.btn-group--column {
+  flex-direction: column;
+}
+.btn-group--nowrap {
+  flex-wrap: nowrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75em;
+  font-family: inherit;
+  /* Size is set on the Button Group, which sets `--btn-font-size`; it cascades
+     here and everything else on the button is em-based, so it all scales.
+     Standalone buttons (no group) fall back to the medium step. */
+  font-size: var(--btn-font-size, 0.9375rem);
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  /* Squared-off rounded rectangle (not a pill). */
+  border-radius: 0.6em;
+  /* Small right padding so the chevron chip sits just inside the edge; the
+     em-based values scale with each size's font-size. */
+  padding: 0.42em 0.42em 0.42em 1.3em;
+  transition:
+    background var(--transition),
+    color var(--transition),
+    border-color var(--transition),
+    transform var(--transition),
+    opacity var(--transition);
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn--full {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.btn__label {
+  display: inline-block;
+}
+
+/* Trailing chevron chip — a rounded square whose colors invert the button. */
+.btn__chevron {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.15em;
+  height: 2.15em;
+  border-radius: 0.45em;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+.btn__chevron svg {
+  display: block;
+  width: 1.05em;
+  height: 1.05em;
+}
+
+/* Sizes — set once on the group as `--btn-font-size`, which cascades to every
+   button inside (see `.btn`). Font-size drives the em-based padding + chip. */
+.btn-group--size-sm {
+  --btn-font-size: 0.8125rem;
+}
+.btn-group--size-md {
+  --btn-font-size: 0.9375rem;
+}
+.btn-group--size-lg {
+  --btn-font-size: 1.0625rem;
+}
+.btn-group--size-xl {
+  --btn-font-size: 1.1875rem;
+}
+
+/* Style variants. The chip is the button inverted: its background is the
+   button's text color and its chevron is the button's background color, so it
+   flips automatically with the variant and the section theme. */
+.btn--primary {
+  background: var(--fg);
+  color: var(--bg);
+}
+.btn--primary .btn__chevron {
+  background: var(--bg);
+  color: var(--fg);
+}
+.btn--primary:hover {
+  opacity: 0.9;
+}
+
+.btn--secondary {
+  background: var(--surface);
+  color: var(--fg);
+}
+.btn--secondary .btn__chevron {
+  background: var(--fg);
+  /* Pair with --bg, not --surface: in the brand theme --surface is a
+     translucent white, which vanishes on the --fg (white) chip. --fg/--bg are
+     the theme's designed contrast pair, so the chevron stays visible in every
+     theme. */
+  color: var(--bg);
+}
+.btn--secondary:hover {
+  background: var(--surface-2);
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--border);
+}
+.btn--outline .btn__chevron {
+  background: var(--fg);
+  color: var(--bg);
+}
+.btn--outline:hover {
+  background: var(--surface);
+}
+
+.btn--link {
+  background: transparent;
+  color: var(--brand);
+  border-radius: 0;
+  gap: 0.3em;
+  padding: 0.2rem 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.btn--link:hover {
+  transform: none;
+  opacity: 0.75;
+}
+
+/* ------------------------------------------------------------------ *
+ * Image + video
+ * ------------------------------------------------------------------ */
+.media {
+  width: 100%;
+  overflow: hidden;
+}
+.media img,
+.media video {
+  width: 100%;
+  height: 100%;
+}
+.media--ratio img,
+.media--ratio video {
+  object-fit: var(--fit, cover);
+}
+
+/* ------------------------------------------------------------------ *
+ * Card
+ * ------------------------------------------------------------------ */
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    border-color var(--transition);
+}
+
+/* Image on top — fixed ratio so cards line up in a grid. */
+.card__media {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+}
+.card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Text block. */
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+}
+.card__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.card__text {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+/* Image background — text overlaid on a scrim; the card runs dark (data-theme). */
+.card--imageBackground {
+  position: relative;
+  min-height: 320px;
+  justify-content: flex-end;
+}
+.card--imageBackground .card__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.card--imageBackground::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8),
+    rgba(0, 0, 0, 0.25) 55%,
+    rgba(0, 0, 0, 0.05)
+  );
+}
+.card--imageBackground .card__body {
+  position: relative;
+  z-index: 2;
+}
+/* Background style chosen but no image uploaded yet — keep it a solid dark. */
+.card--imageBackground.card--noimage {
+  background: var(--surface-2);
+}
+.card--imageBackground.card--noimage::after {
+  display: none;
+}
+
+a.card:hover {
+  transform: translateY(-3px);
+}
+
+/* ------------------------------------------------------------------ *
+ * Grid — column count per breakpoint via custom properties
+ * ------------------------------------------------------------------ */
+.grid {
+  display: grid;
+  gap: var(--row-gap, 24px) var(--col-gap, 24px);
+  grid-template-columns: repeat(var(--cols-mobile, 1), minmax(0, 1fr));
+  align-items: var(--align-items, stretch);
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(var(--cols-tablet, 2), minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(var(--cols-desktop, 3), minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Slider (Embla) — slides-per-view per breakpoint via custom properties
+ * ------------------------------------------------------------------ */
+.embla {
+  position: relative;
+  width: 100%;
+}
+.embla__viewport {
+  overflow: hidden;
+}
+.embla__container {
+  display: flex;
+  gap: var(--slide-gap, 24px);
+  touch-action: pan-y pinch-zoom;
+}
+.embla__slide {
+  min-width: 0;
+  display: flex;
+  flex: 0 0
+    calc(
+      (100% - (var(--slides-mobile, 1) - 1) * var(--slide-gap, 24px)) /
+        var(--slides-mobile, 1)
+    );
+}
+/* Let a single child (e.g. a card) fill the slide for equal heights. */
+.embla__slide > * {
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .embla__slide {
+    flex-basis: calc(
+      (100% - (var(--slides-tablet, 2) - 1) * var(--slide-gap, 24px)) /
+        var(--slides-tablet, 2)
+    );
+  }
+}
+@media (min-width: 1024px) {
+  .embla__slide {
+    flex-basis: calc(
+      (100% - (var(--slides-desktop, 3) - 1) * var(--slide-gap, 24px)) /
+        var(--slides-desktop, 3)
+    );
+  }
+}
+
+.embla__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+.embla__buttons {
+  display: flex;
+  gap: 10px;
+}
+.embla__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+  transition:
+    opacity var(--transition),
+    background var(--transition);
+}
+.embla__button:hover {
+  background: var(--surface-2);
+}
+.embla__button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.embla__dots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.embla__dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.embla__dot--selected {
+  background: var(--brand);
+}
+
+/* ------------------------------------------------------------------ *
+ * Draft-mode banner
+ * ------------------------------------------------------------------ */
+.draft-banner {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: #0b0b0f;
+  color: #fff;
+  font-size: 0.875rem;
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.4);
+}
+.draft-banner a {
+  text-decoration: underline;
+}
+
+/* Rich text (heading/paragraph): each Portable Text block renders as a
+   block-level line inside the semantic <h*>/<p>. Keeps multi-line content
+   stacking without introducing block-level children (valid HTML) and lets the
+   whole block stay one draggable overlay target. */
+.rt-block {
+  display: block;
+}
+/* Paragraph spacing between multiple lines (headings stay tight). */
+.paragraph .rt-block + .rt-block {
+  margin-top: 0.75em;
+}
