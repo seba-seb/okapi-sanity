@@ -2,6 +2,7 @@
 import "@/theme/globals.css";
 import { urlForImage } from "@/core/sanity/image";
 import { clean } from "@/core/lib/clean";
+import { pageHref, resolveLink } from "@/core/lib/routes";
 import { SiteHeader } from "@/chrome/SiteHeader";
 import { SiteFooter } from "@/chrome/SiteFooter";
 import type { Site } from "@/core/sanity/site";
@@ -13,6 +14,7 @@ type Meta = {
   metaDescription?: string;
   ogImage?: SanityImage;
   slug?: { current?: string };
+  noindex?: boolean;
 } | null;
 
 interface Props {
@@ -35,6 +37,23 @@ const description = clean(meta?.metaDescription || settings?.description) || und
 const ogSource = meta?.ogImage?.asset ? meta.ogImage : settings?.ogImage?.asset ? settings.ogImage : null;
 const ogImage = ogSource ? urlForImage(ogSource).width(1200).height(630).fit("crop").url() : undefined;
 const chrome = { navigation, settings, routes };
+
+// Canonical = the public URL of this page, even when rendered under /preview.
+const canonical = meta?.slug?.current
+  ? new URL(pageHref(clean(meta.slug.current)), Astro.site).href
+  : undefined;
+const noindex = preview || !!meta?.noindex;
+const jsonLd = isHome
+  ? {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: siteName,
+      url: Astro.site?.origin,
+      sameAs: (settings?.socialLinks ?? [])
+        .map((item) => resolveLink(clean(item.link), routes)?.href)
+        .filter((href): href is string => !!href && /^https?:/.test(href)),
+    }
+  : null;
 ---
 
 <!doctype html>
@@ -45,13 +64,17 @@ const chrome = { navigation, settings, routes };
     <link rel="icon" href="data:," />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    {canonical && <meta property="og:url" content={canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={title} />
     {description && <meta property="og:description" content={description} />}
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
-    {preview && <meta name="robots" content="noindex" />}
+    {noindex && <meta name="robots" content="noindex" />}
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <link rel="sitemap" href="/sitemap.xml" />
     <slot name="head" />
   </head>
   <body>

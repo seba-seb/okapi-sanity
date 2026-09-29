@@ -25,3 +25,8 @@ export const ROUTES_QUERY = defineQuery(
 export const SETTINGS_QUERY = defineQuery(`*[_id == "settings"][0]`);
 
 export const NAVIGATION_QUERY = defineQuery(`*[_id == "navigation"][0]`);
+
+/** Indexable pages for sitemap.xml. */
+export const SITEMAP_QUERY = defineQuery(
+  `*[_type == "page" && defined(slug.current) && noindex != true]{ "slug": slug.current, _updatedAt }`,
+);
