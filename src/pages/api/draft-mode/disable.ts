@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import { disableDraftMode } from "@/sanity/draftMode";
+import { disableDraftMode } from "@/core/sanity/draftMode";
 
 export const prerender = false;
 

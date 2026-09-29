@@ -1,11 +1,11 @@
 ---
 import Base from "@/layouts/Base.astro";
-import { PageBuilder } from "@/components/PageBuilder";
-import { PreviewTools } from "@/components/PreviewTools";
-import { loadQuery } from "@/sanity/client";
-import { PAGE_QUERY } from "@/sanity/queries";
-import { isDraftMode } from "@/sanity/draftMode";
-import type { Page } from "@/lib/types";
+import { PageBuilder } from "@/core/render/PageBuilder";
+import { PreviewTools } from "@/core/canvas/PreviewTools";
+import { loadQuery } from "@/core/sanity/client";
+import { PAGE_QUERY } from "@/core/sanity/queries";
+import { isDraftMode } from "@/core/sanity/draftMode";
+import type { Page } from "@/core/lib/types";
 
 // Mirrors the public routes under /preview: /preview ↔ /, /preview/about ↔ /about.
 export const prerender = false;

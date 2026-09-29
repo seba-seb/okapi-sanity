@@ -10,15 +10,15 @@ import { structureTool } from "sanity/structure";
 import { presentationTool } from "sanity/presentation";
 import { visionTool } from "@sanity/vision";
 
-import { apiVersion, dataset, projectId, studioUrl } from "./src/sanity/env";
-import { schemaTypes } from "./src/sanity/schemaTypes";
-import { structure } from "./src/sanity/structure";
-import { resolve } from "./src/sanity/presentation";
-import { PreviewSelect } from "./src/sanity/components/PreviewSelect";
-import { TooltipDescriptionField } from "./src/sanity/components/TooltipDescriptionField";
-import { CanvasResizeListener } from "./src/sanity/components/CanvasResizeListener";
-import { EditorKeyForwarder } from "./src/sanity/components/EditorKeyForwarder";
-import { CanvasAutofocusGuard } from "./src/sanity/components/CanvasAutofocusGuard";
+import { apiVersion, dataset, projectId, studioUrl } from "./src/core/sanity/env";
+import { schemaTypes } from "./src/schema";
+import { structure } from "./src/core/sanity/structure";
+import { resolve } from "./src/core/sanity/presentation";
+import { PreviewSelect } from "./src/core/studio/PreviewSelect";
+import { TooltipDescriptionField } from "./src/core/studio/TooltipDescriptionField";
+import { CanvasResizeListener } from "./src/core/studio/CanvasResizeListener";
+import { EditorKeyForwarder } from "./src/core/studio/EditorKeyForwarder";
+import { CanvasAutofocusGuard } from "./src/core/studio/CanvasAutofocusGuard";
 
 /**
  * Renders enum string fields (those with an `options.list`) with the hoverable

@@ -1,10 +1,10 @@
 ---
 import Base from "@/layouts/Base.astro";
-import { PageBuilder } from "@/components/PageBuilder";
-import { Welcome } from "@/components/Welcome";
-import { loadQuery } from "@/sanity/client";
-import { PAGE_QUERY } from "@/sanity/queries";
-import type { Page } from "@/lib/types";
+import { PageBuilder } from "@/core/render/PageBuilder";
+import { Welcome } from "@/core/render/Welcome";
+import { loadQuery } from "@/core/sanity/client";
+import { PAGE_QUERY } from "@/core/sanity/queries";
+import type { Page } from "@/core/lib/types";
 
 const params = { slug: "home" };
 const page = await loadQuery<Page>(PAGE_QUERY, params);

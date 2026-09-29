@@ -1,9 +1,9 @@
 import type { APIRoute } from "astro";
 import { validatePreviewUrl } from "@sanity/preview-url-secret";
 
-import { client } from "@/sanity/client";
-import { readToken, previewPrefix } from "@/sanity/env";
-import { enableDraftMode } from "@/sanity/draftMode";
+import { client } from "@/core/sanity/client";
+import { readToken, previewPrefix } from "@/core/sanity/env";
+import { enableDraftMode } from "@/core/sanity/draftMode";
 
 export const prerender = false;
 
