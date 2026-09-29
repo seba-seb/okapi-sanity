@@ -111,3 +111,8 @@ and any `accepts` that names it (the compiler points at them).
 - `.env` edits restart the dev server; an empty `PUBLIC_SITE_URL` counts as unset.
 - macOS is case-insensitive: don't put `Foo.tsx` and `foo.ts` in one folder.
 - `/preview` 401 = no draft cookie: open it from the Studio, not directly.
+- Blank Studio / preview + `504 (Outdated Optimize Dep)` + "Failed to fetch
+  dynamically imported module" = Vite re-optimized deps while the tab was
+  open (any astro.config change does it). Fix: `npx astro dev stop`,
+  `rm -rf node_modules/.vite`, `npm run dev`, then hard-reload the tab
+  (⌘⇧R). New heavy client deps belong in `vite.optimizeDeps.include`.

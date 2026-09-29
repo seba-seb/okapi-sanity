@@ -71,6 +71,16 @@ export default defineConfig({
         "lodash/sortedIndex.js",
         "embla-carousel-react",
         "three",
+        // The embedded Studio's entry points: without these Vite discovers them
+        // on the first /studio load and re-optimizes mid-session, and the open
+        // tab's lazy chunks then 504 → blank Studio after sign-in.
+        "sanity",
+        "sanity/structure",
+        "sanity/presentation",
+        "@sanity/vision",
+        "@sanity/ui",
+        "@sanity/icons",
+        "styled-components",
       ],
     },
   },
