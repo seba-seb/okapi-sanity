@@ -49,6 +49,20 @@ export const heading = defineType({
       },
     }),
     textWrapField("balance"),
+    defineField({
+      name: "animation",
+      title: "Animation",
+      type: "string",
+      description: "Reveal on scroll. Not played in the editor preview.",
+      initialValue: "none",
+      options: {
+        list: [
+          { title: "None", value: "none" },
+          { title: "Words", value: "words" },
+          { title: "Lines", value: "lines" },
+        ],
+      },
+    }),
     // Drag to adjust the max width — "Auto" means full container width.
     // Measured in `ch` (character width). Also draggable on the canvas.
     sliderField({

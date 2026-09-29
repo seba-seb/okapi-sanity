@@ -75,6 +75,7 @@ const jsonLd = isHome
     {noindex && <meta name="robots" content="noindex" />}
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     <link rel="sitemap" href="/sitemap.xml" />
+    <noscript><style>[data-split]{visibility:visible}</style></noscript>
     <slot name="head" />
   </head>
   <body>

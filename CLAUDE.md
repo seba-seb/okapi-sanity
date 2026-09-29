@@ -16,6 +16,7 @@ src/core/       Infrastructure. Same in every project — don't fork it per proj
   studio/       custom Studio inputs + listeners (preview → Studio writes)
   render/       PageBuilder, BlockRenderer, useLiveQuery, Welcome
   lib/          clean (stega), routes (pageHref/resolveLink), types
+  motion/       SplitReveal (GSAP SplitText + ScrollTrigger), preview-safe
 src/blocks/     The project's blocks. One folder per type: schema.ts + Component.tsx
   meta.ts       THE registry: type names, titles, container slots, canvas flags
   schemas.ts    type → schema     (typed against meta.ts)
@@ -48,7 +49,9 @@ patches/        patch-package fixes for sanity@6.3.0 + @sanity/visual-editing@5.
   never in an Astro `<script>` with querySelector: React re-renders blocks in
   the preview and a script won't see the new nodes. Skip entrance animations
   under `/preview`. Split text inside a wrapper `key`ed by the text, never on
-  the element that carries `data-sanity`.
+  the element that carries `data-sanity`. `core/motion/SplitReveal` already
+  does all of this — reuse it (see Heading's `animation` field) rather than
+  writing a new split.
 - **Styling: Tailwind 4 utilities built from the tokens** — `bg-bg text-fg
   bg-surface text-muted border-border bg-brand text-brand-contrast`,
   `rounded-main`, `gap-md p-lg` (the t-shirt spacing), `text-h-xl`,

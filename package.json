@@ -15,6 +15,7 @@
   "dependencies": {
     "@astrojs/react": "^7.0.0",
     "@astrojs/vercel": "latest",
+    "@gsap/react": "^2.1.2",
     "@portabletext/react": "^6.2.0",
     "@sanity/astro": "^3.5.1",
     "@sanity/client": "^7.14.1",
@@ -29,6 +30,7 @@
     "astro": "^7.3.5",
     "embla-carousel-react": "^8.6.0",
     "groq": "^6.3.0",
+    "gsap": "^3.15.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-is": "^19.2.0",

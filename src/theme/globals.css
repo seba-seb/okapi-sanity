@@ -48,6 +48,10 @@
 }
 
 @layer components {
+/* SplitReveal: hidden until split so it doesn't flash in, then out. */
+[data-split] { visibility: hidden; }
+/* Room for ascenders/descenders: tight display line-heights would clip them. */
+.split-line-mask { padding-block: 0.12em; margin-block: -0.12em; }
 * {
   box-sizing: border-box;
 }
