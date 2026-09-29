@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "typecheck": "astro check && tsc --noEmit",
     "typegen": "sanity typegen generate",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.0.0",

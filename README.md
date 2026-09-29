@@ -78,7 +78,7 @@ A **Section** is the top-level composable container. It exposes:
 - **Background**: optional image with an overlay-opacity slider.
 
 Because theming is driven by CSS custom properties (see
-[`globals.css`](src/app/globals.css)), changing a section's theme is instant and
+[`globals.css`](src/theme/globals.css)), changing a section's theme is instant and
 consistent across all nested blocks.
 
 ---
@@ -89,53 +89,26 @@ consistent across all nested blocks.
   Publishing does not redeploy on its own: hook a Sanity webhook to a Vercel
   deploy hook if you want that.
 - **Draft previews** — `/preview/*` mirrors the public routes on demand
-  (`prerender = false`). It is locked by [`draftMode.ts`](src/sanity/draftMode.ts):
+  (`prerender = false`). It is locked by [`draftMode.ts`](src/core/sanity/draftMode.ts):
   Presentation hits `/api/draft-mode/enable` with a one-time secret, which is
   validated against the dataset and then sets the cookie.
 - **Live edits** — `PageBuilder` is a React island. `usePresentationQuery` +
   `useOptimistic` stream Studio edits straight into it, with no page reload.
 - **Click-to-edit** — every rendered block carries a `data-sanity` attribute
-  built by [`dataAttr`](src/sanity/dataAttr.ts), so you can click any element in
+  built by [`dataAttr`](src/core/sanity/dataAttr.ts), so you can click any element in
   Presentation to jump straight to its field.
 - **Drag controls** — custom Studio inputs power the sliders:
-  [`RangeSliderInput`](src/sanity/components/RangeSliderInput.tsx) (single value)
-  and [`ResponsiveNumberInput`](src/sanity/components/ResponsiveNumberInput.tsx)
+  [`RangeSliderInput`](src/core/studio/RangeSliderInput.tsx) (single value)
+  and [`ResponsiveNumberInput`](src/core/studio/ResponsiveNumberInput.tsx)
   (one slider per breakpoint).
 
 ---
 
 ## Project structure
 
-```
-src/
-├─ app/
-│  ├─ layout.tsx                     Root <html>/<body>
-│  ├─ (frontend)/                    The public site (live + visual editing)
-│  │  ├─ layout.tsx                  SanityLive + VisualEditing wiring
-│  │  ├─ page.tsx                    Home (slug "home")
-│  │  └─ [slug]/page.tsx             All other pages
-│  ├─ studio/[[...tool]]/page.tsx    Embedded Sanity Studio at /studio
-│  └─ api/draft-mode/{enable,disable}
-├─ components/
-│  ├─ PageBuilder.tsx                Renders a page's sections
-│  ├─ Section.tsx                    Theme + spacing + layout
-│  ├─ BlockRenderer.tsx              Recursive block switch
-│  └─ blocks/*                       One component per building block
-├─ sanity/
-│  ├─ schemaTypes/                   Documents, section, and block schemas
-│  ├─ components/                    Custom drag/responsive Studio inputs
-│  ├─ client.ts · live.ts · fetch.ts · image.ts · dataAttr.ts
-│  └─ structure.ts · presentation.ts
-└─ lib/                              Shared types + style helpers
-```
-
-Add a new block by creating its schema in
-[`src/sanity/schemaTypes/blocks`](src/sanity/schemaTypes/blocks), registering it
-in [`blocks.ts`](src/sanity/schemaTypes/shared/blocks.ts) and
-[`index.ts`](src/sanity/schemaTypes/index.ts), then adding a matching component
-and a `case` in [`BlockRenderer.tsx`](src/components/BlockRenderer.tsx).
-
----
+See [`CLAUDE.md`](CLAUDE.md): folder layout, how to add or remove a block, the
+rules that keep the preview working, and the checklist for starting a new
+project from this starter.
 
 ## Scripts
 
@@ -143,7 +116,7 @@ and a `case` in [`BlockRenderer.tsx`](src/components/BlockRenderer.tsx).
 | --- | --- |
 | `npm run dev` | Start the dev server |
 | `npm run build` | Production build |
-| `npm run start` | Serve the production build |
-| `npm run typecheck` | `tsc --noEmit` |
+| `npm run typecheck` | `astro check` + `tsc --noEmit` |
+| `npm run verify` | Build + the checks that catch silent breakage (add a URL for HTTP checks) |
 | `npm run typegen` | Generate `sanity.types.ts` from your schema + queries |
 | `node scripts/generate-seed.mjs` | Rebuild the demo `sanity/seed.ndjson` |
