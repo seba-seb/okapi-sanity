@@ -97,7 +97,7 @@ and any `accepts` that names it (the compiler points at them).
 ## Commands
 
 - `npm run dev` — site on :4321, Studio at `/studio`, visual editor at
-  `/studio#/presentation`. `astro dev` daemonizes: stop with `npx astro dev stop`.
+  `/studio#/presentation` (hash routing: the workspace is at the root of the hash). `astro dev` daemonizes: stop with `npx astro dev stop`.
 - `npm run typecheck` · `npm run verify [-- <url>]`
 - `node scripts/generate-seed.mjs` — regenerate `sanity/seed.ndjson`.
 

@@ -10,7 +10,7 @@ import { structureTool } from "sanity/structure";
 import { presentationTool } from "sanity/presentation";
 import { visionTool } from "@sanity/vision";
 
-import { apiVersion, dataset, projectId, studioUrl } from "./src/core/sanity/env";
+import { apiVersion, dataset, projectId } from "./src/core/sanity/env";
 import { schemaTypes, SINGLETONS } from "./src/schema";
 import { structure } from "./src/core/sanity/structure";
 import { resolve } from "./src/core/sanity/presentation";
@@ -88,7 +88,12 @@ function studioLayout(props: LayoutProps) {
 export default defineConfig({
   name: "default",
   title: "Remarkable",
-  basePath: studioUrl,
+  // The Studio is served at /studio (astro.config studioBasePath) with HASH
+  // routing, so the workspace lives at the root of the hash: #/structure,
+  // #/presentation. With "/studio" here the hash had to be #/studio/…, and
+  // any other hash — #/, or the empty one left after Brave's cookieless
+  // login consumes #sid=… — matched no workspace and rendered a blank page.
+  basePath: "/",
   projectId,
   dataset,
   schema: {
