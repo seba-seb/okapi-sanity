@@ -21,7 +21,8 @@ src/blocks/     The project's blocks. One folder per type: schema.ts + Component
   schemas.ts    type → schema     (typed against meta.ts)
   components.tsx type → component (typed against meta.ts) + block canvas tools
   defaults.ts   what a block contains when inserted from the canvas
-src/theme/      Design tokens + global CSS + spacing/size scales. Per project.
+src/theme/      Per project. tokens.css = the design tokens (edit this first);
+                globals.css = Tailwind 4 wiring + the starter's base CSS.
 src/chrome/     Header/footer. Per project — restyle or replace.
 src/documents/  Document types: page, settings (singleton), navigation (singleton)
 src/pages/      Routes. /preview/[...slug] mirrors the public routes.
@@ -48,6 +49,14 @@ patches/        patch-package fixes for sanity@6.3.0 + @sanity/visual-editing@5.
   the preview and a script won't see the new nodes. Skip entrance animations
   under `/preview`. Split text inside a wrapper `key`ed by the text, never on
   the element that carries `data-sanity`.
+- **Styling: Tailwind 4 utilities built from the tokens** — `bg-bg text-fg
+  bg-surface text-muted border-border bg-brand text-brand-contrast`,
+  `rounded-main`, `gap-md p-lg` (the t-shirt spacing), `text-h-xl`,
+  `px-section-x`, `max-w-page`. Colour utilities read the section's
+  `[data-theme]`, so blocks restyle per theme for free. Tailwind's default
+  palette is removed on purpose (no `bg-red-500`): add colours to tokens.css
+  + the `@theme inline` map. No preflight, so the starter's base CSS is
+  untouched; it lives in `@layer components`, so utilities override it.
 - **Design assets don't go in the CMS** (logos, textures): they're code.
 - Pinned: `sanity@6.3.0`, `@sanity/visual-editing@5.4.5` (overrides in
   package.json). Upgrading either means re-making `patches/` — see its README.

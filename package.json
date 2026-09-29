@@ -25,6 +25,7 @@
     "@sanity/ui": "^3.3.1",
     "@sanity/vision": "6.3.0",
     "@sanity/visual-editing": "5.4.5",
+    "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
     "embla-carousel-react": "^8.6.0",
     "groq": "^6.3.0",
@@ -33,6 +34,7 @@
     "react-is": "^19.2.0",
     "sanity": "6.3.0",
     "styled-components": "^6.4.3",
+    "tailwindcss": "^4.3.3",
     "three": "^0.160.0"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@ import react from "@astrojs/react";
 import vercel from "@astrojs/vercel";
 import sanity from "@sanity/astro";
 import { loadEnv } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 
 // astro.config runs before Astro loads .env, so read it with Vite's loader.
 const env = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
@@ -57,6 +58,7 @@ export default defineConfig({
     remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }],
   },
   vite: {
+    plugins: [tailwindcss()],
     // @sanity/visual-editing pulls these through paths Vite's optimizer misses
     // → "504 Outdated Optimize Dep" and the overlay never mounts in dev.
     optimizeDeps: {
