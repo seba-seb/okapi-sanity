@@ -169,28 +169,8 @@ export function richTextField(opts?: {
             { title: "Italic", value: "em" },
           ],
           annotations: [
-            defineArrayMember({
-              name: "link",
-              type: "object",
-              title: "Link",
-              icon: LinkIcon,
-              fields: [
-                defineField({
-                  name: "href",
-                  title: "URL",
-                  type: "string",
-                  description:
-                    "A URL (https://…), a path (/about), or an anchor (#section).",
-                  validation: (rule) => rule.required(),
-                }),
-                defineField({
-                  name: "newTab",
-                  title: "Open in new tab",
-                  type: "boolean",
-                  initialValue: false,
-                }),
-              ],
-            }),
+            // Same `link` type as buttons and menus (internal page / URL).
+            defineArrayMember({ name: "link", type: "link", title: "Link" }),
           ],
         },
       }),

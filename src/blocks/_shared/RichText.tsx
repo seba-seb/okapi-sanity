@@ -1,4 +1,12 @@
+import type { ReactNode } from "react";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
+
+import { resolveLink, useRoutes, type LinkValue } from "@/core/lib/routes";
+
+function RichLink({ value, children }: { value?: LinkValue; children: ReactNode }) {
+  const link = resolveLink(value, useRoutes());
+  return <a {...(link ?? { href: "#" })}>{children}</a>;
+}
 
 /**
  * Renders a text block's rich-text value (Portable Text) — Bold / Italic and
@@ -15,20 +23,7 @@ const components: PortableTextComponents = {
     normal: ({ children }) => <span className="rt-block">{children}</span>,
   },
   marks: {
-    link: ({ value, children }) => {
-      const href = (value?.href as string | undefined) || "#";
-      const newTab = Boolean(value?.newTab);
-      return (
-        <a
-          href={href}
-          {...(newTab
-            ? { target: "_blank", rel: "noopener noreferrer" }
-            : {})}
-        >
-          {children}
-        </a>
-      );
-    },
+    link: ({ value, children }) => <RichLink value={value}>{children}</RichLink>,
   },
 };
 

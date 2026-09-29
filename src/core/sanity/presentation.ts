@@ -28,6 +28,15 @@ export const resolve: PresentationPluginOptions["resolve"] = {
     },
   ]),
   locations: {
+    // Settings + navigation render on every page; point at the home preview.
+    settings: defineLocations({
+      message: "Used on every page",
+      locations: [{ title: "Home", href: previewPrefix }],
+    }),
+    navigation: defineLocations({
+      message: "Used on every page",
+      locations: [{ title: "Home", href: previewPrefix }],
+    }),
     page: defineLocations({
       select: { title: "title", slug: "slug.current" },
       resolve: (doc) => {

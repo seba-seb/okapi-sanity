@@ -16,18 +16,7 @@ export const button = defineType({
       initialValue: BUTTON_LABEL,
       validation: (rule) => rule.required(),
     }),
-    defineField({
-      name: "href",
-      title: "Link",
-      type: "string",
-      description: "A URL (https://…), a path (/about), or an anchor (#section).",
-    }),
-    defineField({
-      name: "newTab",
-      title: "Open in new tab",
-      type: "boolean",
-      initialValue: false,
-    }),
+    defineField({ name: "link", title: "Link", type: "link" }),
     // Dropdown: button STYLE variant.
     defineField({
       name: "style",

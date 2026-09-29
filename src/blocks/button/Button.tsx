@@ -1,9 +1,12 @@
 import { editable } from "@/core/sanity/dataAttr";
 import { clean } from "@/core/lib/clean";
 import type { BlockProps } from "@/blocks/_shared/props";
+import { resolveLink, useRoutes, type LinkValue } from "@/core/lib/routes";
 
 type ButtonData = {
   label?: string;
+  link?: LinkValue;
+  /** Legacy (pre-`link`) fields, still honoured by resolveLink. */
   href?: string;
   newTab?: boolean;
   style?: "primary" | "secondary" | "outline" | "link";
@@ -27,6 +30,7 @@ export function Button({
    */
   dragFlow?: "horizontal" | "vertical";
 }) {
+  const routes = useRoutes();
   if (!block.label) return null;
   const c = clean(block);
 
@@ -43,18 +47,15 @@ export function Button({
     .filter(Boolean)
     .join(" ");
 
-  const linkProps = c.newTab
-    ? { target: "_blank", rel: "noopener noreferrer" }
-    : {};
+  const link = resolveLink(c.link ?? c, routes) ?? { href: "#" };
 
   return (
     <a
-      href={c.href || "#"}
       className={className}
       style={standalone ? { alignSelf: "flex-start" } : undefined}
       {...editable(ctx.documentId, ctx.documentType, path, block._type)}
       {...(dragFlow ? { "data-sanity-drag-flow": dragFlow } : {})}
-      {...linkProps}
+      {...link}
     >
       <span className="btn__label">{c.label}</span>
       {showChevron ? (

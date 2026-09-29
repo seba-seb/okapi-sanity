@@ -3,6 +3,7 @@ import Base from "@/layouts/Base.astro";
 import { PageBuilder } from "@/core/render/PageBuilder";
 import { PreviewTools } from "@/core/canvas/PreviewTools";
 import { loadQuery } from "@/core/sanity/client";
+import { loadSite } from "@/core/sanity/site";
 import { PAGE_QUERY } from "@/core/sanity/queries";
 import { isDraftMode } from "@/core/sanity/draftMode";
 import type { Page } from "@/core/lib/types";
@@ -17,13 +18,16 @@ if (!isDraftMode(Astro.cookies)) {
 }
 
 const params = { slug: Astro.params.slug || "home" };
-const page = await loadQuery<Page>(PAGE_QUERY, params, { drafts: true });
+const [page, site] = await Promise.all([
+  loadQuery<Page>(PAGE_QUERY, params, { drafts: true }),
+  loadSite({ drafts: true }),
+]);
 Astro.response.headers.set("Cache-Control", "private, no-store");
 ---
 
-<Base meta={page} noindex>
+<Base site={site} meta={page} preview>
   {page
-    ? <PageBuilder client:load page={page} query={PAGE_QUERY} params={params} />
+    ? <PageBuilder client:load page={page} query={PAGE_QUERY} params={params} routes={site.routes} />
     : <main style="padding:48px 24px">No page with slug “{params.slug}” yet.</main>}
   <PreviewTools client:only="react" />
 </Base>

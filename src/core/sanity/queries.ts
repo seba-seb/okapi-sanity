@@ -16,3 +16,12 @@ export const PAGE_META_QUERY = defineQuery(
     title, metaTitle, metaDescription, ogImage
   }`,
 );
+
+/** Page id → slug, for resolving internal links. */
+export const ROUTES_QUERY = defineQuery(
+  `*[_type == "page" && defined(slug.current)]{ _id, "slug": slug.current }`,
+);
+
+export const SETTINGS_QUERY = defineQuery(`*[_id == "settings"][0]`);
+
+export const NAVIGATION_QUERY = defineQuery(`*[_id == "navigation"][0]`);

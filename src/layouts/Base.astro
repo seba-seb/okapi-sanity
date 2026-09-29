@@ -2,27 +2,39 @@
 import "@/theme/globals.css";
 import { urlForImage } from "@/core/sanity/image";
 import { clean } from "@/core/lib/clean";
+import { SiteHeader } from "@/chrome/SiteHeader";
+import { SiteFooter } from "@/chrome/SiteFooter";
+import type { Site } from "@/core/sanity/site";
+import type { SanityImage } from "@/core/lib/types";
 
 type Meta = {
   title?: string;
   metaTitle?: string;
   metaDescription?: string;
-  ogImage?: unknown;
+  ogImage?: SanityImage;
+  slug?: { current?: string };
 } | null;
 
 interface Props {
+  site: Site;
   meta?: Meta;
-  noindex?: boolean;
+  /** Preview routes: hydrate the chrome so menu edits stream in live. */
+  preview?: boolean;
 }
 
-const { meta, noindex = false } = Astro.props as Props;
-const SITE = "Remarkable";
+const { site, meta, preview = false } = Astro.props;
+const { settings, navigation, routes } = site;
+
+// Every SEO value is optional in the CMS and falls back: page → settings → code.
+const siteName = clean(settings?.siteName) || "Untitled site";
 const pageTitle = clean(meta?.metaTitle || meta?.title);
-const title = pageTitle ? `${pageTitle} · ${SITE}` : `${SITE} — Creative Agency`;
-const description = clean(meta?.metaDescription) || "A creative agency, built block by block.";
-const ogImage = meta?.ogImage
-  ? urlForImage(meta.ogImage as never).width(1200).height(630).fit("crop").url()
-  : undefined;
+// The home page's title stands alone (it usually already carries the brand).
+const isHome = meta?.slug?.current === "home";
+const title = pageTitle ? (isHome ? pageTitle : `${pageTitle} · ${siteName}`) : siteName;
+const description = clean(meta?.metaDescription || settings?.description) || undefined;
+const ogSource = meta?.ogImage?.asset ? meta.ogImage : settings?.ogImage?.asset ? settings.ogImage : null;
+const ogImage = ogSource ? urlForImage(ogSource).width(1200).height(630).fit("crop").url() : undefined;
+const chrome = { navigation, settings, routes };
 ---
 
 <!doctype html>
@@ -32,14 +44,19 @@ const ogImage = meta?.ogImage
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="data:," />
     <title>{title}</title>
-    <meta name="description" content={description} />
+    {description && <meta name="description" content={description} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    {description && <meta property="og:description" content={description} />}
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
-    {noindex && <meta name="robots" content="noindex" />}
+    {preview && <meta name="robots" content="noindex" />}
+    <slot name="head" />
   </head>
   <body>
+    {preview ? <SiteHeader client:load {...chrome} /> : <SiteHeader {...chrome} />}
     <slot />
+    {preview ? <SiteFooter client:load {...chrome} /> : <SiteFooter {...chrome} />}
   </body>
 </html>

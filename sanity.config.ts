@@ -11,7 +11,7 @@ import { presentationTool } from "sanity/presentation";
 import { visionTool } from "@sanity/vision";
 
 import { apiVersion, dataset, projectId, studioUrl } from "./src/core/sanity/env";
-import { schemaTypes } from "./src/schema";
+import { schemaTypes, SINGLETONS } from "./src/schema";
 import { structure } from "./src/core/sanity/structure";
 import { resolve } from "./src/core/sanity/presentation";
 import { PreviewSelect } from "./src/core/studio/PreviewSelect";
@@ -93,6 +93,16 @@ export default defineConfig({
   dataset,
   schema: {
     types: schemaTypes,
+    // Singletons can't be created from the "+" menu…
+    templates: (templates) =>
+      templates.filter((t) => !(SINGLETONS as readonly string[]).includes(t.schemaType)),
+  },
+  document: {
+    // …nor deleted or duplicated.
+    actions: (actions, { schemaType }) =>
+      (SINGLETONS as readonly string[]).includes(schemaType)
+        ? actions.filter((a) => !["delete", "duplicate", "unpublish"].includes(a.action ?? ""))
+        : actions,
   },
   form: {
     components: {

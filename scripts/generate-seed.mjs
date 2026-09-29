@@ -35,7 +35,7 @@ const heading = (text, opts = {}) =>
 const paragraph = (text, opts = {}) =>
   key({ _type: "paragraph", text: pt(text), size: "md", color: "muted", ...opts });
 const button = (label, opts = {}) =>
-  key({ _type: "button", label, href: "#", style: "primary", size: "md", ...opts });
+  key({ _type: "button", label, style: "primary", size: "md", ...opts });
 const buttonGroup = (buttons, opts = {}) =>
   key({ _type: "buttonWrapper", buttons, direction: "row", wrap: true, gap: 12, ...opts });
 
@@ -159,5 +159,11 @@ const page = {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outPath = `${__dirname}/../sanity/seed.ndjson`;
 mkdirSync(dirname(outPath), { recursive: true });
-writeFileSync(outPath, JSON.stringify(page) + "\n");
+const settings = {
+  _id: "settings",
+  _type: "settings",
+  siteName: "Remarkable",
+  description: "A creative agency, built block by block.",
+};
+writeFileSync(outPath, [page, settings].map((d) => JSON.stringify(d)).join("\n") + "\n");
 console.log("Wrote", outPath);

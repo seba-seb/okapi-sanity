@@ -4,14 +4,15 @@ import type { GetStaticPaths } from "astro";
 import Base from "@/layouts/Base.astro";
 import { PageBuilder } from "@/core/render/PageBuilder";
 import { loadQuery } from "@/core/sanity/client";
-import { PAGE_QUERY, PAGES_SLUGS_QUERY } from "@/core/sanity/queries";
+import { loadSite } from "@/core/sanity/site";
+import { PAGE_QUERY } from "@/core/sanity/queries";
 import type { Page } from "@/core/lib/types";
 
 export const getStaticPaths = (async () => {
-  const slugs = await loadQuery<{ slug: string }[]>(PAGES_SLUGS_QUERY);
-  const paths = (slugs ?? []).filter((s) => s.slug && s.slug !== "home");
+  const { routes } = await loadSite();
+  const slugs = Object.values(routes).filter((slug) => slug !== "home");
   return await Promise.all(
-    paths.map(async ({ slug }) => ({
+    slugs.map(async (slug) => ({
       params: { slug },
       props: { page: await loadQuery<Page>(PAGE_QUERY, { slug }) },
     })),
@@ -20,8 +21,9 @@ export const getStaticPaths = (async () => {
 
 const { slug } = Astro.params;
 const { page } = Astro.props as { page: Page | null };
+const site = await loadSite();
 ---
 
-<Base meta={page}>
-  {page && <PageBuilder client:load page={page} query={PAGE_QUERY} params={{ slug }} />}
+<Base site={site} meta={page}>
+  {page && <PageBuilder client:load page={page} query={PAGE_QUERY} params={{ slug }} routes={site.routes} />}
 </Base>

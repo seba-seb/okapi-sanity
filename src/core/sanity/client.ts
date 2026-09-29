@@ -6,7 +6,9 @@ export const client = createClient({
   projectId: projectId || "missing",
   dataset,
   apiVersion,
-  useCdn: true,
+  // No CDN: pages are fetched at build time (a handful of requests), and a
+  // publish-triggered rebuild must never read a stale cached response.
+  useCdn: false,
   stega: { studioUrl },
 });
 
@@ -24,7 +26,7 @@ export async function loadQuery<T>(
   if (!projectId) return null;
   try {
     const c = drafts
-      ? client.withConfig({ token: readToken(), useCdn: false, perspective: "drafts" })
+      ? client.withConfig({ token: readToken(), perspective: "drafts" })
       : client.withConfig({ perspective: "published" });
     return ((await c.fetch<T>(query, params, { stega: false })) ?? null) as T | null;
   } catch (error) {

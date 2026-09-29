@@ -719,3 +719,24 @@ a.card:hover {
 .paragraph .rt-block + .rt-block {
   margin-top: 0.75em;
 }
+
+/* ── Site chrome (src/chrome) — restyle per project ───────────────────── */
+.site-header,
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md, 16px);
+  padding: 20px clamp(20px, 4vw, 48px);
+  background: var(--bg);
+  color: var(--fg);
+}
+.site-header__brand { font-weight: 600; color: inherit; text-decoration: none; }
+.site-header__links,
+.site-footer__links { display: flex; flex-wrap: wrap; gap: 24px; margin: 0; padding: 0; list-style: none; }
+.site-header__links a,
+.site-footer__links a { color: inherit; text-decoration: none; }
+.site-header__links a:hover,
+.site-footer__links a:hover { text-decoration: underline; }
+.site-footer { border-top: 1px solid var(--border); font-size: 0.875rem; }
+.site-footer__copy { margin: 0; opacity: 0.7; }

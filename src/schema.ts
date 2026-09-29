@@ -1,7 +1,20 @@
 import type { SchemaTypeDefinition } from "sanity";
 
+import { link, navItem } from "@/core/sanity/schema/link";
 import { page } from "@/documents/page";
+import { settings } from "@/documents/settings";
+import { navigation } from "@/documents/navigation";
 import { BLOCK_SCHEMAS } from "@/blocks/schemas";
 
-/** Everything the Studio knows about: documents + the block registry. */
-export const schemaTypes: SchemaTypeDefinition[] = [page, ...Object.values(BLOCK_SCHEMAS)];
+/** Singletons: one fixed document each, no create/delete/duplicate. */
+export const SINGLETONS = ["settings", "navigation"] as const;
+
+/** Everything the Studio knows about: documents, shared types, blocks. */
+export const schemaTypes: SchemaTypeDefinition[] = [
+  page,
+  settings,
+  navigation,
+  link,
+  navItem,
+  ...Object.values(BLOCK_SCHEMAS),
+];

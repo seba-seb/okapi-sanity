@@ -6,6 +6,7 @@ import { useOptimistic, usePresentationQuery } from "@sanity/visual-editing/reac
 import { keyed } from "@/core/sanity/dataAttr";
 import { dedupeByKey } from "@/core/lib/dedupe";
 import type { Page } from "@/core/lib/types";
+import { RoutesContext, type Routes } from "@/core/lib/routes";
 
 import { Section } from "@/blocks/section/Section";
 
@@ -18,10 +19,12 @@ export function PageBuilder({
   page,
   query,
   params,
+  routes,
 }: {
   page: Page;
   query: string;
   params: Record<string, unknown>;
+  routes: Routes;
 }) {
   const baseId = baseIdOf(page._id);
 
@@ -58,6 +61,7 @@ export function PageBuilder({
   if (!sections?.length) return null;
 
   return (
+    <RoutesContext.Provider value={routes}>
     <main>
       {dedupeByKey(sections).map((section) => (
         <Section
@@ -68,5 +72,6 @@ export function PageBuilder({
         />
       ))}
     </main>
+    </RoutesContext.Provider>
   );
 }
