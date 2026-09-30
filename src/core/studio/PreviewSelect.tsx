@@ -1,6 +1,8 @@
-import { useCallback, useRef } from "react";
-import { set, unset, type StringInputProps } from "sanity";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { set, useFormValue, type StringInputProps } from "sanity";
 import { Flex, Button } from "@sanity/ui";
+
+import { PREVIEW_CHANNEL, toBlockTarget, type PreviewMessage } from "@/core/canvas/channels";
 
 type Option = { title: string; value: string };
 
@@ -19,68 +21,62 @@ function normalize(list: unknown): Option[] {
 /**
  * A segmented replacement for the default select/radio on enum string fields.
  *
- * Hovering (or focusing) an option applies it optimistically via `onChange`, so
- * the live Presentation preview and the highlighted button update instantly —
- * this rides the same draft stream that makes typing show up live, so it works
- * for every field (including ones with no bespoke DOM applier, like a heading's
- * semantic level). Leaving the control without clicking reverts to the value
- * you started on; clicking commits.
+ * Hovering an option PREVIEWS it — broadcast to the preview's PreviewBridge,
+ * which swaps the class/style on the rendered block. Nothing is written: no
+ * mutation per hover (that queued a network write for every option the pointer
+ * crossed, so the click landed late — or the leave-revert raced it and won).
+ * Clicking writes once and sends `commit`, so the preview keeps what it shows.
+ * Fields without a DOM applier (see previewOverrides.ts) just don't preview
+ * on hover; the click still applies them live.
  */
 export function PreviewSelect(props: StringInputProps) {
-  const { onChange, value, schemaType, readOnly } = props;
+  const { onChange, value, schemaType, readOnly, path } = props;
 
   const options = normalize((schemaType.options as { list?: unknown })?.list);
 
-  // When the field has no value yet (a new or pre-existing section), show its
-  // schema `initialValue` as selected so the effective default is visible —
-  // it matches what the front-end renders for an unset value.
+  // When the field has no value yet, show its schema `initialValue` as
+  // selected — it matches what the front-end renders for an unset value.
   const defaultValue =
-    typeof schemaType.initialValue === "string"
-      ? schemaType.initialValue
-      : undefined;
+    typeof schemaType.initialValue === "string" ? schemaType.initialValue : undefined;
   const active = value ?? defaultValue;
 
-  // The value to restore if the pointer leaves without a click. Captured on
-  // enter (before any preview) and updated on commit.
-  const originalRef = useRef<string | undefined>(value);
+  const target = useMemo(() => toBlockTarget(path), [path]);
+  const parent = useFormValue(path.slice(0, -1)) as { _type?: string } | undefined;
+  const blockType = parent?._type;
 
-  const write = useCallback(
-    (next: string | undefined) => {
-      onChange(typeof next === "string" ? set(next) : unset());
-    },
-    [onChange],
-  );
+  const channel = useRef<BroadcastChannel | null>(null);
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const c = new BroadcastChannel(PREVIEW_CHANNEL);
+    channel.current = c;
+    return () => {
+      c.postMessage({ type: "clear" } satisfies PreviewMessage);
+      c.close();
+      channel.current = null;
+    };
+  }, []);
+  const post = useCallback((m: PreviewMessage) => channel.current?.postMessage(m), []);
 
-  // Snapshot the committed value the moment the pointer enters, before any
-  // hover has previewed anything.
-  const handleEnter = useCallback(() => {
-    originalRef.current = value;
-  }, [value]);
-
-  // Revert whenever the current (previewed) value differs from what we started
-  // on. After a commit, `originalRef` holds the committed value, so a later
-  // hover-then-leave correctly snaps back to it instead of sticking.
-  const handleLeave = useCallback(() => {
-    if (value !== originalRef.current) write(originalRef.current);
-  }, [value, write]);
-
-  const handleCommit = useCallback(
+  const preview = useCallback(
     (v: string) => {
-      originalRef.current = v;
-      write(v);
+      if (!target || !blockType || v === active) post({ type: "clear" });
+      else post({ type: "preview", path: target.path, blockType, field: target.field, value: v });
     },
-    [write],
+    [target, blockType, active, post],
+  );
+  const clear = useCallback(() => post({ type: "clear" }), [post]);
+  const commit = useCallback(
+    (v: string) => {
+      post({ type: "commit" });
+      if (v !== value) onChange(set(v));
+    },
+    [post, value, onChange],
   );
 
   if (readOnly || options.length === 0) return props.renderDefault(props);
 
   return (
-    <Flex
-      gap={1}
-      wrap="wrap"
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-    >
+    <Flex gap={1} wrap="wrap" onMouseLeave={clear} onBlur={clear}>
       {options.map((o) => {
         const selected = active === o.value;
         return (
@@ -92,9 +88,9 @@ export function PreviewSelect(props: StringInputProps) {
             fontSize={1}
             padding={2}
             radius={2}
-            onMouseEnter={() => write(o.value)}
-            onFocus={() => write(o.value)}
-            onClick={() => handleCommit(o.value)}
+            onMouseEnter={() => preview(o.value)}
+            onFocus={() => preview(o.value)}
+            onClick={() => commit(o.value)}
           />
         );
       })}

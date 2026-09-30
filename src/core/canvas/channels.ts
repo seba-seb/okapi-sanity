@@ -60,7 +60,35 @@ export type PreviewMessage =
       /** The candidate value being hovered. */
       value: string;
     }
-  | { type: "clear" };
+  /** Hover ended without a click: restore what was there. */
+  | { type: "clear" }
+  /**
+   * The hovered value was clicked and written to the draft. Drop the pending
+   * revert WITHOUT restoring: the DOM already shows the committed value, and
+   * restoring could land after React re-rendered it — leaving the old value on
+   * screen while React believes the new one is there.
+   */
+  | { type: "commit" };
+
+type PathSegment = string | number | { _key: string } | [number | "", number | ""];
+
+/**
+ * A form path (["sections", {_key:"a"}, "content", {_key:"b"}, "size"]) →
+ * the block's GROQ path as rendered in `data-sanity-path`
+ * (`sections[_key=="a"].content[_key=="b"]`) + the field name ("size").
+ * Null for anything that isn't a keyed-array block field.
+ */
+export function toBlockTarget(path: readonly PathSegment[]): { path: string; field: string } | null {
+  const field = path[path.length - 1];
+  if (typeof field !== "string" || path.length < 3) return null;
+  let out = "";
+  for (const seg of path.slice(0, -1)) {
+    if (typeof seg === "string") out += out ? `.${seg}` : seg;
+    else if (seg && typeof seg === "object" && "_key" in seg) out += `[_key=="${seg._key}"]`;
+    else return null; // index / range segments: not a block path
+  }
+  return { path: out, field };
+}
 
 import type { Path } from "sanity";
 

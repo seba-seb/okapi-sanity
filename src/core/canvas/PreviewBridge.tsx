@@ -32,7 +32,13 @@ export function PreviewBridge() {
       const msg = event.data;
       if (!msg) return;
 
-      // Always drop the previous preview first.
+      // Committed: keep what's on screen (it IS the new value) and forget the
+      // revert — restoring now could overwrite React's fresh render.
+      if (msg.type === "commit") {
+        revert = null;
+        return;
+      }
+      // Otherwise drop the previous preview first.
       clear();
       if (msg.type !== "preview") return;
 

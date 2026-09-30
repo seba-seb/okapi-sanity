@@ -22,6 +22,7 @@ const check = (cond, msg) => (cond ? ok(msg) : fail(msg));
 
 console.log("\n1. Unit checks");
 execSync("node --experimental-strip-types --no-warnings src/core/lib/routes.check.ts", { stdio: "inherit" });
+execSync("node --experimental-strip-types --no-warnings src/core/canvas/channels.check.ts", { stdio: "inherit" });
 
 console.log("\n2. Build");
 execSync("npx astro build", { stdio: ["ignore", "ignore", "inherit"] });
