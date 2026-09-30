@@ -62,7 +62,21 @@ export default defineConfig({
     // @sanity/visual-editing pulls these through paths Vite's optimizer misses
     // → "504 Outdated Optimize Dep" and the overlay never mounts in dev.
     optimizeDeps: {
+      // Crawl EVERY source file at startup — the public pages, /preview (the
+      // visual editor's deps) and the Studio — so no dependency is discovered
+      // mid-session. A late discovery re-optimizes, and the open tab's lazy
+      // chunks (e.g. visual-editing's LoaderComlink) then 504: blank Studio,
+      // or a preview you can see but not edit.
+      entries: ["src/**/*.{ts,tsx,astro}", "sanity.config.ts"],
       include: [
+        "@sanity/visual-editing",
+        "@sanity/visual-editing/react",
+        "@sanity/visual-editing/create-data-attribute",
+        "@sanity/mutate",
+        "@sanity/client",
+        "@sanity/client/stega",
+        "@sanity/image-url",
+        "@portabletext/react",
         "react/compiler-runtime",
         "lodash/isObject.js",
         "lodash/groupBy.js",
