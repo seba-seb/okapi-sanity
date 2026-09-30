@@ -14,6 +14,12 @@ import { Card } from "./card/Card";
 import { Slider } from "./slider/Slider";
 import { Grid } from "./grid/Grid";
 import { Logo3d } from "./logo3d/Logo3d";
+import { HorizontalScroll } from "./horizontalScroll/HorizontalScroll";
+import { StackCards } from "./stackCards/StackCards";
+import { Marquee } from "./marquee/Marquee";
+import { TextScrub } from "./textScrub/TextScrub";
+import { BigType } from "./bigType/BigType";
+import { ParallaxMedia } from "./parallaxMedia/ParallaxMedia";
 import { CanvasLogo3dEditor } from "./logo3d/CanvasLogo3dEditor";
 
 /** Site side of the registry. Missing a type from meta.ts = type error. */
@@ -32,6 +38,12 @@ export const BLOCK_COMPONENTS: Record<ContentBlockType, ComponentType<BlockProps
   slider: Slider,
   grid: Grid,
   logo3d: Logo3d,
+  horizontalScroll: HorizontalScroll,
+  stackCards: StackCards,
+  marquee: Marquee,
+  textScrub: TextScrub,
+  bigType: BigType,
+  parallaxMedia: ParallaxMedia,
 };
 
 /** Block-specific canvas tools, mounted in the preview next to the core ones. */

@@ -50,6 +50,27 @@
 @layer components {
 /* SplitReveal: hidden until split so it doesn't flash in, then out. */
 [data-split] { visibility: hidden; }
+/* ── Creative / motion blocks ─────────────────────────────────────────── */
+/* Full-bleed bands inside the centered section container. */
+/* `.section__container > *` resets margins to 0 later in this file; match its
+   specificity + 1 so the negative full-bleed margin survives. */
+.section__container > .hscroll,
+.section__container > .marquee { align-self: stretch; margin-inline: calc(50% - 50vw); width: 100vw; }
+/* 100vw includes a classic (Windows) scrollbar; clip — not hidden — so sticky
+   and ScrollTrigger pins keep working. */
+body { overflow-x: clip; }
+.hscroll__track > * { flex: 0 0 var(--panel-w, 45vw); max-width: none; }
+@media (max-width: 767px) { .hscroll__track > * { flex-basis: max(var(--panel-w, 45vw), 80vw); } }
+.hscroll__track > .card,
+.hscroll__track > .media { min-height: 60vh; }
+.stack > * { position: sticky; top: calc(var(--nav-h) + 1rem); min-height: 65vh; transform-origin: center top; }
+.marquee__word { font-size: var(--h-4xl); font-weight: 700; line-height: 1.1; letter-spacing: -0.03em; padding-inline: 0.35em; white-space: nowrap; }
+.marquee__sep { font-size: var(--h-2xl); }
+.marquee--outline .marquee__word { color: transparent; -webkit-text-stroke: 2px var(--fg); }
+.bigtype { font-size: clamp(4rem, 16vw, 16rem); font-weight: 800; line-height: 0.9; letter-spacing: -0.05em; }
+.parallax__fallback { background: radial-gradient(120% 90% at 20% 10%, var(--brand), transparent 60%), radial-gradient(90% 90% at 90% 90%, var(--surface-2), var(--bg)); }
+@media (prefers-reduced-motion: reduce) { .hscroll__track { overflow-x: auto; width: auto; } }
+
 /* Room for ascenders/descenders: tight display line-heights would clip them. */
 .split-line-mask { padding-block: 0.12em; margin-block: -0.12em; }
 * {

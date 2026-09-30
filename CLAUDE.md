@@ -16,7 +16,8 @@ src/core/       Infrastructure. Same in every project — don't fork it per proj
   studio/       custom Studio inputs + listeners (preview → Studio writes)
   render/       PageBuilder, BlockRenderer, useLiveQuery, Welcome
   lib/          clean (stega), routes (pageHref/resolveLink), types
-  motion/       SplitReveal (GSAP SplitText + ScrollTrigger), preview-safe
+  motion/       gsap.ts (the ONE place GSAP is imported + the motion policy),
+                ScrollRefresh, useSplit, SplitReveal
 src/blocks/     The project's blocks. One folder per type: schema.ts + Component.tsx
   meta.ts       THE registry: type names, titles, container slots, canvas flags
   schemas.ts    type → schema     (typed against meta.ts)
@@ -27,6 +28,8 @@ src/theme/      Per project. tokens.css = the design tokens (edit this first);
 src/chrome/     Header/footer. Per project — restyle or replace.
 src/documents/  Document types: page, settings (singleton), navigation (singleton)
 src/pages/      Routes. /preview/[...slug] mirrors the public routes.
+                /lab/[slug] = dev-only stress harness (not built in production).
+src/lab/        LabHarness: replays editor mutations + checks (see "Testing motion").
 patches/        patch-package fixes for sanity@6.3.0 + @sanity/visual-editing@5.4.5
 ```
 
@@ -63,6 +66,48 @@ patches/        patch-package fixes for sanity@6.3.0 + @sanity/visual-editing@5.
 - **Design assets don't go in the CMS** (logos, textures): they're code.
 - Pinned: `sanity@6.3.0`, `@sanity/visual-editing@5.4.5` (overrides in
   package.json). Upgrading either means re-making `patches/` — see its README.
+
+## Motion blocks
+
+Horizontal Scroll (pinned), Stacked Cards (sticky + scrub), Marquee (loop +
+scroll velocity), Scroll Text (words light up), Big Type (chars), Parallax
+Media, plus the Heading `animation` field. Policy (`core/motion/gsap.ts`):
+
+| Kind | Examples | Public | Editor preview | Reduced motion |
+|---|---|---|---|---|
+| Layout | pin, horizontal scroll, sticky scrub, parallax | ✓ | ✓ (the editor must reach the content) | native fallback |
+| Decorative | text splits, entrances, marquee loop, clip reveals | ✓ | ✗ (would replay / re-split per keystroke) | ✗ |
+
+Rules for new motion blocks:
+- Import GSAP from `@/core/motion/gsap`, never from `"gsap"`.
+- `useGSAP` with `scope`; if the block has children, pass
+  `dependencies: [childKeys], revertOnUpdate: true` so inserts/removes rebuild it.
+- Pin an INNER element, never the one with `data-sanity` (React owns the outer
+  node; GSAP's pin-spacer goes between them).
+- Anything whose size can change without the page height changing (a track's
+  width) needs its own ResizeObserver → `ScrollTrigger.refresh()`.
+  `ScrollRefresh` covers page-height changes.
+- Full-bleed: `.section__container > .your-block { margin-inline: calc(50% - 50vw); width: 100vw }`
+  (the container resets child margins; match its specificity + 1).
+- On-screen-at-load elements get a time-based entrance, not a scrub (it would
+  start half-played).
+
+## Testing motion
+
+`npm run dev`, then open `/lab/<slug>` (append `?as-preview` for the editor's
+motion policy). The panel replays editor mutations on the real PageBuilder —
+typing into every text, inserting/removing items inside pinned bands,
+reversing/duplicating/deleting pinned sections, cycling animations and
+themes, 25 rapid edits — half of them while scrolled INTO a pin, and checks
+after each: React errors, one pin-spacer per band, pin distance = track
+travel, no dangling ScrollTriggers, no nested/stuck splits, no horizontal
+overflow, edited text rendered. Scripted: `await window.__lab.run()`.
+Seed the three test pages with `SANITY_WRITE_TOKEN=… node scripts/seed-lab.mjs`
+(/lab-noir, /lab-kinetic, /lab-stack — noindex).
+
+What /lab can't cover: the Presentation overlays themselves (hover boxes,
+drag handles) — those need the real Studio. Check them by hand in
+`/studio#/presentation` on a lab page.
 
 ## Add a block
 

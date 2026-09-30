@@ -40,6 +40,16 @@ export const BLOCKS = {
     slot: { field: "items", accepts: ["card", "contentWrapper", "imageBlock", "logo3d"] },
   },
   logo3d: { title: "3D Logo" },
+  // Creative / motion blocks
+  horizontalScroll: {
+    title: "Horizontal Scroll",
+    slot: { field: "items", accepts: ["card", "imageBlock", "contentWrapper"] },
+  },
+  stackCards: { title: "Stacked Cards", slot: { field: "items", accepts: ["card"] } },
+  marquee: { title: "Marquee" },
+  textScrub: { title: "Scroll Text" },
+  bigType: { title: "Big Type" },
+  parallaxMedia: { title: "Parallax Media" },
 } as const satisfies Record<string, BlockMeta>;
 
 export type BlockType = keyof typeof BLOCKS;

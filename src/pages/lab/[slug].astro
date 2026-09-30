@@ -1,0 +1,25 @@
+---
+// DEV-ONLY stress harness: /lab/<slug>[?as-preview]. Builds nothing in
+// production (getStaticPaths returns no paths).
+import type { GetStaticPaths } from "astro";
+
+import Base from "@/layouts/Base.astro";
+import { LabHarness } from "@/lab/LabHarness";
+import { loadQuery } from "@/core/sanity/client";
+import { loadSite } from "@/core/sanity/site";
+import { PAGE_QUERY } from "@/core/sanity/queries";
+import type { Page } from "@/core/lib/types";
+
+export const getStaticPaths = (async () => {
+  if (import.meta.env.PROD) return [];
+  const { routes } = await loadSite();
+  return Object.values(routes).map((slug) => ({ params: { slug } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params;
+const [page, site] = await Promise.all([loadQuery<Page>(PAGE_QUERY, { slug }), loadSite()]);
+---
+
+<Base site={site} meta={page} preview>
+  {page ? <LabHarness client:only="react" page={page} routes={site.routes} /> : <p>No page “{slug}”.</p>}
+</Base>

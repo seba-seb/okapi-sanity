@@ -15,6 +15,12 @@ import { card } from "./card/schema";
 import { slider } from "./slider/schema";
 import { grid } from "./grid/schema";
 import { logo3d } from "./logo3d/schema";
+import { horizontalScroll } from "./horizontalScroll/schema";
+import { stackCards } from "./stackCards/schema";
+import { marquee } from "./marquee/schema";
+import { textScrub } from "./textScrub/schema";
+import { bigType } from "./bigType/schema";
+import { parallaxMedia } from "./parallaxMedia/schema";
 
 /** Studio side of the registry. Missing a type from meta.ts = type error. */
 export const BLOCK_SCHEMAS: Record<BlockType, SchemaTypeDefinition> = {
@@ -31,6 +37,12 @@ export const BLOCK_SCHEMAS: Record<BlockType, SchemaTypeDefinition> = {
   slider,
   grid,
   logo3d,
+  horizontalScroll,
+  stackCards,
+  marquee,
+  textScrub,
+  bigType,
+  parallaxMedia,
 };
 
 // Blocks without their own `icon` fall back to CubeIcon (overlay chip + menus).

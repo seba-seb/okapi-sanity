@@ -114,6 +114,12 @@ const DEFAULTS = {
   card: () => ({ layout: "imageTop", heading: CARD_HEADING, body: CARD_BODY }),
   grid: () => ({ items: [defaultCard()] }),
   logo3d: () => ({ preset: "shape1", maxWidth: 35 }),
+  horizontalScroll: () => ({ panelWidth: 45, items: [defaultCard(), defaultCard(), defaultCard(), defaultCard()] }),
+  stackCards: () => ({ items: [defaultCard(), defaultCard(), defaultCard()] }),
+  marquee: () => ({ items: ["Strategy", "Design", "Motion", "Code"], separator: "✦", direction: "left", duration: 24 }),
+  textScrub: () => ({ size: "xl", text: PARAGRAPH_TEXT }),
+  bigType: () => ({ text: "Remarkable", effect: "rise" }),
+  parallaxMedia: () => ({ height: 80, strength: 15, reveal: true }),
 };
 // Keys are checked against the registry; callers look up by raw `_type` string.
 export const INSERT_DEFAULTS: Record<string, Factory | undefined> =
