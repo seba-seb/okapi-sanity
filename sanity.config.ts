@@ -14,6 +14,7 @@ import { apiVersion, dataset, projectId } from "./src/core/sanity/env";
 import { schemaTypes, SINGLETONS } from "./src/schema";
 import { structure } from "./src/core/sanity/structure";
 import { resolve } from "./src/core/sanity/presentation";
+import { PageNavigator } from "./src/core/studio/PageNavigator";
 import { PreviewSelect } from "./src/core/studio/PreviewSelect";
 import { TooltipDescriptionField } from "./src/core/studio/TooltipDescriptionField";
 import { CanvasResizeListener } from "./src/core/studio/CanvasResizeListener";
@@ -124,6 +125,11 @@ export default defineConfig({
     structureTool({ structure }),
     presentationTool({
       resolve,
+      // Page picker in the side panel. `unstable_navigator` lives under
+      // `components` in sanity@6 (not top-level `navigator`).
+      components: {
+        unstable_navigator: { component: PageNavigator, minWidth: 200, maxWidth: 320 },
+      },
       previewUrl: {
         // Relative: the Studio is embedded, so its origin IS the site.
         initial: "/preview",
