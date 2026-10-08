@@ -12,7 +12,7 @@ import { randomKey } from "./paths";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
 import { FieldList, PagesContext, UploadContext, type View } from "./FieldControls";
-import { canPlace, duplicateMany, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
+import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
 import { plainToPt } from "./text";
 
 type Row = { _id: string; title?: string; slug?: string };
@@ -346,6 +346,7 @@ function PageEditor({
           else select(msg.path);
         }
         else if (msg.type === "key") onKeyRef.current(msg);
+        else if (msg.type === "move") act((d) => moveNextTo(d, msg.from, msg.target, msg.position));
         else if (msg.type === "text") {
           const rich = msg.kind === "pt";
           writeField(msg.path, msg.field, msg.pt ?? (rich ? plainToPt(msg.value) : msg.value), rich ? "rich" : "text", `text:${msg.path}.${msg.field}`);
@@ -360,7 +361,7 @@ function PageEditor({
           }
         }
       }),
-    [setField, upload, writeField],
+    [act, setField, upload, writeField],
   );
 
   // ── Editor → canvas: every local edit re-renders the canvas immediately.

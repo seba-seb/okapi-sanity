@@ -1,7 +1,7 @@
 // Run: node --experimental-strip-types src/core/editor/ops.check.ts  (also run by verify)
 import assert from "node:assert/strict";
 
-import { canPlace, duplicate, duplicateMany, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, topmost } from "./ops.ts";
+import { canPlace, duplicate, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, topmost } from "./ops.ts";
 
 const h = (k: string) => ({ _type: "heading", _key: k, text: [] });
 const doc = {
@@ -71,6 +71,12 @@ assert.deepEqual(keysOf(nudgeMany(three, [P("b"), P("c")], -1).doc.sections![0].
 assert.deepEqual(keysOf(nudgeMany(three, [P("a"), P("b")], -1).doc.sections![0].content as never), ["a", "b", "c"]); // blocked at the top, b doesn't leapfrog a
 const im = insertMany(three, P("a"), [h("x"), h("y")]);
 assert.deepEqual(keysOf(im.doc.sections![0].content as never), ["a", "x", "y", "b", "c"]);
+
+// Canvas drop next to a block
+assert.deepEqual(keysOf(moveNextTo(three, P("a"), P("c"), "after").doc.sections![0].content as never), ["b", "c", "a"]);
+assert.deepEqual(keysOf(moveNextTo(three, P("c"), P("a"), "before").doc.sections![0].content as never), ["c", "a", "b"]);
+assert.deepEqual(keysOf(moveNextTo(doc, H1, 'sections[_key=="s2"].content[_key=="h2"]', "after").doc.sections![1].content as never), ["h2", "h1"]);
+assert.throws(() => moveNextTo(doc, H1, C1, "before")); // a heading can't go into the grid
 
 // Helpers
 assert.equal(parentBlock(C1), G1);

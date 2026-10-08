@@ -116,7 +116,9 @@ function runChecks(lastMarker: string | null): Check[] {
     const track = h.querySelector<HTMLElement>(".hscroll__track");
     const pin = spacer?.firstElementChild as HTMLElement | null;
     if (!spacer || !track || !pin) return [];
-    const expected = innerHeight + Math.max(0, track.scrollWidth - pin.clientWidth);
+    // Spacer = the pinned element's own height (it can outgrow the viewport
+    // when its content grows) + the horizontal travel.
+    const expected = pin.offsetHeight + Math.max(0, track.scrollWidth - pin.clientWidth);
     const diff = Math.abs(spacer.offsetHeight - expected);
     return diff > 6 ? [`${spacer.offsetHeight} vs ${expected}`] : [];
   });

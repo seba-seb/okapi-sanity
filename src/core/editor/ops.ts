@@ -222,3 +222,13 @@ export function insertMany(doc: Doc, selected: string | null, blocks: Block[]): 
   }
   return { doc: d, paths: out };
 }
+
+/** Move `from` right before/after `target` (a canvas drop). Validated like any move. */
+export function moveNextTo(doc: Doc, from: string, target: string, position: "before" | "after"): { doc: Doc; path: string } {
+  const t = resolveSelection(doc, target);
+  const f = resolveSelection(doc, from);
+  if (!t || !f || from === target) return { doc, path: from };
+  const siblings = t.parentArray.filter((x) => x._key !== f.item._key);
+  const index = siblings.findIndex((x) => x._key === t.item._key) + (position === "after" ? 1 : 0);
+  return move(doc, from, t.parentArrayPath, index);
+}

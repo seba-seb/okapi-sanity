@@ -93,6 +93,11 @@ device widths. Client view: content fields + reorder only.
 Rich text edits in place too: a floating bar (B, I, Link, Unlink; ⌘B ⌘I ⌘K) —
 `core/editor/richtext.ts` maps PT ⇄ editable HTML, keeping existing link
 targets (internal/external) via their markDef key; new links are external.
+**Multi-select**: shift/⌘-click blocks (canvas or layers); delete, duplicate,
+copy/paste and ▲▼ apply to all of them.
+**Drag on the canvas**: the selected block shows a ⠿ grip — drag it; a blue
+line shows where it lands (before/after the block under the pointer,
+horizontal inside rows/grids). Validated like any move (`moveNextTo`).
 **▶ Play** remounts the canvas once with decorative motion on (the canvas
 keeps it still while you edit); a block you edit afterwards goes still again.
 

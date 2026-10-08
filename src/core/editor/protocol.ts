@@ -20,6 +20,8 @@ export type ToEditor =
   | { type: "select"; path: string | null; add?: boolean }
   /** Inline text edit. `final` on Enter/blur; intermediate ones keep the draft live. */
   | { type: "text"; path: string; field: string; kind: "pt" | "string"; value: string; pt?: unknown[]; final: boolean }
+  /** A block dragged on the canvas and dropped before/after another. */
+  | { type: "move"; from: string; target: string; position: "before" | "after" }
   /** A file dropped on an image-bearing block. */
   | { type: "drop"; path: string; field: string; file: File }
   /** Shortcut pressed while focus is in the canvas. */

@@ -95,6 +95,54 @@ export function CanvasApp() {
   const hoverEl = useRef<Element | null>(null);
   const dropEl = useRef<Element | null>(null);
   const [replayKey, setReplayKey] = useState(0);
+  // Canvas drag: the selected block, dropped before/after the block under the pointer.
+  const [dropLine, setDropLine] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const startDrag = (e: React.PointerEvent) => {
+    const from = selected;
+    if (!from) return;
+    e.preventDefault();
+    let target: { path: string; position: "before" | "after" } | null = null;
+    const onMove = (ev: PointerEvent) => {
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      const el = under ? (under.closest("[data-instance]") ?? under.closest("[data-sanity-path]")) : null;
+      const path = el?.getAttribute("data-sanity-path");
+      // Not onto itself or into its own subtree; not inside an instance's inner blocks.
+      if (!el || !path || path === from || path.startsWith(`${from}.`) || path.includes(".__component.")) {
+        target = null;
+        setDropLine(null);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const parent = el.parentElement;
+      const cs = parent ? getComputedStyle(parent) : null;
+      const horizontal = !!cs && ((cs.display.includes("flex") && cs.flexDirection.startsWith("row")) || cs.display.includes("grid"));
+      const after = horizontal ? ev.clientX > r.left + r.width / 2 : ev.clientY > r.top + r.height / 2;
+      target = { path, position: after ? "after" : "before" };
+      setDropLine(
+        horizontal
+          ? { top: r.top, left: after ? r.right - 1 : r.left - 2, width: 3, height: r.height }
+          : { top: after ? r.bottom - 1 : r.top - 2, left: r.left, width: r.width, height: 3 },
+      );
+    };
+    const finish = (ev: Event) => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("keydown", onEsc);
+      setDropLine(null);
+      document.body.style.cursor = "";
+      if (ev.type === "pointerup" && target) post(window.parent, { type: "move", from, target: target.path, position: target.position });
+    };
+    const onEsc = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        target = null;
+        finish(ev);
+      }
+    };
+    document.body.style.cursor = "grabbing";
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("keydown", onEsc);
+  };
   const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box; bar: Box; multi: Box[] }>({ hover: null, sel: null, drop: null, bar: null, multi: [] });
 
   useEffect(() => {
@@ -126,6 +174,7 @@ export function CanvasApp() {
       t instanceof Element ? (t.closest("[data-instance]") ?? t.closest("[data-sanity-path]")) : null;
 
     const onClick = (e: MouseEvent) => {
+      if ((e.target as Element).closest("[data-format-bar], [data-drag-handle]")) return; // our own controls
       if (editing.current && (e.target as Element).closest("[contenteditable]")) return; // clicking inside the edit
       e.preventDefault();
       e.stopPropagation();
@@ -327,6 +376,11 @@ export function CanvasApp() {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
+    // Dev/test hook: hidden tabs pause rAF; let a test force one measurement.
+    if (import.meta.env.DEV) (window as { __canvasMeasure?: () => void }).__canvasMeasure = () => {
+      cancelAnimationFrame(raf);
+      tick();
+    };
     return () => cancelAnimationFrame(raf);
   }, [selected, others]);
 
@@ -348,6 +402,8 @@ export function CanvasApp() {
       {page ?? <p style={{ padding: 32, font: "14px system-ui", opacity: 0.6 }}>This page has no sections yet. Add one from the editor.</p>}
       <Outline box={boxes.hover} color="#6b8cff" dashed />
       <Outline box={boxes.sel} color="#2f5bff" />
+      {boxes.sel && !boxes.bar ? <DragHandle box={boxes.sel} onPointerDown={startDrag} /> : null}
+      {dropLine ? <div data-drop-line="" style={{ position: "fixed", ...dropLine, background: "#2f5bff", borderRadius: 2, pointerEvents: "none", zIndex: 2147483647 }} /> : null}
       {boxes.multi.map((b, i) => (
         <Outline key={i} box={b} color="#2f5bff" />
       ))}
@@ -408,6 +464,35 @@ function FormatBar({ box, run }: { box: NonNullable<Box>; run: (c: "bold" | "ita
       {btn("italic", <i>I</i>, "Italic (⌘I)")}
       {btn("link", "Link", "Link (⌘K)")}
       {btn("unlink", "Unlink", "Remove link")}
+    </div>
+  );
+}
+
+/** Grip on the selection: drag it to move the block (drop before/after another). */
+function DragHandle({ box, onPointerDown }: { box: NonNullable<Box>; onPointerDown: (e: React.PointerEvent) => void }) {
+  return (
+    <div
+      data-drag-handle=""
+      title="Drag to move"
+      onPointerDown={onPointerDown}
+      style={{
+        position: "fixed",
+        top: box.top > 20 ? box.top - 20 : box.top,
+        left: box.left + box.width - 26,
+        width: 24,
+        height: 18,
+        background: "#2f5bff",
+        color: "#fff",
+        borderRadius: "3px 3px 0 0",
+        font: "600 12px/18px system-ui",
+        textAlign: "center",
+        cursor: "grab",
+        zIndex: 2147483647,
+        userSelect: "none",
+        touchAction: "none",
+      }}
+    >
+      ⠿
     </div>
   );
 }
