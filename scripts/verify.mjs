@@ -59,16 +59,19 @@ const sitePages = publicHtml.filter((f) => !f.includes("edit-canvas"));
 const leaks = sitePages.filter((f) => /EditorTool|CanvasApp|studio-component/.test(readFileSync(f, "utf8")));
 check(leaks.length === 0, `no editor/Studio bundle in public HTML${leaks.length ? `: ${leaks.join(", ")}` : ""}`);
 
-// The JS a public page actually loads: entry scripts + their static imports.
+// The JS a public page can load: entry scripts, their dynamic imports (the
+// island hydrator, counted as if the page has islands) and every static import.
+// Per-block lazy chunks (three.js for logo3d) load only with that block: not counted.
 function jsGraph(html) {
   const seen = new Set();
-  const visit = (f) => {
+  const visit = (f, entry) => {
     if (seen.has(f) || !existsSync(join(outDir, f))) return;
     seen.add(f);
     const src = readFileSync(join(outDir, f), "utf8");
-    for (const m of src.matchAll(/(?:from|import)\s*\(?\s*["'](\.\/[^"']+\.js)["']/g)) visit(join(f, "..", m[1]));
+    for (const m of src.matchAll(/(?:from|import)\s*["'](\.\/[^"']+\.js)["']/g)) visit(join(f, "..", m[1]));
+    if (entry) for (const m of src.matchAll(/import\(\s*["'`](\.\/[^"'`]+\.js)["'`]/g)) visit(join(f, "..", m[1]));
   };
-  for (const m of html.matchAll(/\/_astro\/[^"]+?\.js/g)) visit(m[0]);
+  for (const m of html.matchAll(/\/_astro\/[^"]+?\.js/g)) visit(m[0], true);
   return [...seen];
 }
 const homeGraph = jsGraph(readFileSync(join(outDir, "index.html"), "utf8"));

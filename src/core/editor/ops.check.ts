@@ -1,6 +1,7 @@
 // Run: node --experimental-strip-types src/core/editor/ops.check.ts  (also run by verify)
 import assert from "node:assert/strict";
 
+import { needsJs } from "../../blocks/meta.ts";
 import { canPlace, duplicate, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, topmost } from "./ops.ts";
 
 const h = (k: string) => ({ _type: "heading", _key: k, text: [] });
@@ -77,6 +78,12 @@ assert.deepEqual(keysOf(moveNextTo(three, P("a"), P("c"), "after").doc.sections!
 assert.deepEqual(keysOf(moveNextTo(three, P("c"), P("a"), "before").doc.sections![0].content as never), ["c", "a", "b"]);
 assert.deepEqual(keysOf(moveNextTo(doc, H1, 'sections[_key=="s2"].content[_key=="h2"]', "after").doc.sections![1].content as never), ["h2", "h1"]);
 assert.throws(() => moveNextTo(doc, H1, C1, "before")); // a heading can't go into the grid
+
+// Islands: a section needs JS only if some block in its tree does
+assert.equal(needsJs(doc.sections[0]), false);
+assert.equal(needsJs({ _type: "section", content: [{ _type: "grid", items: [{ _type: "logo3d" }] }] }), true);
+assert.equal(needsJs([{ _type: "heading", animation: "none" }]), false);
+assert.equal(needsJs([{ _type: "heading", animation: "words" }]), true);
 
 // Helpers
 assert.equal(parentBlock(C1), G1);

@@ -80,5 +80,9 @@ const jsonLd = isHome
     <SiteHeader {...chrome} />
     <slot />
     <SiteFooter {...chrome} />
+    <script>
+      // Pages are plain HTML; React + the blocks load only if a section needs JS.
+      if (document.querySelector("[data-island]")) import("@/core/render/hydrate");
+    </script>
   </body>
 </html>

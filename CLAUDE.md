@@ -60,6 +60,13 @@ patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
   palette is removed on purpose (no `bg-red-500`): add colours to tokens.css
   + the `@theme inline` map. No preflight, so the starter's base CSS is
   untouched; it lives in `@layer components`, so utilities override it.
+- **Public pages are plain HTML; only sections that need JS hydrate.** A block
+  with `js` in `meta.ts` (motion, slider, WebGL — or a predicate, e.g. Heading
+  only when `animation` is set) turns its top-level section into an island
+  (`PageBuilder islands` → `[data-island]` → `core/render/hydrate.tsx`, loaded
+  by `Base.astro` only if the page has one). A page without such blocks ships
+  ~1 KB of JS. **A block with hooks/effects/handlers MUST declare `js`**, or it
+  renders but never runs on the public site. The editor canvas is unaffected.
 - **Design assets don't go in the CMS** (logos, textures): they're code.
 - Pinned: `sanity@6.3.0` (override in package.json). Upgrading means
   re-making `patches/` — see its README.
@@ -169,7 +176,8 @@ Seed the three test pages with `SANITY_WRITE_TOKEN=… node scripts/seed-lab.mjs
 1. `src/blocks/<type>/schema.ts` (`defineType`, icon from `@sanity/icons`) and
    `src/blocks/<type>/<Type>.tsx` (receives `{ block, path, ctx }`; put
    `{...editable(ctx.documentId, ctx.documentType, path, block._type)}` on its root).
-2. Add `<type>: { title, slot?, margin? }` to `blocks/meta.ts`.
+2. Add `<type>: { title, slot?, margin?, js? }` to `blocks/meta.ts` (`js` if it
+   runs anything in the browser — see Rules).
 3. Register it in `blocks/schemas.ts` and `blocks/components.tsx` — the
    compiler errors until you do.
 4. Optional: insert defaults in `blocks/defaults.ts`; inline-editable text in
