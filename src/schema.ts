@@ -5,6 +5,7 @@ import { page } from "@/documents/page";
 import { settings } from "@/documents/settings";
 import { navigation } from "@/documents/navigation";
 import { BLOCK_SCHEMAS } from "@/blocks/schemas";
+import { blockStyle, styleProps } from "@/core/style/schema";
 
 /** Singletons: one fixed document each, no create/delete/duplicate. */
 export const SINGLETONS = ["settings", "navigation"] as const;
@@ -16,5 +17,7 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   navigation,
   link,
   navItem,
+  blockStyle,
+  styleProps,
   ...Object.values(BLOCK_SCHEMAS),
 ];

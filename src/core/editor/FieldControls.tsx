@@ -175,17 +175,26 @@ function FieldControl({ field, value, parent, path, onChange, view }: { field: F
       </label>
     );
   if (is(t, "image")) return <ImageControl label={label} value={value} path={path} onChange={onChange} />;
-  if (t.jsonType === "object" && (t as ObjectSchemaType).fields)
-    return (
-      <fieldset style={{ border: "1px solid color-mix(in srgb, currentColor 15%, transparent)", borderRadius: 8, padding: 10, margin: 0 }}>
+  if (t.jsonType === "object" && (t as ObjectSchemaType).fields) {
+    const body = <FieldList type={t as ObjectSchemaType} value={(value as Record<string, unknown>) ?? {}} basePath={path} onChange={onChange} view={view} />;
+    const opts = (t.options ?? {}) as { collapsible?: boolean; collapsed?: boolean };
+    return opts.collapsible ? (
+      <details open={!opts.collapsed} style={group}>
+        <summary style={{ ...labelStyle, cursor: "pointer", marginBottom: 8 }}>{title}</summary>
+        {body}
+      </details>
+    ) : (
+      <fieldset style={group}>
         <legend style={labelStyle}>{title}</legend>
-        <FieldList type={t as ObjectSchemaType} value={(value as Record<string, unknown>) ?? {}} basePath={path} onChange={onChange} view={view} />
+        {body}
       </fieldset>
     );
+  }
   return <p style={muted}>{title}: {typeName(t)} not editable here yet.</p>;
 }
 
 const muted = { opacity: 0.6, fontSize: 12, margin: 0 } as const;
+const group = { border: "1px solid color-mix(in srgb, currentColor 15%, transparent)", borderRadius: 8, padding: 10, margin: 0 } as const;
 const hint = { opacity: 0.55, fontSize: 11 } as const;
 const labelStyle = { fontSize: 12, fontWeight: 600, marginBottom: 6, opacity: 0.85 } as const;
 const input = {

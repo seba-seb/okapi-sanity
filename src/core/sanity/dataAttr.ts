@@ -38,8 +38,10 @@ export function editable(
   blockType?: string,
   /** Overrides the label — e.g. a section passes "Section — <name>". */
   title?: string,
-): { "data-sanity-title": string; "data-sanity-path": string; "data-sanity-type": string } {
+): { "data-sanity-title": string; "data-sanity-path": string; "data-sanity-type": string; "data-b": string } {
   return {
+    // The block's _key: what core/style/stylesheet targets.
+    "data-b": path.match(/\[_key=="([^"]+)"\]$/)?.[1] ?? "",
     "data-sanity-title": title || blockTitle(blockType),
     "data-sanity-path": path,
     "data-sanity-type": blockType ?? "",

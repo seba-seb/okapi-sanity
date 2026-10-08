@@ -3,6 +3,7 @@ import { dedupeByKey } from "@/core/lib/dedupe";
 import type { Page } from "@/core/lib/types";
 import { RoutesContext, type Routes } from "@/core/lib/routes";
 import { ScrollRefresh } from "@/core/motion/ScrollRefresh";
+import { stylesheet } from "@/core/style/stylesheet";
 
 import { Section } from "@/blocks/section/Section";
 
@@ -17,9 +18,11 @@ export function PageBuilder({ page, routes }: { page: Page; routes: Routes }) {
   const ctx = { documentId: baseIdOf(page._id), documentType: "page" };
   const sections = page.sections;
   if (!sections?.length) return null;
+  const css = stylesheet(sections);
   return (
     <RoutesContext.Provider value={routes}>
       <ScrollRefresh />
+      {css ? <style>{css}</style> : null}
       <main>
         {dedupeByKey(sections).map((section) => (
           <Section key={section._key} section={section} path={keyed("sections", section._key)} ctx={ctx} />

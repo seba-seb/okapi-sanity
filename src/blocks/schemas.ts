@@ -1,5 +1,6 @@
 import type { SchemaTypeDefinition } from "sanity";
 import { CubeIcon } from "@sanity/icons";
+import { defineField } from "sanity";
 
 import type { BlockType } from "./meta";
 import { section } from "./section/schema";
@@ -45,8 +46,14 @@ export const BLOCK_SCHEMAS: Record<BlockType, SchemaTypeDefinition> = {
   parallaxMedia,
 };
 
-// Blocks without their own `icon` fall back to CubeIcon (overlay chip + menus).
+// Every block: a CubeIcon fallback, and the shared `design` field (tokens +
+// breakpoints, rendered by core/style/stylesheet) — in its Styles tab if any.
 for (const schema of Object.values(BLOCK_SCHEMAS)) {
-  const s = schema as { icon?: unknown };
+  const s = schema as { icon?: unknown; fields?: { name: string }[]; groups?: { name: string }[] };
   if (!s.icon) s.icon = CubeIcon;
+  // Named `design`, not `style`: Button already has a `style` (primary/outline…).
+  if (s.fields && !s.fields.some((f) => f.name === "design")) {
+    const group = s.groups?.find((g) => /^styles?$/.test(g.name))?.name;
+    s.fields.push(defineField({ name: "design", title: "Style", type: "blockStyle", ...(group ? { group } : {}) }));
+  }
 }
