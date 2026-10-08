@@ -247,13 +247,13 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <button type="button" data-set-mode="vibe" aria-pressed="true">Vibe coding</button>
       <button type="button" data-set-mode="tech" aria-pressed="false">Técnico</button>
     </div>
-    <p class="mode-hint" data-only="vibe">Cómo trabajar pidiéndole a Claude.</p>
+    <p class="mode-hint" data-only="vibe">Cómo pedírselo a tu agente.</p>
     <p class="mode-hint" data-only="tech">Cómo está hecho por dentro.</p>
-    <h2 data-only="vibe">Trabajar con Claude</h2>
+    <h2 data-only="vibe">Con tu agente</h2>
     <ol data-only="vibe">
       <li><a href="#que-es">Qué es</a></li>
-      <li><a href="#flujo">Cómo se trabaja</a></li>
-      <li><a href="#prompts">Qué pedirle</a></li>
+      <li><a href="#instalar">Sumarlo a tu proyecto</a></li>
+      <li><a href="#prompts">Qué pedirle después</a></li>
       <li><a href="#pedir-bien">Para pedir bien</a></li>
       <li><a href="#editor">El editor</a></li>
       <li><a href="#componentes">Componentes</a></li>
@@ -274,9 +274,10 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <li><a href="#bloques">Bloques</a></li>
       <li><a href="#motion">Motion</a></li>
     </ol>
-    <h2 data-only="tech">Trabajar con él</h2>
+    <h2 data-only="tech">Integración</h2>
     <ol data-only="tech">
-      <li><a href="#nuevo-proyecto">Proyecto nuevo</a></li>
+      <li><a href="#instalacion">Instalación</a></li>
+      <li><a href="#contrato">Contrato con tu proyecto</a></li>
       <li><a href="#codigo">El código</a></li>
       <li><a href="#agregar-bloque">Agregar un bloque</a></li>
       <li><a href="#publicar">Hosting y publicación</a></li>
@@ -300,8 +301,8 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       </div>
       <ol data-only="vibe">
         <li><a href="#que-es">Qué es</a></li>
-        <li><a href="#flujo">Cómo se trabaja</a></li>
-        <li><a href="#prompts">Qué pedirle</a></li>
+        <li><a href="#instalar">Sumarlo a tu proyecto</a></li>
+        <li><a href="#prompts">Qué pedirle después</a></li>
         <li><a href="#pedir-bien">Para pedir bien</a></li>
         <li><a href="#editor">El editor</a></li>
         <li><a href="#componentes">Componentes</a></li>
@@ -320,7 +321,8 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <li><a href="#componentes">Componentes</a></li>
         <li><a href="#bloques">Bloques</a></li>
         <li><a href="#motion">Motion</a></li>
-        <li><a href="#nuevo-proyecto">Proyecto nuevo</a></li>
+        <li><a href="#instalacion">Instalación</a></li>
+      <li><a href="#contrato">Contrato con tu proyecto</a></li>
         <li><a href="#codigo">El código</a></li>
         <li><a href="#agregar-bloque">Agregar un bloque</a></li>
         <li><a href="#publicar">Hosting y publicación</a></li>
@@ -334,10 +336,10 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
 
     <!-- ───────────────────────── Hero ───────────────────────── -->
     <header id="inicio" class="hero">
-      <p class="eyebrow">Starter + editor visual · uso interno</p>
+      <p class="eyebrow">Sanity + editor visual para Astro · uso interno</p>
       <h1>Remarkable</h1>
-      <p class="lead">La base con la que arrancamos cada sitio de cliente: un sitio Astro estático y rápido, un editor visual propio para armar y editar páginas sobre el diseño real, y Sanity guardando el contenido.</p>
-      <p class="lead" data-only="vibe">Está pensado para construirse con Claude: le pedís lo que querés en tus palabras, y las reglas del proyecto hacen que el resultado sea consistente, liviano y editable.</p>
+      <p class="lead">Remarkable se suma a un proyecto Astro, nuevo o ya empezado, y le da dos cosas: Sanity como base de datos y un editor visual propio donde el equipo y los clientes arman y editan las páginas sobre el diseño real.</p>
+      <p class="lead" data-only="vibe">Lo instala tu agente de código, el que uses, siguiendo una guía del repo. Esta vista explica cómo pedírselo y cómo se trabaja después.</p>
       <ul class="stack-line" aria-label="Stack">
         <li><b>Astro</b> 7.3 · estático</li>
         <li><b>Sanity</b> 6.3.0 · fijo</li>
@@ -349,31 +351,31 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <div><strong>≈1 KB</strong><span>de JS en una página sin bloques animados</span></div>
         <div><strong>138 KB</strong><span>de JS (gzip) en una página con motion</span></div>
         <div><strong>0 KB</strong><span>del editor en el sitio público, controlado en cada build</span></div>
-        <div><strong>≈4 s</strong><span>de build completo, Studio incluido</span></div>
+        <div><strong>2</strong><span>caminos: proyecto nuevo o proyecto Astro existente</span></div>
       </div>
-      <div class="switch-note" data-only="vibe">Estás en la guía para trabajar con Claude. <button type="button" data-set-mode="tech">Ver la documentación técnica</button></div>
-      <div class="switch-note" data-only="tech">Estás en la documentación técnica. <button type="button" data-set-mode="vibe">Ver la guía para trabajar con Claude</button></div>
+      <div class="switch-note" data-only="vibe">Estás en la guía para trabajar con tu agente. <button type="button" data-set-mode="tech">Ver la documentación técnica</button></div>
+      <div class="switch-note" data-only="tech">Estás en la documentación técnica. <button type="button" data-set-mode="vibe">Ver la guía para trabajar con tu agente</button></div>
     </header>
 
     <!-- ───────────────────────── Qué es ───────────────────────── -->
     <section id="que-es">
       <div class="prose">
         <p class="eyebrow">Producto</p>
-        <h2>Qué es y para quién</h2>
-        <p>Remarkable es un repo plantilla. Cada proyecto nuevo se copia de él y se personaliza en tokens, header, footer y bloques. La infraestructura (<code>src/core</code>) es la misma en todos los proyectos. Tiene tres partes:</p>
+        <h2>Qué es</h2>
+        <p>No es un template de sitio. Remarkable es la capa de contenido y edición que se suma a un proyecto Astro. Tu proyecto sigue siendo tuyo: tus páginas, tu diseño y tu deploy. Remarkable agrega:</p>
       </div>
       <div class="parts">
         <div class="part">
-          <h3>Sitio público</h3>
-          <p>Astro genera HTML estático en el build. Solo las secciones con animaciones o sliders cargan JavaScript. Funciona en cualquier hosting estático.</p>
+          <h3>Sanity como base de datos</h3>
+          <p>Login, roles, borradores, historial, imágenes y CDN. No lo mantenemos nosotros. El Studio queda en <code>/studio</code> de tu sitio.</p>
         </div>
         <div class="part">
           <h3>Remarkable Editor</h3>
-          <p>Nuestro editor visual, como pestaña del Studio en <code>/studio#/editor</code>. Se edita texto sobre la página, se arrastran bloques, se estilan con tokens y se arman componentes.</p>
+          <p>Nuestro editor visual en <code>/studio#/editor</code>. Se escribe sobre la página, se arrastran bloques, se estila con tus tokens y se arman componentes.</p>
         </div>
         <div class="part">
-          <h3>Sanity</h3>
-          <p>La base de datos. Login, roles, borradores, historial, imágenes y CDN. No lo mantenemos nosotros; el Studio queda para settings, menús y colecciones.</p>
+          <h3>Páginas que salen del editor</h3>
+          <p>Las rutas que elijas se arman en el editor y se sirven como HTML estático. Solo las secciones animadas cargan JavaScript.</p>
         </div>
       </div>
 
@@ -395,94 +397,120 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <p class="small muted prose">Con <code>editor</code> el cliente publica solo. Con <code>contributor</code> deja borradores y publica alguien del equipo. Los roles disponibles dependen del plan de Sanity.</p>
     </section>
 
-
-    <!-- ───────────────────────── Vibe: flujo ───────────────────────── -->
-    <section id="flujo" data-only="vibe">
+    <!-- ───────────────────────── Vibe: instalar ───────────────────────── -->
+    <section id="instalar" data-only="vibe">
       <div class="prose">
-        <p class="eyebrow">Trabajar con Claude</p>
-        <h2>Cómo se trabaja</h2>
-        <p>Cada proyecto se construye conversando con Claude Code dentro de la carpeta del sitio. No hace falta explicarle el stack: Claude lee <code>CLAUDE.md</code> al empezar, y ahí están todas las reglas del proyecto.</p>
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Sumarlo a tu proyecto</h2>
+        <p>La instalación está escrita en el <code>INSTALL.md</code> del repo, pensado para que lo siga cualquier agente de código: Claude Code, Codex, Cursor u otro. Abrí tu agente en la carpeta del proyecto y pedíselo.</p>
       </div>
-      <ol class="steps prose">
-        <li><div><strong>Abrís el proyecto en Claude Code</strong><p>La carpeta del sitio, con <code>npm run dev</code> corriendo en <code>localhost:4321</code>.</p></div></li>
-        <li><div><strong>Pedís el resultado, no la implementación</strong><p>En tus palabras y con una referencia: captura, link de Figma o una web que te guste.</p></div></li>
-        <li><div><strong>Claude lo hace y lo verifica</strong><p>Cambia el código siguiendo las reglas y corre <code>npm run verify</code>.</p></div></li>
-        <li><div><strong>Lo mirás en el sitio y en el editor</strong><p>El sitio en <code>localhost:4321</code>; el editor en <code>/studio#/editor</code>, para confirmar que se puede editar.</p></div></li>
-        <li><div><strong>Lo guardás</strong><p>"Commiteá y pusheá." El contenido (textos, imágenes, orden) se publica desde el editor, no desde el código.</p></div></li>
-      </ol>
-      <div class="note">
-        <strong>Una vez por máquina</strong>
-        <p>Instalá la skill para arrancar proyectos: <code>cp -R skills/remarkable-astro ~/.claude/skills/</code> desde el repo del starter. Después alcanza con pedir "un proyecto nuevo con Remarkable".</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Cualquier agente</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Cloná seba-seb/Remarkable-Astro en /tmp/remarkable y seguí su INSTALL.md para sumar Remarkable a este proyecto.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Detecta si el proyecto es nuevo o existente, te hace las preguntas que faltan, copia lo necesario sin pisar tus archivos, configura Sanity y corre verify.</div><div><b>Vos revisás</b>Que tus páginas sigan igual, que <code>/studio</code> abra y que el editor muestre la página.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Claude Code, con la skill instalada</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Sumá Remarkable a este proyecto.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>La skill <code>remarkable-astro</code> trae el mismo INSTALL.md y lo sigue.</div><div><b>Vos revisás</b>Lo mismo. La skill se instala una vez con <code>cp -R skills/remarkable-astro ~/.claude/skills/</code> desde el repo.</div></div>
+        </article>
+      </div>
+      <div class="prose">
+        <h3>Proyecto nuevo o existente</h3>
+        <ul>
+          <li><strong>Carpeta vacía:</strong> el agente parte del repo de Remarkable, que ya es un proyecto Astro con bloques de ejemplo que después reemplazás.</li>
+          <li><strong>Proyecto existente:</strong> el agente suma Remarkable a tu proyecto. Tus páginas, tu layout y tu configuración quedan. Las páginas del editor se sirven en las rutas que no existan, o donde le indiques.</li>
+        </ul>
+        <h3>Qué te va a preguntar</h3>
+        <ul>
+          <li>En qué organización de Sanity va el proyecto, o el project ID si ya lo creaste.</li>
+          <li>Si el proyecto existe: qué rutas salen del editor y si la home sale del editor o queda la tuya.</li>
+        </ul>
+        <h3>Qué hacés vos</h3>
+        <p>Lo que necesita tu cuenta. El agente te pasa el comando o los pasos exactos:</p>
+        <ul>
+          <li>Entrar a Sanity y, si querés, importar la página de ejemplo.</li>
+          <li>Invitar al cliente.</li>
+          <li>En el hosting: variables de entorno, el dominio en CORS y el webhook de publicación.</li>
+          <li>La prueba logueada del editor (<a href="#entregar">Antes de entregar</a>).</li>
+        </ul>
+      </div>
+      <div class="note warn">
+        <strong>Nunca pegues tokens ni contraseñas en el chat</strong>
+        <p>La guía está escrita para que ningún agente los necesite. Si te pide uno, no se lo des: decile que siga INSTALL.md.</p>
       </div>
     </section>
 
     <!-- ───────────────────────── Vibe: prompts ───────────────────────── -->
     <section id="prompts" data-only="vibe">
       <div class="prose">
-        <p class="eyebrow">Trabajar con Claude</p>
-        <h2>Qué pedirle</h2>
-        <p>Ejemplos reales para copiar y adaptar. Cada uno dice qué va a hacer Claude y qué conviene que revises vos.</p>
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Qué pedirle después</h2>
+        <p>Con Remarkable instalado, esto es lo que más se pide. Sirve para cualquier agente: las reglas que sigue están en el <code>AGENTS.md</code> que queda en tu proyecto.</p>
       </div>
-      <p class="prompt-group">Arrancar</p>
+      <p class="prompt-group">Conectar tu proyecto</p>
       <div class="prompts">
         <article class="prompt">
-          <div class="prompt-head"><h3>Proyecto nuevo</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Arrancá un proyecto nuevo con Remarkable para Estudio Norte. Sanity en la organización de la agencia, hosting en Vercel, dominio estudionorte.com.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Usa la skill: copia el starter, crea el proyecto de Sanity, arma <code>.env</code> y CORS, y levanta el sitio. Frena en lo que necesita tu login.</div><div><b>Vos revisás</b>Correr el comando de importación que te pasa, entrar a <code>/studio</code> y ver la home en el editor.</div></div>
+          <div class="prompt-head"><h3>Hacer editable un componente que ya tenés</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Pasá el Hero de la home a un bloque de Remarkable: título, bajada, botón e imagen editables desde el editor. El diseño tiene que quedar igual.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Crea el bloque con tu componente adaptado, lo registra, hace el texto editable sobre la página y corre verify.</div><div><b>Vos revisás</b>En el editor: + Add → Hero, escribir sobre la página y comparar con el original.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Tu diseño en el panel de estilo</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Asigná nuestros colores, espaciados y radios a los tokens de Remarkable, sin cambiar los nombres, para que el panel de estilo ofrezca nuestra paleta.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Completa <code>tokens.css</code> con los valores de tu diseño. Los nombres quedan porque el editor los usa.</div><div><b>Vos revisás</b>Abrir el panel de estilo de un bloque y ver tus colores y espaciados.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Tu header y footer</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Que las páginas del editor usen nuestro header y footer en vez de los de Remarkable.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Cambia el layout de las páginas del editor para usar tus componentes.</div><div><b>Vos revisás</b>Una página del editor y una tuya se ven con el mismo header.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Pasar una página al editor</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Que /servicios salga del editor: armala en Sanity con bloques de Remarkable y sacá la página hardcodeada.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Arma la página con bloques existentes (o propone bloques nuevos) y quita la ruta vieja. Si tiene el MCP de Sanity, crea el documento; si no, te dice cómo.</div><div><b>Vos revisás</b>Que <code>/servicios</code> se vea igual y se pueda editar.</div></div>
         </article>
       </div>
-      <p class="prompt-group">Diseño</p>
-      <div class="prompts">
-        <article class="prompt">
-          <div class="prompt-head"><h3>La marca desde Figma</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Pasá la marca de este Figma a los tokens del proyecto: &lt;link&gt;. Colores para los temas claro, oscuro y brand, tipografía, radios y espaciado.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Actualiza <code>tokens.css</code> y la tipografía. Todos los bloques cambian juntos porque leen los mismos tokens.</div><div><b>Vos revisás</b>Recorrer la home en los tres temas y en mobile.</div></div>
-        </article>
-        <article class="prompt">
-          <div class="prompt-head"><h3>Una sección desde una captura</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Armá esta sección en la home con los bloques que ya existen [captura]. Si falta algún bloque, decime antes de crearlo.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Compone con Section, Box, Grid y los bloques existentes. Si hace falta uno nuevo, te lo propone.</div><div><b>Vos revisás</b>En el editor, que cada parte se pueda seleccionar y editar.</div></div>
-        </article>
-        <article class="prompt">
-          <div class="prompt-head"><h3>Header y footer</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Rediseñá el header como esta referencia [captura]. El menú tiene que salir de Navigation y en mobile tiene que ser un menú desplegable.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Edita <code>src/chrome/</code>. Los links salen de Navigation, así que el cliente los cambia desde el Studio.</div><div><b>Vos revisás</b>Cambiar un ítem en Navigation, publicar y verlo en el sitio después del build.</div></div>
-        </article>
-      </div>
-      <p class="prompt-group">Bloques y animación</p>
+      <p class="prompt-group">Bloques</p>
       <div class="prompts">
         <article class="prompt">
           <div class="prompt-head"><h3>Un bloque nuevo</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Creá un bloque Testimonios: foto, cita, nombre y cargo. Grid de 3 en desktop y una columna en mobile. La cita se tiene que poder editar sobre la página.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Crea el schema, el componente, lo registra, le da contenido inicial y hace la cita editable en el canvas. Corre verify.</div><div><b>Vos revisás</b>En el editor: + Add → Testimonios, y escribir la cita sobre la página.</div></div>
+          <blockquote>Creá un bloque Testimonios: foto, cita, nombre y cargo. Grid de 3 en desktop y una columna en mobile. La cita se edita sobre la página.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Schema, componente, registro, contenido inicial y texto editable en el canvas. Corre verify.</div><div><b>Vos revisás</b>+ Add → Testimonios, y escribir la cita sobre la página.</div></div>
         </article>
         <article class="prompt">
-          <div class="prompt-head"><h3>Animaciones</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Que el título del hero entre por palabras y que la sección de servicios sea un scroll horizontal pineado.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Usa los bloques de motion que ya existen o crea uno siguiendo las reglas de motion, y lo marca para que cargue su JS.</div><div><b>Vos revisás</b>Verlo en el sitio. En el canvas las animaciones decorativas quedan quietas: usá ▶ Play.</div></div>
+          <div class="prompt-head"><h3>Que un bloque se anime</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>El bloque Testimonios tiene que entrar con una animación al scrollear.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Agrega la animación con las reglas de motion y marca el bloque para que cargue su JavaScript.</div><div><b>Vos revisás</b>Verlo en el sitio. En el editor las animaciones decorativas quedan quietas: usá ▶ Play.</div></div>
         </article>
         <article class="prompt">
-          <div class="prompt-head"><h3>Sacar lo que no se usa</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Borrá los bloques que no vamos a usar en este proyecto: 3D Logo, Marquee y Stacked Cards.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Borra las carpetas y los registros, y corre verify. Menos bloques con JS significa páginas más livianas.</div><div><b>Vos revisás</b>Que ya no aparezcan en + Add.</div></div>
+          <div class="prompt-head"><h3>Sacar los bloques de ejemplo</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Borrá los bloques de ejemplo de Remarkable que no usamos en este proyecto.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Borra carpetas y registros y corre verify. Menos bloques con animación = páginas más livianas.</div><div><b>Vos revisás</b>Que ya no aparezcan en + Add.</div></div>
         </article>
       </div>
       <p class="prompt-group">Publicar y mantener</p>
       <div class="prompts">
         <article class="prompt">
-          <div class="prompt-head"><h3>Salir a producción</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>Dejalo listo para Vercel con el dominio estudionorte.com y decime exactamente qué tengo que configurar yo.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Revisa el build, agrega el dominio a CORS y te pasa las variables, el deploy hook y el webhook paso a paso.</div><div><b>Vos revisás</b>Cargar todo en los paneles. Después: “corré verify contra estudionorte.com”.</div></div>
+          <div class="prompt-head"><h3>Publicar = deployar</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Conectá publicar en el editor con el deploy de Vercel y decime exactamente qué tengo que configurar yo.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Te pasa el deploy hook, el webhook de Sanity y las variables, paso a paso.</div><div><b>Vos revisás</b>Publicar un cambio y verlo en el sitio unos minutos después.</div></div>
         </article>
         <article class="prompt">
           <div class="prompt-head"><h3>Invitar al cliente</h3><button class="copy" type="button">Copiar</button></div>
           <blockquote>¿Cómo invito a Ana (ana@cliente.com) para que edite textos pero no publique?</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Te da el comando con el rol <code>contributor</code> y te explica qué va a ver Ana en el editor.</div><div><b>Vos revisás</b>Correrlo y que Ana acepte la invitación.</div></div>
+          <div class="prompt-meta"><div><b>El agente</b>Te da el comando con el rol <code>contributor</code> y te explica qué va a ver Ana.</div><div><b>Vos revisás</b>Correrlo y que Ana acepte la invitación.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Actualizar Remarkable</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Traé la última versión de Remarkable a este proyecto: actualizá src/core desde el repo, avisame si cambió algún schema y corré verify.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Reemplaza <code>src/core</code> por la versión nueva, revisa cambios de schema y corre verify.</div><div><b>Vos revisás</b>Que el editor y las páginas sigan funcionando.</div></div>
         </article>
         <article class="prompt">
           <div class="prompt-head"><h3>Un bug del editor</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>En el editor, al arrastrar una card dentro del grid se va al final. Arreglalo en el starter y decime qué copiar a los otros proyectos.</blockquote>
-          <div class="prompt-meta"><div><b>Claude</b>Lo arregla en <code>src/core</code> del starter, agrega un chequeo para que no vuelva y te lista los archivos a copiar.</div><div><b>Vos revisás</b>Probar el caso en el editor.</div></div>
+          <blockquote>En el editor, al arrastrar una card dentro del grid se va al final. Esto es de Remarkable: decime qué cambiar en el repo.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Lo arregla en el repo de Remarkable (no solo en tu proyecto), con un chequeo para que no vuelva.</div><div><b>Vos revisás</b>Probar el caso en el editor.</div></div>
         </article>
       </div>
     </section>
@@ -490,35 +518,31 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
     <!-- ───────────────────────── Vibe: pedir bien ───────────────────────── -->
     <section id="pedir-bien" data-only="vibe">
       <div class="prose">
-        <p class="eyebrow">Trabajar con Claude</p>
+        <p class="eyebrow">Con tu agente</p>
         <h2>Para pedir bien</h2>
-        <p>Lo que más cambia el resultado.</p>
+        <p>La división que más ordena el trabajo:</p>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Esto va en el editor</th><th>Esto se le pide a Claude</th></tr></thead>
+          <thead><tr><th>Se hace en el editor</th><th>Se le pide al agente</th></tr></thead>
           <tbody>
-            <tr><td>Textos, links e imágenes</td><td>Colores, tipografía, radios y espaciados (tokens)</td></tr>
-            <tr><td>Agregar, ordenar y duplicar secciones y bloques</td><td>Bloques nuevos y cambios en cómo se ven los existentes</td></tr>
-            <tr><td>Estilo de un bloque dentro de los tokens</td><td>Animaciones e interacciones</td></tr>
-            <tr><td>Armar y reusar componentes</td><td>Header, footer y SEO por defecto</td></tr>
-            <tr><td>Publicar</td><td>Hosting, dominio y deploy</td></tr>
+            <tr><td>Textos, links e imágenes</td><td>Bloques nuevos o hacer editable algo que ya existe</td></tr>
+            <tr><td>Agregar, ordenar y duplicar secciones y bloques</td><td>Cómo se ve un bloque y sus animaciones</td></tr>
+            <tr><td>Estilo de un bloque dentro de los tokens</td><td>Los valores de los tokens (tu diseño)</td></tr>
+            <tr><td>Armar y reusar componentes</td><td>Rutas, layout, header y footer de las páginas del editor</td></tr>
+            <tr><td>Publicar</td><td>Conectar publicar con el deploy</td></tr>
           </tbody>
         </table>
       </div>
       <ul class="prose">
-        <li><strong>Mostrá en vez de describir.</strong> Una captura o un link de Figma ahorra tres idas y vueltas.</li>
-        <li><strong>El diseño son tokens.</strong> Pedí "agregá un verde de marca como token", no "poné este verde acá". Así cambia en todos lados a la vez y el editor lo ofrece.</li>
-        <li><strong>Lo que se mueve carga JavaScript.</strong> Claude lo marca solo. Si algo se ve pero no se anima en el sitio, decíselo así.</li>
+        <li><strong>Los nombres de los tokens no se cambian.</strong> Los valores sí. El panel de estilo usa esos nombres.</li>
+        <li><strong>El editor solo ve bloques registrados.</strong> Para que algo se edite, tiene que ser un bloque.</li>
+        <li><strong>Lo que se mueve carga JavaScript.</strong> El agente lo marca. Si algo se ve pero no se anima en el sitio, decíselo así.</li>
         <li><strong>Pedí que verifique.</strong> "Corré verify" antes de dar algo por terminado.</li>
         <li><strong>Publicar no es deployar.</strong> Publish deja el contenido listo; el sitio cambia en el próximo build.</li>
-        <li><strong>Los arreglos del editor van al starter.</strong> Si algo falla en el editor, no se arregla solo en un proyecto: se arregla en el starter y se copia.</li>
-        <li><strong>No pidas actualizar Sanity de paso.</strong> Está fijo a propósito; actualizarlo es un trabajo aparte.</li>
+        <li><strong>Remarkable se arregla en su repo.</strong> <code>src/core</code> es igual en todos los proyectos: si algo del editor falla, el arreglo va al repo y después se trae a cada proyecto.</li>
+        <li><strong>No pidas actualizar Sanity de paso.</strong> Está fijo en 6.3.0 a propósito.</li>
       </ul>
-      <div class="note warn">
-        <strong>Nunca pegues tokens ni contraseñas en el chat</strong>
-        <p>Lo que necesita tu cuenta (importar contenido, invitar usuarios, paneles del hosting) lo corrés vos. Claude te pasa el comando o los pasos exactos.</p>
-      </div>
     </section>
 
     <!-- ───────────────────────── Arquitectura ───────────────────────── -->
@@ -748,7 +772,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>Bloques</h2>
-        <p>El registro único está en <code>src/blocks/meta.ts</code>. Define qué tipos existen, qué pueden contener, cuáles necesitan JS y qué ofrece el editor en cada lugar. <code>schemas.ts</code> y <code>components.tsx</code> están tipados contra el registro: si falta algo, el compilador lo marca.</p>
+        <p>Remarkable trae estos bloques de ejemplo: cada proyecto borra los que no usa y suma los suyos. El registro único está en <code>src/blocks/meta.ts</code>. Define qué tipos existen, qué pueden contener, cuáles necesitan JS y qué ofrece el editor en cada lugar. <code>schemas.ts</code> y <code>components.tsx</code> están tipados contra el registro: si falta algo, el compilador lo marca.</p>
       </div>
       <div class="table-wrap">
         <table>
@@ -810,31 +834,68 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       </div>
     </section>
 
-    <!-- ───────────────────────── Nuevo proyecto ───────────────────────── -->
-    <section id="nuevo-proyecto" data-only="tech">
+    <!-- ───────────────────────── Instalación ───────────────────────── -->
+    <section id="instalacion" data-only="tech">
       <div class="prose">
-        <p class="eyebrow">Trabajar con él</p>
-        <h2>Proyecto nuevo</h2>
-        <p>El arranque está empaquetado como una skill de Claude Code, <code>remarkable-astro</code>, que vive en <code>skills/</code> del repo. Se instala una vez por máquina:</p>
+        <p class="eyebrow">Integración</p>
+        <h2>Instalación</h2>
+        <p>La guía completa es <code>INSTALL.md</code>, en la raíz del repo, escrita para que la siga cualquier agente. Hay dos caminos y los dos terminan en los mismos pasos comunes: Sanity, <code>.env</code>, arranque, roles, producción y verify.</p>
+        <h3>Camino A: proyecto nuevo</h3>
+        <p>El repo de Remarkable ya es un proyecto Astro completo: se clona, se le saca el <code>.git</code> y se corre <code>npm install</code>, que aplica <code>patches/</code>.</p>
+        <h3>Camino B: proyecto existente</h3>
+        <p>Se copian piezas al proyecto sin pisar nada que ya exista. Si una ruta choca, el agente frena y pregunta.</p>
       </div>
-      <div class="code"><pre>gh repo clone seba-seb/Remarkable-Astro /tmp/remarkable -- --depth 1
-cp -R /tmp/remarkable/skills/remarkable-astro ~/.claude/skills/</pre><button class="copy" type="button">Copiar</button></div>
-      <p class="prose">Después alcanza con pedirle a Claude <em>"un proyecto nuevo con Remarkable para &lt;cliente&gt;"</em>. La skill sigue estos pasos y frena en los que te tocan a vos:</p>
-      <ol class="steps prose">
-        <li><div><strong>Datos mínimos</strong><p>Nombre, organización de Sanity del cliente, hosting y dominio, si existe.</p></div></li>
-        <li><div><strong>Repo</strong><p>Copia el starter, inicia git y corre <code>npm install</code>, que aplica <code>patches/</code> y falla si Sanity no es 6.3.0.</p></div></li>
-        <li><div><strong>Sanity</strong><p>Crea el proyecto y el dataset <code>production</code> público, agrega <code>http://localhost:4321</code> a CORS con credenciales y arma <code>.env</code>.</p></div></li>
-        <li><div><strong>Contenido demo</strong> <span class="pill warn">Vos</span><p><code>npx sanity login &amp;&amp; npx sanity dataset import sanity/seed.ndjson production</code>. Usa tu login, sin tokens.</p></div></li>
-        <li><div><strong>Primer arranque</strong><p><code>npm run dev</code>: la home, <code>/studio</code> y el editor con la página.</p></div></li>
-        <li><div><strong>Hacerlo del cliente</strong><p>Tokens, tipografía, header y footer, bloques que sobran, bloques propios, Settings y Navigation.</p></div></li>
-        <li><div><strong>Roles</strong> <span class="pill warn">Vos</span><p>Invitar al cliente como <code>editor</code> o <code>contributor</code>.</p></div></li>
-        <li><div><strong>Hosting y publicación</strong> <span class="pill warn">Vos</span><p>Variables de entorno, CORS del dominio y el webhook de Sanity al deploy hook del host.</p></div></li>
-        <li><div><strong>Cierre</strong><p><code>npm run verify</code> en verde y el <a href="#calidad">smoke test logueado</a>.</p></div></li>
-      </ol>
-      <div class="note warn">
-        <strong>Tokens</strong>
-        <p>Nunca van al chat ni a un archivo commiteado. El único lugar es <code>.env</code>, que está en <code>.gitignore</code>. Lo que necesita permisos de escritura lo corrés en tu terminal con tu login.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Se copia</th><th>Qué es</th></tr></thead>
+          <tbody>
+            <tr><td><code>src/core/</code></td><td>El producto: editor, render, estilos, motion, Sanity. No se modifica por proyecto</td></tr>
+            <tr><td><code>src/blocks/</code></td><td>Registro y bloques de ejemplo. Se borran o se suman bloques</td></tr>
+            <tr><td><code>src/documents/</code>, <code>src/schema.ts</code></td><td>page, component, settings, navigation</td></tr>
+            <tr><td><code>src/theme/</code></td><td>Tokens (nombres que usa el editor) y CSS de los bloques. Solo lo cargan las páginas del editor</td></tr>
+            <tr><td><code>src/layouts/Base.astro</code></td><td>Layout de las páginas del editor (o <code>RemarkableBase.astro</code> si ya hay un Base)</td></tr>
+            <tr><td><code>src/pages/[slug].astro</code>, <code>edit-canvas.astro</code></td><td>Páginas del editor y el canvas. <code>index.astro</code> solo si la home sale del editor</td></tr>
+            <tr><td><code>sanity.config.ts</code>, <code>sanity.cli.ts</code>, <code>patches/</code></td><td>Studio y ajustes a sanity@6.3.0</td></tr>
+            <tr><td><code>scripts/verify.mjs</code>, <code>check-editor-schema.ts</code></td><td>Chequeos</td></tr>
+            <tr><td><code>src/chrome/</code>, <code>public/placeholder.svg</code></td><td>Header y footer de las páginas del editor (reemplazables) e imagen por defecto de bloques nuevos</td></tr>
+            <tr><td><code>AGENTS.md</code></td><td>Reglas para agentes. Si el proyecto ya tiene uno, se agrega como sección</td></tr>
+          </tbody>
+        </table>
       </div>
+      <div class="prose">
+        <p class="small muted">Probado sobre el template de blog oficial de Astro: build y verify en verde, el blog intacto y <code>src/core</code> sin cambios.</p>
+        <h3>Configuración que se integra</h3>
+        <ul>
+          <li><strong><code>package.json</code>:</strong> dependencias de Sanity, React 19 y Tailwind 4 (más GSAP, Embla y three si quedan los bloques de motion), <code>overrides: { sanity: "6.3.0" }</code> y <code>postinstall: patch-package --error-on-fail</code>.</li>
+          <li><strong><code>astro.config</code>:</strong> la integración <code>sanity()</code> con <code>studioBasePath: "/studio"</code> y hash routing, <code>react()</code>, el plugin de Tailwind y <code>optimizeDeps</code> completo. Sin eso último, el Studio queda en blanco en dev. El <code>output</code> y el <code>site</code> del proyecto se respetan.</li>
+          <li><strong><code>tsconfig</code>:</strong> JSX de React y el alias <code>@/*</code> → <code>./src/*</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Contrato ───────────────────────── -->
+    <section id="contrato" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Integración</p>
+        <h2>Contrato con tu proyecto</h2>
+        <p>Lo que tu código tiene que respetar para que el editor funcione. Todo lo demás es libre.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Regla</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Todo lo editable es un bloque registrado en <code>src/blocks/meta.ts</code>, <code>schemas.ts</code> y <code>components.tsx</code></td><td>El registro define qué existe, qué contiene qué y qué ofrece el editor</td></tr>
+            <tr><td>Un bloque recibe <code>{ block, path, ctx }</code>, nunca hace fetch y pone <code>{...editable(…)}</code> en su raíz</td><td>El canvas dibuja el documento que recibe y selecciona por <code>data-sanity-path</code></td></tr>
+            <tr><td><code>js</code> en <code>meta.ts</code> si el bloque corre algo en el navegador</td><td>Si no, el sitio lo sirve como HTML y nunca se hidrata</td></tr>
+            <tr><td>Cada layout que renderiza <code>&lt;PageBuilder islands /&gt;</code> incluye <code>&lt;Islands /&gt;</code></td><td>Es el que hidrata las secciones animadas, y en dev instala el preámbulo de React</td></tr>
+            <tr><td>Los nombres de <code>tokens.css</code> no cambian; los valores sí</td><td>El panel de estilo ofrece esos nombres</td></tr>
+            <tr><td>Links con <code>resolveLink()</code> y <code>pageHref()</code></td><td>Una sola fuente de URLs: links, sitemap, canonical, futuros idiomas</td></tr>
+            <tr><td>GSAP desde <code>@/core/motion/gsap</code>, con <code>useGSAP</code> y <code>scope</code></td><td>Ahí vive la política de motion del editor y del sitio</td></tr>
+            <tr><td><code>sanity</code> en 6.3.0</td><td><code>patches/</code> solo encaja en esa versión</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose small muted">Las únicas tablas de <code>src/core</code> que un proyecto toca son <code>TEXT_TARGETS</code> e <code>IMAGE_FIELDS</code> (<code>CanvasApp.tsx</code>), y <code>pageHref()</code> si las páginas del editor se montan bajo un prefijo.</p>
     </section>
 
     <!-- ───────────────────────── Código ───────────────────────── -->
@@ -842,12 +903,12 @@ cp -R /tmp/remarkable/skills/remarkable-astro ~/.claude/skills/</pre><button cla
       <div class="prose">
         <p class="eyebrow">Trabajar con él</p>
         <h2>El código</h2>
-        <p>La regla que sostiene el starter: <strong><code>src/core</code> es igual en todos los proyectos</strong>. Un arreglo en core va primero al starter y después se copia a los proyectos. Lo de cada cliente vive en <code>theme</code>, <code>chrome</code> y <code>blocks</code>. Cuando haya 3 o más proyectos en producción, core pasa a ser un paquete privado y los arreglos llegan con <code>npm update</code>.</p>
+        <p>La regla que sostiene el producto: <strong><code>src/core</code> es igual en todos los proyectos</strong>. Un arreglo en core se hace en el repo de Remarkable y después se trae a cada proyecto. Lo propio de cada proyecto vive en <code>blocks</code>, <code>theme</code> y sus layouts. Cuando haya 3 o más proyectos en producción, core pasa a ser un paquete privado y los arreglos llegan con <code>npm update</code>.</p>
       </div>
       <div class="diagram"><div class="tree" style="min-width:560px">
-<span class="d">src/core/</span>          <span class="c">infraestructura · igual en todos los proyectos</span>
+<span class="d">src/core/</span>          <span class="c">el producto · igual en todos los proyectos</span>
   <span class="d">editor/</span>         <span class="c">EditorTool, CanvasApp, FieldControls, ops, paths, protocol, richtext</span>
-  <span class="d">render/</span>         <span class="c">PageBuilder, BlockRenderer, components (instancias), overrides, hydrate</span>
+  <span class="d">render/</span>         <span class="c">PageBuilder, BlockRenderer, instancias, overrides, Islands.astro + hydrate</span>
   <span class="d">style/</span>          <span class="c">tokens del panel, stylesheet por página, schema del campo design</span>
   <span class="d">motion/</span>         <span class="c">gsap.ts (política), ScrollRefresh, useSplit, SplitReveal</span>
   <span class="d">sanity/</span>         <span class="c">client + loadQuery, site loader, queries, editable(), env</span>
@@ -857,12 +918,13 @@ cp -R /tmp/remarkable/skills/remarkable-astro ~/.claude/skills/</pre><button cla
 <span class="d">src/theme/</span>         <span class="c">tokens.css (lo primero que se cambia) + globals.css</span>
 <span class="d">src/chrome/</span>        <span class="c">header y footer del proyecto</span>
 <span class="d">src/documents/</span>     <span class="c">page, component, settings, navigation</span>
-<span class="d">src/pages/</span>         <span class="c">rutas · /edit-canvas = canvas · /lab/[slug] = banco de motion (solo dev)</span>
+<span class="d">src/pages/</span>         <span class="c">[slug] = páginas del editor · /edit-canvas = canvas · /lab = banco de motion (solo este repo)</span>
 <span class="d">patches/</span>           <span class="c">ajustes a sanity@6.3.0 (ver su README)</span>
 <span class="d">scripts/</span>           <span class="c">verify, check-editor-schema, seeds</span>
-<span class="d">skills/</span>            <span class="c">skill remarkable-astro para proyectos nuevos</span>
+<span class="d">skills/</span>            <span class="c">skill remarkable-astro (Claude Code): sigue INSTALL.md</span>
 <span class="d">docs/</span>              <span class="c">esta documentación</span>
-CLAUDE.md          <span class="c">reglas para trabajar en el código (fuente de verdad)</span>
+INSTALL.md         <span class="c">instalación en un proyecto nuevo o existente, para cualquier agente</span>
+AGENTS.md          <span class="c">reglas para trabajar en el código (CLAUDE.md lo importa)</span>
       </div></div>
       <div class="prose">
         <h3>Reglas que más se rompen</h3>
@@ -900,6 +962,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     &lt;/blockquote&gt;
   );
 }</pre></div>
+      <p class="prose"><strong>Si el componente ya existe en tu proyecto</strong>, es el mismo camino: el componente pasa a leer todo de <code>block</code> en vez de props o texto fijo, y si era <code>.astro</code> se pasa a <code>.tsx</code>.</p>
       <p class="prose">Para borrar un bloque: su carpeta, su entrada en <code>meta.ts</code>, las dos entradas de los mapas y cualquier <code>accepts</code> que lo nombre. El compilador te lleva a cada una.</p>
     </section>
 
@@ -1004,7 +1067,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>La home muestra la pantalla de bienvenida</td><td>Falta <code>.env</code> o el contenido.</td><td>Completar <code>.env</code> e importar el seed.</td></tr>
             <tr><td>Un bloque se ve pero no se anima en el sitio</td><td>Le falta <code>js</code> en <code>meta.ts</code>.</td><td>Agregarlo.</td></tr>
             <tr><td><code>npm install</code> falla en patch-package</td><td><code>sanity</code> no está en 6.3.0.</td><td>Volver a 6.3.0. Actualizar es un trabajo aparte: rehacer <code>patches/</code>.</td></tr>
-            <tr><td>"can't detect preamble" en dev</td><td>Falta el preámbulo de React para las islas.</td><td>Ya está en <code>Base.astro</code>; no borrarlo.</td></tr>
+            <tr><td>"can't detect preamble" en dev</td><td>El layout no incluye <code>&lt;Islands /&gt;</code>.</td><td>Agregarlo al final del <code>&lt;body&gt;</code>.</td></tr>
             <tr><td>Publiqué y el sitio no cambió</td><td>El sitio es estático.</td><td>Revisar el webhook al deploy hook o correr un build.</td></tr>
           </tbody>
         </table>
@@ -1050,9 +1113,14 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <p><b>Decisión.</b> El panel solo ofrece tokens. Los bloques nuevos se escriben en código y el editor compone y estila con ellos.</p>
         </div>
         <div class="decision">
-          <h3>Core aislado, plantilla primero</h3>
+          <h3>Se copia, todavía no es un paquete</h3>
           <p><b>Problema.</b> Un paquete privado desde el día uno agrega versionado antes de saber qué cambia por proyecto.</p>
-          <p><b>Decisión.</b> Copiar el starter y mantener <code>src/core</code> intacto. Extraerlo a paquete cuando haya 3 o más sitios en producción.</p>
+          <p><b>Decisión.</b> Instalar copiando con una guía para agentes, con <code>src/core</code> intacto. Pasarlo a paquete cuando haya 3 o más sitios en producción.</p>
+        </div>
+        <div class="decision">
+          <h3>Instalación para cualquier agente</h3>
+          <p><b>Problema.</b> El equipo no usa un solo agente, y una instalación atada a uno se desactualiza en los demás.</p>
+          <p><b>Decisión.</b> Un <code>INSTALL.md</code> y un <code>AGENTS.md</code> en markdown plano. La skill de Claude Code solo los trae y los sigue.</p>
         </div>
         <div class="decision">
           <h3>Sin i18n, pero preparado</h3>
@@ -1072,7 +1140,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
       <ol class="timeline prose">
         <li>
           <time datetime="2026-09-29">29 sep 2026</time>
-          <h3>Port a Astro y base del starter</h3>
+          <h3>Port a Astro y base</h3>
           <ul>
             <li>Page builder de Next.js portado a Astro 7. Separación en <code>core</code>, <code>blocks</code> y <code>theme</code>, con el registro tipado de bloques.</li>
             <li>Tipo <code>link</code>, Settings y Navigation, header y footer, SEO completo, <code>npm run verify</code> y <code>CLAUDE.md</code>.</li>
@@ -1105,7 +1173,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <li>El sitio público no importa nada del editor.</li>
             <li>Islas por sección: las páginas sin motion bajan de 138 KB a ≈1 KB de JS.</li>
             <li>Install y verify fallan si Sanity se desvía de su parche.</li>
-            <li>Skill <code>remarkable-astro</code> y esta documentación.</li>
+            <li>Instalable en proyectos Astro existentes, con <code>INSTALL.md</code> y <code>AGENTS.md</code> para cualquier agente. Esta documentación.</li>
           </ul>
         </li>
       </ol>
@@ -1115,13 +1183,13 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     <!-- ───────────────────────── Vibe: si falla ───────────────────────── -->
     <section id="si-falla" data-only="vibe">
       <div class="prose">
-        <p class="eyebrow">Trabajar con Claude</p>
+        <p class="eyebrow">Con tu agente</p>
         <h2>Si algo falla</h2>
-        <p>Contale a Claude lo que ves, tal cual. Estos ya pasaron y tienen solución.</p>
+        <p>Contale a tu agente lo que ves, tal cual. Estos ya pasaron y tienen solución.</p>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Ves</th><th>Lo más probable</th><th>Decile a Claude</th></tr></thead>
+          <thead><tr><th>Ves</th><th>Lo más probable</th><th>Decile al agente</th></tr></thead>
           <tbody>
             <tr><td>"Connect this studio to your project"</td><td>Entraste por otro puerto. El local es <code>:4321</code>.</td><td>"Me aparece Connect this studio en localhost:&lt;puerto&gt;"</td></tr>
             <tr><td>El Studio queda en blanco</td><td>La pestaña quedó vieja después de reiniciar el server.</td><td>Primero <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>. Si sigue: "El Studio queda en blanco, mirá la consola"</td></tr>
@@ -1129,6 +1197,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>Un bloque se ve pero no se anima en el sitio</td><td>No está marcado como bloque con JS.</td><td>"El bloque X no se anima en el sitio publicado"</td></tr>
             <tr><td>Publiqué y el sitio no cambió</td><td>Falta el webhook o el build todavía no terminó.</td><td>"Publiqué y el sitio no cambió"</td></tr>
             <tr><td><code>npm install</code> falla en patch-package</td><td>Cambió la versión de Sanity.</td><td>"npm install falla en patch-package"</td></tr>
+            <tr><td>Una página mía dejó de verse igual</td><td>El CSS de Remarkable se cargó fuera de sus páginas.</td><td>"Desde que sumamos Remarkable, /&lt;ruta&gt; se ve distinta"</td></tr>
           </tbody>
         </table>
       </div>
@@ -1137,9 +1206,9 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     <!-- ───────────────────────── Vibe: entregar ───────────────────────── -->
     <section id="entregar" data-only="vibe">
       <div class="prose">
-        <p class="eyebrow">Trabajar con Claude</p>
+        <p class="eyebrow">Con tu agente</p>
         <h2>Antes de entregar</h2>
-        <p>Pedile a Claude "corré verify". Después, con tu usuario y en una página descartable:</p>
+        <p>Pedile al agente "corré verify". Después, con tu usuario y en una página descartable:</p>
         <ol class="check">
           <li>Escribir en un título sobre la página, recargar, y que el texto siga ahí.</li>
           <li>Negrita, itálica y link en un párrafo. Insertar, duplicar, borrar y arrastrar un bloque. Deshacer y rehacer.</li>
@@ -1156,7 +1225,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     <!-- ───────────────────────── Vibe: glosario ───────────────────────── -->
     <section id="glosario" data-only="vibe">
       <div class="prose">
-        <p class="eyebrow">Trabajar con Claude</p>
+        <p class="eyebrow">Con tu agente</p>
         <h2>Glosario</h2>
         <dl class="glossary">
           <dt>Bloque</dt><dd>Una pieza de la página: título, párrafo, imagen, card, slider…</dd>
@@ -1173,9 +1242,10 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <dt>Studio</dt><dd>El panel de Sanity en <code>/studio</code>. Adentro está el editor.</dd>
           <dt>Canvas</dt><dd>La vista de la página dentro del editor, donde hacés clic y escribís.</dd>
           <dt>verify</dt><dd>El chequeo automático del proyecto: si pasa, lo importante funciona.</dd>
-          <dt>Skill</dt><dd>Instrucciones empaquetadas para Claude. <code>remarkable-astro</code> arranca proyectos nuevos.</dd>
-          <dt>CLAUDE.md</dt><dd>Las reglas del proyecto que Claude lee siempre antes de trabajar.</dd>
-          <dt>Starter</dt><dd>El repo Remarkable del que se copia cada proyecto.</dd>
+          <dt>INSTALL.md</dt><dd>La guía que sigue cualquier agente para sumar Remarkable a un proyecto.</dd>
+          <dt>AGENTS.md</dt><dd>Las reglas que el agente lee antes de trabajar en el proyecto. Claude Code las lee a través de <code>CLAUDE.md</code>.</dd>
+          <dt>Skill</dt><dd>Atajo para Claude Code: <code>remarkable-astro</code> trae INSTALL.md y lo sigue.</dd>
+          <dt>Core</dt><dd><code>src/core</code>, el código del editor. Es igual en todos los proyectos y se arregla en el repo de Remarkable.</dd>
         </dl>
       </div>
     </section>
@@ -1196,13 +1266,13 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td><strong>Insertar como copia o enlazado</strong></td><td>Elegirlo al insertar desde la librería.</td><td><span class="pill ok">Chico</span></td></tr>
             <tr><td><strong>UI propia del Studio</strong></td><td>Reemplazar la barra y el marco de Sanity con la API oficial (<code>studio.components</code>) para que el editor sea la app entera.</td><td><span class="pill warn">Medio</span></td></tr>
             <tr><td><strong>JS por bloque</strong></td><td>Que una sección con solo un marquee no cargue todos los bloques. Baja los 138 KB en páginas con poco motion.</td><td><span class="pill warn">Medio</span></td></tr>
-            <tr><td><strong>Core como paquete privado</strong></td><td>Cuando haya 3 o más sitios en producción, para que los arreglos lleguen con <code>npm update</code>.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Paquete npm privado</strong></td><td>Instalar y actualizar con <code>npm</code> en vez de copiar <code>src/core</code>. Cuando haya 3 o más sitios en producción.</td><td><span class="pill warn">Medio</span></td></tr>
             <tr><td><strong>Idiomas</strong></td><td>Cuando un cliente lo pida. La base está en <code>pageHref</code> y <code>resolveLink</code>.</td><td><span class="pill warn">Medio</span></td></tr>
             <tr><td><strong>Gizmo 3D en el canvas</strong></td><td>Rotar el 3D Logo directamente en el canvas. Postergado.</td><td><span class="pill no">Pausado</span></td></tr>
           </tbody>
         </table>
       </div>
-      <footer class="end">Remarkable · repo <code>seba-seb/Remarkable-Astro</code> · reglas de código en <code>CLAUDE.md</code> · actualizado el 8 de octubre de 2026</footer>
+      <footer class="end">Remarkable · repo <code>seba-seb/Remarkable-Astro</code> · instalación en <code>INSTALL.md</code> · reglas en <code>AGENTS.md</code> · actualizado el 8 de octubre de 2026</footer>
     </section>
   </main>
 </div>

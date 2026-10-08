@@ -38,8 +38,8 @@ Preguntá en una sola tanda solo lo que no puedas deducir del proyecto:
   listá las organizaciones. Si no, el usuario crea el proyecto en
   sanity.io/manage y te pasa el **project ID**, que no es secreto.
 - **Solo si el proyecto es existente:**
-  - ¿Qué rutas sirve Remarkable? Por defecto, todas las que no existan ya.
-  - ¿La home sale del editor o queda la actual?
+  - ¿La home sale del editor o queda la actual? Por defecto, queda la actual.
+  - Las páginas del editor se sirven en `/<slug>` (ver B4).
 
 Necesitás:
 - Node ≥ 22.
@@ -80,10 +80,27 @@ Seguí con los **pasos comunes**.
 ### B2. Traer Remarkable
 
 ```bash
-gh repo clone seba-seb/Remarkable-Astro /tmp/remarkable -- --depth 1
+rm -rf /tmp/remarkable   # una copia vieja daría una versión vieja
+gh repo clone seba-seb/Remarkable-Astro /tmp/remarkable -- --depth 1   # --branch <ref> si el usuario pide otra versión
 ```
 
-Copiá desde `/tmp/remarkable` sin pisar nada que ya exista:
+Copiá desde `/tmp/remarkable` **sin pisar nada que ya exista**. Revisá primero
+que ninguna de estas rutas exista en el proyecto. Si alguna existe, resolvela
+según la tabla o preguntá.
+
+```bash
+R=/tmp/remarkable
+mkdir -p src/layouts src/pages scripts sanity public
+cp -Rn $R/src/core $R/src/blocks $R/src/documents $R/src/theme $R/src/chrome src/
+cp -n  $R/src/schema.ts src/
+cp -n  $R/src/layouts/Base.astro src/layouts/
+cp -n  $R/src/pages/edit-canvas.astro "$R/src/pages/[slug].astro" src/pages/
+cp -n  $R/sanity.config.ts $R/sanity.cli.ts .
+cp -Rn $R/patches .
+cp -n  $R/scripts/verify.mjs $R/scripts/check-editor-schema.ts scripts/
+cp -n  $R/sanity/seed.ndjson sanity/
+cp -n  $R/public/placeholder.svg public/
+```
 
 | Copiar | Qué es | Obligatorio |
 |---|---|---|
@@ -92,15 +109,16 @@ Copiá desde `/tmp/remarkable` sin pisar nada que ya exista:
 | `src/documents/`, `src/schema.ts` | Documentos de Sanity: page, component, settings, navigation | Sí |
 | `src/theme/` | `tokens.css` (los nombres que usa el editor) + CSS de los bloques | Sí |
 | `src/layouts/Base.astro` | Layout de las páginas de Remarkable: SEO, header y footer, `<Islands />` | Sí (ver B4) |
-| `src/chrome/` | Header y footer que leen Navigation | Opcional: se puede usar el del proyecto |
+| `src/chrome/` | Header y footer que leen Navigation | Sí, salvo que reemplaces `SiteHeader`/`SiteFooter` en el layout (B4) |
 | `src/pages/edit-canvas.astro` | El canvas del editor | Sí |
 | `src/pages/[slug].astro` | Páginas del editor por slug | Sí |
 | `src/pages/index.astro` | Home desde el editor | Solo si la home sale del editor |
-| `src/pages/sitemap.xml.ts`, `robots.txt.ts` | SEO | Si el proyecto no tiene los suyos |
+| `src/pages/sitemap.xml.ts`, `robots.txt.ts` | SEO | Ver "Sitemap y robots" en B3 |
 | `sanity.config.ts`, `sanity.cli.ts` | Config del Studio | Sí |
 | `patches/` | Ajustes a `sanity@6.3.0` | Sí |
 | `scripts/verify.mjs`, `scripts/check-editor-schema.ts` | Chequeos | Sí |
 | `sanity/seed.ndjson` | Página demo | Opcional |
+| `public/placeholder.svg` | Imagen por defecto de los bloques nuevos | Sí: sin ella, insertar una imagen muestra un ícono roto |
 | `AGENTS.md` | Reglas para agentes | Sí (ver B5) |
 | `INSTALL.md`, `docs/` | Esta guía y la documentación | Opcional |
 
@@ -123,10 +141,12 @@ del repo de Remarkable.
   // bloques de motion (si se quedan): gsap, slider, 3D
   "gsap": "^3.15.0", "@gsap/react": "^2.1.2", "embla-carousel-react": "^8.6.0", "three": "^0.160.0"
 },
-"devDependencies": { "patch-package": "^8.0.1", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
+"devDependencies": { "patch-package": "^8.0.1", "vite": "*", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
 "overrides": { "sanity": "6.3.0" },
 "scripts": { "postinstall": "patch-package --error-on-fail", "verify": "node scripts/verify.mjs" }
 ```
+
+`vite` va explícito porque `astro.config` importa `loadEnv` de `vite`.
 
 **`astro.config.*`**: integrá lo que trae `/tmp/remarkable/astro.config.mjs`.
 Copiá los bloques tal cual: cada línea tiene su razón documentada en ese archivo.
@@ -134,6 +154,7 @@ Copiá los bloques tal cual: cada línea tiene su razón documentada en ese arch
 - La integración `sanity({ …, useCdn: false, studioBasePath: "/studio", studioRouterHistory: "hash" })`.
 - `react()`.
 - `vite.plugins: [tailwindcss()]`.
+- `image.remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }]`.
 - `vite.optimizeDeps` completo (`entries` + `include`). Sin eso, el Studio
   queda en blanco en dev.
 - `site`: si el proyecto ya define uno, dejá el suyo. Si no, copiá
@@ -144,8 +165,36 @@ Copiá los bloques tal cual: cada línea tiene su razón documentada en ese arch
 **`tsconfig.json`**: `"jsx": "react-jsx"`, `"jsxImportSource": "react"` y el
 alias `@/*` (B1).
 
+**Sitemap y robots**
+- **Si el proyecto no tiene ninguno de los dos:** copiá `sitemap.xml.ts` y
+  `robots.txt.ts`.
+- **Si usa `@astrojs/sitemap`:**
+  - No copies `sitemap.xml.ts`.
+  - Agregale
+    `filter: (p) => !/\/(edit-canvas|studio)(\/|$)/.test(new URL(p).pathname)`.
+  - Copiá `robots.txt.ts` y cambiá `/sitemap.xml` por `/sitemap-index.xml`,
+    ahí y en el `<link rel="sitemap">` de `Base.astro`.
+  - Avisá al usuario: con esa integración, las páginas marcadas `noindex` en
+    Sanity igual entran al sitemap.
+- **Si ya tiene un `robots.txt` propio:** sumale
+  `Disallow: /studio` y `Disallow: /edit-canvas`.
+
+**Barra final**
+- Si el proyecto usa `trailingSlash: "always"` o `build.format: "directory"`
+  con links con barra, avisá al usuario.
+- Los canonicals y links de Remarkable salen sin barra final. Ajustarlo es
+  un cambio en core: va al repo de Remarkable, no al proyecto.
+
 ### B4. Rutas y layout
 
+- **Cómo se reparten las rutas:**
+  - `[slug].astro` genera una página por cada documento `page` de Sanity,
+    excepto `home`, y solo en un nivel (`/<slug>`).
+  - Si un slug coincide con una ruta del proyecto, Astro sirve la del
+    proyecto. No hay otro filtro.
+  - Si la home queda la del proyecto, la página `home` de Sanity no se sirve
+    en ningún lado. Los links de Remarkable a "home" (logo, menú) van a `/`,
+    la home del proyecto.
 - **Rutas que chocan:**
   - Si el proyecto ya tiene una ruta con el mismo slug que una página de
     Sanity, gana la ruta del proyecto.
@@ -165,10 +214,16 @@ alias `@/*` (B1).
 
 ### B5. Reglas para agentes
 
-- Si el proyecto no tiene `AGENTS.md`, copiá el nuestro.
-- Si ya tiene uno, agregá al final una sección `## Remarkable` con el
+- **Si el proyecto no tiene `AGENTS.md`:** copiá el nuestro.
+- **Si ya tiene uno:** agregá al final una sección `## Remarkable` con el
   contenido del nuestro. No reemplaces el suyo.
-- Si existe `CLAUDE.md` sin `@AGENTS.md`, agregale esa línea.
+  - Sacale el título `#` al nuestro y bajá cada encabezado un nivel
+    (`##` → `###`).
+  - Nuestro texto menciona `INSTALL.md` y `docs/index.html`. Copialos o
+    reemplazá esas menciones por el link al repo de Remarkable.
+- **`CLAUDE.md`:**
+  - Si existe y no contiene `@AGENTS.md`, agregale esa línea.
+  - Si es un symlink a `AGENTS.md`, no lo toques.
 
 ### B6. Diseño
 
@@ -219,8 +274,12 @@ opcional: también se puede crear la primera página desde el editor.
 
 - [ ] `/studio` muestra el login de Sanity. Entra el usuario.
 - [ ] `/studio#/editor` lista las páginas y el canvas muestra la elegida.
-- [ ] La página se ve en el sitio, en `/` o en `/<slug>`.
+- [ ] La página se ve en el sitio: en `/<slug>`, o en `/` si la home sale del
+      editor.
 - [ ] `npm run verify` en verde.
+  - En un proyecto existente, el chequeo que importa es "Remarkable rendered
+    a page".
+  - El de la pantalla de bienvenida pasa siempre si la home es del proyecto.
 
 ### 5. Roles
 
