@@ -3,22 +3,27 @@ import { useClient, useCurrentUser, useDocumentOperation, useEditState, useSchem
 
 import { apiVersion } from "@/core/sanity/env";
 import { pageHref, toRoutes, type Routes } from "@/core/lib/routes";
-import { resolveSelection } from "@/core/canvas/editorOps";
-import type { Page } from "@/core/lib/types";
+import { reKey, resolveSelection } from "@/core/canvas/editorOps";
+import { blockMeta, blockTypes } from "@/blocks/meta";
+import type { Block, Page } from "@/core/lib/types";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
-import { FieldList, PagesContext, type View } from "./FieldControls";
+import { FieldList, PagesContext, UploadContext, type View } from "./FieldControls";
+import { canPlace, duplicate, insert, insertTarget, layers, move, newBlock, nudge, parentBlock, remove, type Doc, type LayerNode } from "./ops";
+import { plainToPt } from "./text";
 
 type Row = { _id: string; title?: string; slug?: string };
 const DEVICES = { Desktop: "100%", Tablet: "768px", Mobile: "390px" } as const;
+const CLIPBOARD = "remarkable:editor-clipboard";
+const COALESCE_MS = 1200;
 
 /**
- * Remarkable Editor (Studio tool, /studio#/editor) — phase 0.
- * Pages | canvas (iframe of /edit-canvas rendering the real PageBuilder) |
- * properties generated from the schema. Edits go through the Studio's own
- * document store (useDocumentOperation → patch), which applies them locally
- * at once and saves the draft in the background; useEditState hands the
- * canvas the locally-edited document, so the canvas never waits on the network.
+ * Remarkable Editor (Studio tool, /studio#/editor).
+ * Pages + layers | canvas (iframe of /edit-canvas, the real PageBuilder) |
+ * properties (generated from the schema). Reads with useEditState (local edits
+ * applied at once), writes through the Studio document store
+ * (useDocumentOperation → patch/publish), so the canvas never waits on the
+ * network and drafts save in the background.
  */
 export function EditorTool() {
   const client = useClient({ apiVersion });
@@ -38,81 +43,289 @@ export function EditorTool() {
       });
   }, [client]);
 
+  const upload = useCallback(async (file: File) => {
+    const asset = await client.assets.upload("image", file, { filename: file.name });
+    return { _type: "image", asset: { _type: "reference", _ref: asset._id } };
+  }, [client]);
+
   const pageOptions = useMemo(() => pages.map((p) => ({ id: p._id, title: p.title || p.slug || p._id })), [pages]);
   return (
     <PagesContext.Provider value={pageOptions}>
-    <div style={{ display: "grid", gridTemplateColumns: "220px 1fr 320px", height: "100%", minHeight: 0, fontSize: 13 }}>
-      <aside style={{ ...column, borderRight: border }}>
-        <div style={heading}>Pages</div>
-        {pages.map((p) => (
-          <button key={p._id} type="button" onClick={() => setPageId(p._id)} style={{ ...rowBtn, ...(p._id === pageId ? rowOn : null) }}>
-            {p.title || p.slug}
-            <span style={{ display: "block", opacity: 0.55, fontSize: 11 }}>{pageHref(p.slug)}</span>
-          </button>
-        ))}
-      </aside>
-      {pageId ? <PageEditor key={pageId} id={pageId} routes={routes} /> : <div style={{ padding: 24, opacity: 0.6 }}>Loading pages…</div>}
-    </div>
+      <UploadContext.Provider value={upload}>
+        <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 320px", height: "100%", minHeight: 0, fontSize: 13 }}>
+          {pageId ? (
+            <PageEditor key={pageId} id={pageId} routes={routes} pages={pages} onPage={setPageId} upload={upload} />
+          ) : (
+            <div style={{ padding: 24, opacity: 0.6 }}>Loading pages…</div>
+          )}
+        </div>
+      </UploadContext.Provider>
     </PagesContext.Provider>
   );
 }
 
-function PageEditor({ id, routes }: { id: string; routes: Routes }) {
+function PageEditor({
+  id,
+  routes,
+  pages,
+  onPage,
+  upload,
+}: {
+  id: string;
+  routes: Routes;
+  pages: Row[];
+  onPage: (id: string) => void;
+  upload: (file: File) => Promise<unknown>;
+}) {
   const { draft, published, ready } = useEditState(id, "page");
-  const doc = (draft ?? published) as Page | null;
+  const doc = (draft ?? published) as (Page & Doc) | null;
+  const docRef = useRef(doc);
+  docRef.current = doc;
   const ops = useDocumentOperation(id, "page");
   const schema = useSchema();
   const user = useCurrentUser();
   const isTeam = !!user?.roles?.some((r) => r.name === "administrator");
   const [view, setView] = useState<View>(isTeam ? "team" : "client");
+  const canStructure = view === "team";
   const [device, setDevice] = useState<keyof typeof DEVICES>("Desktop");
   const [selected, setSelected] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
 
-  // Canvas → editor
-  useEffect(
-    () =>
-      listen<ToEditor>((msg, source) => {
-        if (source !== frame.current?.contentWindow) return;
-        if (msg.type === "ready") setCanvasReady(true);
-        if (msg.type === "select") setSelected(msg.path);
-      }),
-    [],
+  // ── History: snapshots of `sections` (everything the editor changes lives there).
+  const past = useRef<Block[][]>([]);
+  const future = useRef<Block[][]>([]);
+  const lastCoalesce = useRef<{ key: string; at: number } | null>(null);
+  const [, bump] = useState(0);
+  const record = useCallback((coalesce?: string) => {
+    const now = Date.now();
+    const last = lastCoalesce.current;
+    if (coalesce && last && last.key === coalesce && now - last.at < COALESCE_MS) {
+      last.at = now; // same burst of typing: one undo step
+      return;
+    }
+    lastCoalesce.current = coalesce ? { key: coalesce, at: now } : null;
+    past.current.push(structuredClone(docRef.current?.sections ?? []));
+    if (past.current.length > 100) past.current.shift();
+    future.current = [];
+    bump((n) => n + 1);
+  }, []);
+
+  const setField = useCallback(
+    (path: string, value: unknown, coalesce = path) => {
+      record(coalesce);
+      ops.patch.execute([value === undefined ? { unset: [path] } : { set: { [path]: value } }]);
+    },
+    [ops.patch, record],
+  );
+  const setSections = useCallback(
+    (next: Doc) => {
+      record();
+      ops.patch.execute([{ set: { sections: next.sections ?? [] } }]);
+    },
+    [ops.patch, record],
+  );
+  const travel = useCallback(
+    (from: React.MutableRefObject<Block[][]>, to: React.MutableRefObject<Block[][]>) => {
+      const snap = from.current.pop();
+      if (!snap) return;
+      to.current.push(structuredClone(docRef.current?.sections ?? []));
+      lastCoalesce.current = null;
+      ops.patch.execute([{ set: { sections: snap } }]);
+      bump((n) => n + 1);
+    },
+    [ops.patch],
+  );
+  const undo = useCallback(() => travel(past, future), [travel]);
+  const redo = useCallback(() => travel(future, past), [travel]);
+
+  const select = useCallback((path: string | null, scroll = false) => {
+    setSelected(path);
+    post(frame.current?.contentWindow, { type: "select", path, scroll });
+  }, []);
+
+  // ── Actions on the selection
+  const act = useCallback(
+    (fn: (d: Doc) => { doc: Doc; path: string | null } | Doc) => {
+      const d = docRef.current;
+      if (!d) return;
+      try {
+        const res = fn(d);
+        const out = "doc" in res && "path" in res ? (res as { doc: Doc; path: string | null }) : { doc: res as Doc, path: null };
+        setSections(out.doc);
+        if (out.path !== undefined) select(out.path, true);
+      } catch (e) {
+        setStatus((e as Error).message);
+      }
+    },
+    [select, setSections],
+  );
+  const doRemove = useCallback(() => selected && canStructure && act((d) => ({ doc: remove(d, selected), path: parentBlock(selected) })), [act, canStructure, selected]);
+  const doDuplicate = useCallback(() => selected && canStructure && act((d) => duplicate(d, selected)), [act, canStructure, selected]);
+  const doNudge = useCallback((dir: -1 | 1) => selected && act((d) => nudge(d, selected, dir)), [act, selected]);
+  const doCopy = useCallback(() => {
+    const item = selected && docRef.current ? resolveSelection(docRef.current, selected)?.item : null;
+    if (item) {
+      localStorage.setItem(CLIPBOARD, JSON.stringify(item));
+      setStatus(`Copied ${blockMeta(item._type)?.title ?? item._type}`);
+    }
+  }, [selected]);
+  const doPaste = useCallback(() => {
+    if (!canStructure) return;
+    const raw = localStorage.getItem(CLIPBOARD);
+    if (!raw) return;
+    const item = reKey(JSON.parse(raw) as Block);
+    act((d) => {
+      const t = insertTarget(d, selected, item._type);
+      if (!t) throw new Error(`Can't paste a ${item._type} here`);
+      return insert(d, t.arrayPath, t.index, item);
+    });
+  }, [act, canStructure, selected]);
+  const doAdd = useCallback(
+    (type: string) => {
+      setAdding(false);
+      act((d) => {
+        const t = insertTarget(d, selected, type);
+        if (!t) throw new Error(`Can't add a ${type} here`);
+        return insert(d, t.arrayPath, t.index, newBlock(type));
+      });
+    },
+    [act, selected],
   );
 
-  // Editor → canvas: every local edit re-renders the canvas immediately.
+  const onKey = useCallback(
+    (k: { key: string; mod: boolean; shift: boolean; alt: boolean }) => {
+      if (k.mod && k.key.toLowerCase() === "z") return k.shift ? redo() : undo();
+      if (k.mod && k.key.toLowerCase() === "y") return redo();
+      if (k.mod && k.key.toLowerCase() === "d") return doDuplicate();
+      if (k.mod && k.key.toLowerCase() === "c") return doCopy();
+      if (k.mod && k.key.toLowerCase() === "v") return doPaste();
+      if (k.key === "Delete" || k.key === "Backspace") return doRemove();
+      if (k.alt && k.key === "ArrowUp") return doNudge(-1);
+      if (k.alt && k.key === "ArrowDown") return doNudge(1);
+      if (k.key === "Escape" && selected) return select(parentBlock(selected));
+    },
+    [doCopy, doDuplicate, doNudge, doPaste, doRemove, redo, select, selected, undo],
+  );
+  // Shortcuts pressed in the editor chrome (not while typing in a field).
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest("input, textarea, select, [contenteditable]")) return;
+      const mod = e.metaKey || e.ctrlKey;
+      const handled = e.key === "Delete" || e.key === "Backspace" || e.key === "Escape" || (e.altKey && /^Arrow(Up|Down)$/.test(e.key)) || (mod && /^[dzcvy]$/i.test(e.key));
+      if (!handled) return;
+      e.preventDefault();
+      onKey({ key: e.key, mod, shift: e.shiftKey, alt: e.altKey });
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onKey]);
+
+  // ── Canvas → editor
+  const onKeyRef = useRef(onKey);
+  onKeyRef.current = onKey;
+  useEffect(
+    () =>
+      listen<ToEditor>(async (msg, source) => {
+        if (source !== frame.current?.contentWindow) return;
+        if (msg.type === "ready") setCanvasReady(true);
+        else if (msg.type === "select") setSelected(msg.path);
+        else if (msg.type === "key") onKeyRef.current(msg);
+        else if (msg.type === "text") setField(`${msg.path}.${msg.field}`, msg.kind === "pt" ? plainToPt(msg.value) : msg.value, `text:${msg.path}.${msg.field}`);
+        else if (msg.type === "drop") {
+          setStatus(`Uploading ${msg.file.name}…`);
+          try {
+            setField(`${msg.path}.${msg.field}`, await upload(msg.file));
+            setStatus("Image uploaded");
+          } catch (e) {
+            setStatus(`Upload failed: ${(e as Error).message}`);
+          }
+        }
+      }),
+    [setField, upload],
+  );
+
+  // ── Editor → canvas: every local edit re-renders the canvas immediately.
   useEffect(() => {
     if (canvasReady && doc) post(frame.current?.contentWindow, { type: "render", doc, routes });
   }, [canvasReady, doc, routes]);
 
+  useEffect(() => {
+    if (!status) return;
+    const t = setTimeout(() => setStatus(null), 3000);
+    return () => clearTimeout(t);
+  }, [status]);
+
   const target = useMemo(() => (doc && selected ? resolveSelection(doc, selected) : null), [doc, selected]);
   const type = target ? (schema.get(target.item._type) as ObjectSchemaType | undefined) : undefined;
-
-  const onChange = useCallback(
-    (path: string, value: unknown) => {
-      ops.patch.execute([value === undefined ? { unset: [path] } : { set: { [path]: value } }]);
-    },
-    [ops.patch],
-  );
-
-  const select = (path: string | null) => {
-    setSelected(path);
-    post(frame.current?.contentWindow, { type: "select", path });
-  };
-
+  const tree = useMemo(() => (doc ? layers(doc) : []), [doc]);
+  const addable = useMemo(() => (doc ? blockTypes.filter((t) => insertTarget(doc, selected, t)) : []), [doc, selected]);
   const publishDisabled = ops.publish.disabled;
+
   return (
     <>
+      <aside style={{ ...column, borderRight: border, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div>
+          <div style={heading}>Pages</div>
+          <select style={{ ...select_ }} value={id} onChange={(e) => onPage(e.target.value)}>
+            {pages.map((p) => (
+              <option key={p._id} value={p._id}>
+                {p.title || p.slug} — {pageHref(p.slug)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ ...heading, flex: 1 }}>Layers</div>
+          </div>
+          {doc ? (
+            <Layers
+              nodes={tree}
+              depth={0}
+              selected={selected}
+              onSelect={(p) => select(p, true)}
+              canDrag
+              onMove={(from, toArray, index) => act((d) => move(d, from, toArray, index))}
+              canDrop={(type, arrayPath) => !!docRef.current && canPlace(docRef.current, type, arrayPath)}
+            />
+          ) : null}
+        </div>
+      </aside>
+
       <main style={{ display: "flex", flexDirection: "column", minHeight: 0, background: "color-mix(in srgb, currentColor 6%, transparent)" }}>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "8px 12px", borderBottom: border }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "8px 12px", borderBottom: border, position: "relative" }}>
           {(Object.keys(DEVICES) as (keyof typeof DEVICES)[]).map((d) => (
             <button key={d} type="button" onClick={() => setDevice(d)} style={{ ...chip, ...(device === d ? chipOn : null) }}>
               {d}
             </button>
           ))}
+          <span style={{ width: 8 }} />
+          <button type="button" onClick={undo} disabled={!past.current.length} style={{ ...chip, opacity: past.current.length ? 1 : 0.4 }} title="Undo (⌘Z)">
+            ↶
+          </button>
+          <button type="button" onClick={redo} disabled={!future.current.length} style={{ ...chip, opacity: future.current.length ? 1 : 0.4 }} title="Redo (⌘⇧Z)">
+            ↷
+          </button>
+          {canStructure ? (
+            <button type="button" onClick={() => setAdding((a) => !a)} style={chip} title="Add a block after the selection (or inside it)">
+              + Add
+            </button>
+          ) : null}
+          {adding ? (
+            <div style={{ position: "absolute", top: 40, left: 220, zIndex: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8, borderRadius: 8, border, background: "var(--card-bg-color, #fff)", color: "inherit", boxShadow: "0 8px 30px #0003", width: 300 }}>
+              {addable.map((t) => (
+                <button key={t} type="button" onClick={() => doAdd(t)} style={{ ...chip, textAlign: "left" }}>
+                  {blockMeta(t)?.title ?? t}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <span style={{ flex: 1 }} />
-          <span style={{ opacity: 0.6, fontSize: 12 }}>{!ready ? "Loading…" : draft ? "Unpublished changes" : "Published"}</span>
+          <span style={{ opacity: 0.6, fontSize: 12 }}>{status ?? (!ready ? "Loading…" : draft ? "Unpublished changes" : "Published")}</span>
           <button
             type="button"
             disabled={!!publishDisabled}
@@ -124,14 +337,13 @@ function PageEditor({ id, routes }: { id: string; routes: Routes }) {
           </button>
         </div>
         <div style={{ flex: 1, minHeight: 0, display: "flex", justifyContent: "center", overflow: "auto" }}>
-          <iframe
-            ref={frame}
-            src={CANVAS_PATH}
-            title="Canvas"
-            style={{ width: DEVICES[device], height: "100%", border: 0, background: "#fff", transition: "width 200ms ease" }}
-          />
+          <iframe ref={frame} src={CANVAS_PATH} title="Canvas" style={{ width: DEVICES[device], height: "100%", border: 0, background: "#fff", transition: "width 200ms ease" }} />
+        </div>
+        <div style={{ padding: "4px 12px", borderTop: border, fontSize: 11, opacity: 0.55 }}>
+          Click to select · double-click text to edit · drop an image on an image · ⌘Z / ⌘⇧Z · ⌘D duplicate · ⌘C ⌘V · ⌫ delete · ⌥↑↓ move · Esc parent
         </div>
       </main>
+
       <aside style={{ ...column, borderLeft: border }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
           <div style={{ ...heading, margin: 0, flex: 1 }}>{target ? (type?.title ?? target.item._type) : "Properties"}</div>
@@ -143,34 +355,132 @@ function PageEditor({ id, routes }: { id: string; routes: Routes }) {
         </div>
         {target ? (
           <>
-            <button type="button" onClick={() => select(parentPath(selected!))} style={{ ...chip, marginBottom: 12 }} disabled={!parentPath(selected!)}>
-              ↑ Select parent
-            </button>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
+              <button type="button" onClick={() => select(parentBlock(selected!), true)} style={chip} disabled={!parentBlock(selected!)}>
+                ↑ Parent
+              </button>
+              <button type="button" onClick={() => doNudge(-1)} style={chip} title="Move up (⌥↑)">
+                ▲
+              </button>
+              <button type="button" onClick={() => doNudge(1)} style={chip} title="Move down (⌥↓)">
+                ▼
+              </button>
+              {canStructure ? (
+                <>
+                  <button type="button" onClick={doDuplicate} style={chip} title="⌘D">
+                    Duplicate
+                  </button>
+                  <button type="button" onClick={doRemove} style={{ ...chip, color: "#e5484d" }} title="⌫">
+                    Delete
+                  </button>
+                </>
+              ) : null}
+            </div>
             {type ? (
-              <FieldList type={type} value={target.item as Record<string, unknown>} basePath={selected!} onChange={onChange} view={view} />
+              <FieldList type={type} value={target.item as Record<string, unknown>} basePath={selected!} onChange={(p, v) => setField(p, v)} view={view} />
             ) : (
               <p style={{ opacity: 0.6 }}>Unknown block type “{target.item._type}”.</p>
             )}
           </>
         ) : (
-          <p style={{ opacity: 0.6, margin: 0 }}>Click anything on the canvas to edit it.</p>
+          <p style={{ opacity: 0.6, margin: 0 }}>Click anything on the canvas — or a layer — to edit it.</p>
         )}
       </aside>
     </>
   );
 }
 
-/** `a[_key=="x"].b[_key=="y"]` → `a[_key=="x"]` (the enclosing block), or null. */
-function parentPath(path: string): string | null {
-  const i = path.lastIndexOf("[_key==");
-  const j = path.lastIndexOf("[_key==", i - 1);
-  return j < 0 ? null : path.slice(0, path.indexOf("]", j) + 1);
+/** Layers tree with drag & drop (before / after / inside), validated against the registry. */
+function Layers({
+  nodes,
+  depth,
+  selected,
+  onSelect,
+  onMove,
+  canDrop,
+  canDrag,
+}: {
+  nodes: LayerNode[];
+  depth: number;
+  selected: string | null;
+  onSelect: (path: string) => void;
+  onMove: (from: string, toArray: string, index: number) => void;
+  canDrop: (type: string, arrayPath: string) => boolean;
+  canDrag: boolean;
+}) {
+  const [over, setOver] = useState<{ path: string; zone: "before" | "after" | "inside" } | null>(null);
+  const zoneOf = (e: React.DragEvent, n: LayerNode): "before" | "after" | "inside" => {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const y = (e.clientY - r.top) / r.height;
+    if (n.childArray && y > 0.3 && y < 0.7) return "inside";
+    return y < 0.5 ? "before" : "after";
+  };
+  return (
+    <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+      {nodes.map((n) => {
+        const parentArray = n.path.slice(0, n.path.lastIndexOf("["));
+        return (
+          <li key={n.path}>
+            <div
+              draggable={canDrag}
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/x-layer", JSON.stringify({ path: n.path, type: n.type }));
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                const raw = [...e.dataTransfer.types].includes("text/x-layer");
+                if (!raw) return;
+                e.preventDefault();
+                setOver({ path: n.path, zone: zoneOf(e, n) });
+              }}
+              onDragLeave={() => setOver(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setOver(null);
+                const data = e.dataTransfer.getData("text/x-layer");
+                if (!data) return;
+                const { path: from, type } = JSON.parse(data) as { path: string; type: string };
+                if (from === n.path) return;
+                const zone = zoneOf(e, n);
+                const toArray = zone === "inside" ? n.childArray! : parentArray;
+                if (!canDrop(type, toArray)) return;
+                // Index in the target array once `from` has been removed from it.
+                const siblings = (zone === "inside" ? n.children : nodes).map((x) => x.path).filter((p) => p !== from);
+                const index = zone === "inside" ? siblings.length : siblings.indexOf(n.path) + (zone === "after" ? 1 : 0);
+                onMove(from, toArray, index);
+              }}
+              onClick={() => onSelect(n.path)}
+              style={{
+                padding: `5px 8px 5px ${8 + depth * 14}px`,
+                borderRadius: 6,
+                cursor: "pointer",
+                userSelect: "none",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                fontWeight: n.type === "section" ? 600 : 400,
+                background: selected === n.path ? "#2f5bff" : over?.path === n.path && over.zone === "inside" ? "color-mix(in srgb, #2f5bff 25%, transparent)" : "transparent",
+                color: selected === n.path ? "#fff" : "inherit",
+                boxShadow:
+                  over?.path === n.path && over.zone === "before" ? "inset 0 2px 0 #2f5bff" : over?.path === n.path && over.zone === "after" ? "inset 0 -2px 0 #2f5bff" : undefined,
+              }}
+              title={n.title}
+            >
+              {n.title}
+            </div>
+            {n.children.length ? (
+              <Layers nodes={n.children} depth={depth + 1} selected={selected} onSelect={onSelect} onMove={onMove} canDrop={canDrop} canDrag={canDrag} />
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 const border = "1px solid color-mix(in srgb, currentColor 14%, transparent)";
 const column = { padding: 12, overflowY: "auto", minHeight: 0 } as const;
-const heading = { fontWeight: 600, margin: "4px 4px 10px" } as const;
-const rowBtn = { display: "block", width: "100%", textAlign: "left", padding: "7px 8px", border: 0, borderRadius: 6, font: "inherit", color: "inherit", cursor: "pointer", background: "transparent" } as const;
-const rowOn = { background: "color-mix(in srgb, currentColor 14%, transparent)", fontWeight: 600 } as const;
+const heading = { fontWeight: 600, margin: "4px 4px 8px" } as const;
 const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: 6 } as const;
 const chipOn = { background: "#2f5bff", borderColor: "#2f5bff", color: "#fff" } as const;
+const select_ = { width: "100%", padding: "6px 8px", font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: 6 } as const;

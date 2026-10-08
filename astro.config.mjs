@@ -77,6 +77,7 @@ export default defineConfig({
         "@sanity/client/stega",
         "@sanity/image-url",
         "@portabletext/react",
+        "groq",
         "react/compiler-runtime",
         "lodash/isObject.js",
         "lodash/groupBy.js",

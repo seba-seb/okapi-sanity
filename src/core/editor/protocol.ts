@@ -8,11 +8,18 @@ import type { Page } from "@/core/lib/types";
  */
 export type ToCanvas =
   | { type: "render"; doc: Page; routes: Routes }
-  | { type: "select"; path: string | null };
+  /** `scroll`: bring it into view (selection came from the layers panel). */
+  | { type: "select"; path: string | null; scroll?: boolean };
 
 export type ToEditor =
   | { type: "ready" }
-  | { type: "select"; path: string | null };
+  | { type: "select"; path: string | null }
+  /** Inline text edit. `final` on Enter/blur; intermediate ones keep the draft live. */
+  | { type: "text"; path: string; field: string; kind: "pt" | "string"; value: string; final: boolean }
+  /** A file dropped on an image-bearing block. */
+  | { type: "drop"; path: string; field: string; file: File }
+  /** Shortcut pressed while focus is in the canvas. */
+  | { type: "key"; key: string; mod: boolean; shift: boolean; alt: boolean };
 
 const TAG = "remarkable-editor";
 type Envelope<T> = { tag: typeof TAG; msg: T };

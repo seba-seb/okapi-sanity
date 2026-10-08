@@ -25,6 +25,8 @@ execSync("node --experimental-strip-types --no-warnings src/core/lib/routes.chec
 execSync("node --experimental-strip-types --no-warnings src/core/canvas/channels.check.ts", { stdio: "inherit" });
 // Every block field gets a control in the Remarkable Editor panel.
 execSync("npx sanity exec scripts/check-editor-schema.ts", { stdio: ["ignore", "inherit", "inherit"] });
+// Structural edits (insert/move/remove/duplicate) keep the document valid.
+execSync("npx sanity exec src/core/editor/ops.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 
 console.log("\n2. Build");
 execSync("npx astro build", { stdio: ["ignore", "ignore", "inherit"] });

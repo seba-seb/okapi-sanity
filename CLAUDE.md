@@ -85,8 +85,20 @@ properties. `src/core/editor/`:
   verify) fails if any block field has no control. Content vs design:
   `isContent` (text, rich text, links, images, references = client-visible).
 
-Next (phase 1): inline text editing on the canvas, layers tree + drag,
-insert/duplicate/delete, undo/redo, image drop. See the plan in the session.
+Phase 1 (done):
+- Double-click text on the canvas to edit it in place (headings, paragraphs,
+  eyebrows, button labels, card title/body, Big Type, Scroll Text). While
+  editing, the canvas holds incoming renders and afterwards restores React's
+  exact DOM before applying them (no caret jumps, no duplicated text).
+  Formatted rich text (marks/links) still edits in the Structure form.
+- Layers tree with drag & drop (before/after/inside, validated against
+  meta.ts), + Add (inserts inside the selected container or after the
+  selection), duplicate, delete, move ▲▼, copy/paste between pages
+  (localStorage), undo/redo (snapshots of `sections`, typing coalesced).
+- Images: drop a file on any image block/card/parallax/section, or upload
+  from the panel.
+- Client view: content fields + reorder; no add/duplicate/delete/paste.
+- `ops.ts` = pure structural edits; `ops.check.ts` (run by verify).
 
 ## Motion blocks
 

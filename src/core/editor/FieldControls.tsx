@@ -1,7 +1,7 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 import type { ObjectSchemaType, SchemaType } from "sanity";
 
-import { ptFromString } from "@/blocks/defaults";
+import { plainToPt, ptToPlainIfSimple } from "./text";
 
 /**
  * Properties panel controls generated from the compiled Studio schema — no
@@ -13,6 +13,8 @@ type Field = { name: string; type: SchemaType };
 
 /** Pages the editor knows about, for reference pickers (links to pages). */
 export const PagesContext = createContext<{ id: string; title: string }[]>([]);
+/** Uploads an image file and returns the image field value (`{_type:"image", asset}`). */
+export const UploadContext = createContext<((file: File) => Promise<unknown>) | null>(null);
 type Change = (path: string, value: unknown) => void;
 export type View = "team" | "client";
 
@@ -65,16 +67,6 @@ function hiddenFor(t: SchemaType, parent: unknown, value: unknown): boolean {
   return h === true;
 }
 
-/** Plain text of a simple Portable Text value, or null if it carries marks / several blocks. */
-function ptToPlainIfSimple(v: unknown): string | null {
-  if (v == null) return "";
-  if (typeof v === "string") return v;
-  if (!Array.isArray(v) || v.length > 1) return null;
-  const b = v[0] as { children?: { text?: string; marks?: string[] }[] } | undefined;
-  if (!b?.children) return "";
-  if (b.children.some((c) => c.marks?.length)) return null;
-  return b.children.map((c) => c.text ?? "").join("");
-}
 
 export function FieldList({
   type,
@@ -113,9 +105,9 @@ function FieldControl({ field, value, parent, path, onChange, view }: { field: F
       <label>
         {label}
         {plain === null ? (
-          <p style={muted}>Formatted text — edit on the canvas (phase 1) or in the form.</p>
+          <p style={muted}>Formatted text (bold, links…) — edit it in the Structure form.</p>
         ) : (
-          <textarea rows={3} style={input} value={plain} onChange={(e) => onChange(path, ptFromString(e.target.value))} />
+          <textarea rows={3} style={input} value={plain} onChange={(e) => onChange(path, plainToPt(e.target.value))} />
         )}
       </label>
     );
@@ -182,13 +174,7 @@ function FieldControl({ field, value, parent, path, onChange, view }: { field: F
         <span style={labelStyle}>{title}</span>
       </label>
     );
-  if (is(t, "image"))
-    return (
-      <div>
-        {label}
-        <p style={muted}>{(value as { asset?: unknown })?.asset ? "Image set" : "No image"} — change it in the form (drag & drop arrives in phase 1).</p>
-      </div>
-    );
+  if (is(t, "image")) return <ImageControl label={label} value={value} path={path} onChange={onChange} />;
   if (t.jsonType === "object" && (t as ObjectSchemaType).fields)
     return (
       <fieldset style={{ border: "1px solid color-mix(in srgb, currentColor 15%, transparent)", borderRadius: 8, padding: 10, margin: 0 }}>
@@ -235,5 +221,46 @@ function ReferencePicker({ label, value, path, onChange }: { label: React.ReactN
         ))}
       </select>
     </label>
+  );
+}
+
+function ImageControl({ label, value, path, onChange }: { label: React.ReactNode; value: unknown; path: string; onChange: Change }) {
+  const upload = useContext(UploadContext);
+  const [busy, setBusy] = useState(false);
+  const has = !!(value as { asset?: unknown } | undefined)?.asset;
+  return (
+    <div>
+      {label}
+      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+        <label style={{ ...chip, display: "inline-block" }}>
+          {busy ? "Uploading…" : has ? "Replace image" : "Upload image"}
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            disabled={!upload || busy}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file || !upload) return;
+              setBusy(true);
+              try {
+                // Keep sibling fields (alt, hotspot) — only the asset changes.
+                const img = (await upload(file)) as Record<string, unknown>;
+                onChange(path, { ...((value as Record<string, unknown>) ?? {}), ...img });
+              } finally {
+                setBusy(false);
+              }
+            }}
+          />
+        </label>
+        {has ? (
+          <button type="button" style={chip} onClick={() => onChange(path, undefined)}>
+            Remove
+          </button>
+        ) : null}
+      </div>
+      <span style={hint}>Or drop an image file on it in the canvas.</span>
+    </div>
   );
 }
