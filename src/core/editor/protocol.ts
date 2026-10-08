@@ -45,4 +45,4 @@ export function listen<T extends ToCanvas | ToEditor>(handler: (msg: T, source: 
   return () => window.removeEventListener("message", onMessage);
 }
 
-export const CANVAS_PATH = "/edit-canvas";
+export { CANVAS_PATH } from "@/core/sanity/env";

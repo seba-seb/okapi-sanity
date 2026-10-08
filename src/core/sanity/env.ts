@@ -15,6 +15,10 @@ export const projectId = env("PUBLIC_SANITY_PROJECT_ID") || "";
 /** Build-time only, for private datasets. Never read this from client code. */
 export const readToken = () => env("SANITY_API_READ_TOKEN");
 
+/** The editor canvas route (data-free; see core/editor). Here, not in the
+ * editor protocol, so public code never imports editor modules. */
+export const CANVAS_PATH = "/edit-canvas";
+
 /** Where the embedded Studio lives, used for click-to-edit links. */
 export const studioUrl = "/studio";
 

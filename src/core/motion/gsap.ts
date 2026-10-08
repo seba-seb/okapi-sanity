@@ -3,7 +3,7 @@ import { SplitText } from "gsap/SplitText";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
-import { CANVAS_PATH } from "@/core/editor/protocol";
+import { CANVAS_PATH } from "@/core/sanity/env";
 
 // One registration for the whole site; import GSAP from here, not from "gsap".
 if (typeof window !== "undefined") gsap.registerPlugin(SplitText, ScrollTrigger, useGSAP);
