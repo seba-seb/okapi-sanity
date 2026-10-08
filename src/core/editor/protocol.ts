@@ -10,13 +10,14 @@ import type { Components } from "@/core/render/components";
 export type ToCanvas =
   | { type: "render"; doc: Page; routes: Routes; components: Components }
   /** `scroll`: bring it into view (selection came from the layers panel). */
-  | { type: "select"; path: string | null; scroll?: boolean }
+  | { type: "select"; path: string | null; scroll?: boolean; paths?: string[] }
   /** Remount the page once with decorative motion on ("Play" in the editor). */
   | { type: "replay" };
 
 export type ToEditor =
   | { type: "ready" }
-  | { type: "select"; path: string | null }
+  /** `add`: shift/⌘-click — toggle this block in the selection. */
+  | { type: "select"; path: string | null; add?: boolean }
   /** Inline text edit. `final` on Enter/blur; intermediate ones keep the draft live. */
   | { type: "text"; path: string; field: string; kind: "pt" | "string"; value: string; pt?: unknown[]; final: boolean }
   /** A file dropped on an image-bearing block. */

@@ -158,3 +158,67 @@ export function layers(doc: Doc): LayerNode[] {
     });
   return walk(doc.sections, "sections");
 }
+
+// ── Multi-selection ──────────────────────────────────────────────────────────
+
+/** Drop paths whose ancestor is also selected (acting on the parent covers them). */
+export function topmost(paths: string[]): string[] {
+  const uniq = [...new Set(paths)];
+  return uniq.filter((p) => !uniq.some((q) => q !== p && p.startsWith(`${q}.`)));
+}
+
+export function removeMany(doc: Doc, paths: string[]): Doc {
+  return topmost(paths).reduce((d, p) => remove(d, p), doc);
+}
+
+export function duplicateMany(doc: Doc, paths: string[]): { doc: Doc; paths: string[] } {
+  let d = doc;
+  const out: string[] = [];
+  for (const p of topmost(paths)) {
+    const r = duplicate(d, p);
+    d = r.doc;
+    out.push(r.path);
+  }
+  return { doc: d, paths: out };
+}
+
+/** Move each selected block one step; siblings move together without leapfrogging. */
+export function nudgeMany(doc: Doc, paths: string[], dir: -1 | 1): { doc: Doc; paths: string[] } {
+  const items = topmost(paths)
+    .map((p) => ({ p, r: resolveSelection(doc, p) }))
+    .filter((x) => x.r)
+    .sort((a, b) => (a.r!.index - b.r!.index) * -dir);
+  const selectedKeys = new Set(items.map((x) => x.r!.item._key));
+  let d = doc;
+  const out: string[] = [];
+  for (const { p } of items) {
+    const r = resolveSelection(d, p);
+    if (!r) continue;
+    const neighbour = r.parentArray[r.index + dir];
+    // Blocked by the edge, or by a selected sibling that couldn't move.
+    if (!neighbour || selectedKeys.has(neighbour._key)) {
+      out.push(p);
+      continue;
+    }
+    const n = nudge(d, p, dir);
+    d = n.doc;
+    out.push(n.path);
+  }
+  return { doc: d, paths: out };
+}
+
+/** Insert several blocks in a row where a block of the first one's type would go. */
+export function insertMany(doc: Doc, selected: string | null, blocks: Block[]): { doc: Doc; paths: string[] } {
+  let d = doc;
+  let anchor = selected;
+  const out: string[] = [];
+  for (const b of blocks) {
+    const t = insertTarget(d, anchor, b._type);
+    if (!t) continue;
+    const r = insert(d, t.arrayPath, t.index, b);
+    d = r.doc;
+    anchor = r.path; // next one goes right after this one
+    out.push(r.path);
+  }
+  return { doc: d, paths: out };
+}

@@ -59,6 +59,7 @@ export function CanvasApp() {
   const [routes, setRoutes] = useState<Routes>({});
   const [components, setComponents] = useState<Components>({});
   const [selected, setSelected] = useState<string | null>(null);
+  const [others, setOthers] = useState<string[]>([]); // the rest of a multi-selection
   const docRef = useRef<Page | null>(null);
   docRef.current = doc;
   const componentsRef = useRef<Components>({});
@@ -94,7 +95,7 @@ export function CanvasApp() {
   const hoverEl = useRef<Element | null>(null);
   const dropEl = useRef<Element | null>(null);
   const [replayKey, setReplayKey] = useState(0);
-  const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box; bar: Box }>({ hover: null, sel: null, drop: null, bar: null });
+  const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box; bar: Box; multi: Box[] }>({ hover: null, sel: null, drop: null, bar: null, multi: [] });
 
   useEffect(() => {
     const off = listen<ToCanvas>((msg) => {
@@ -110,6 +111,7 @@ export function CanvasApp() {
         setReplayKey((k) => k + 1);
       } else if (msg.type === "select") {
         setSelected(msg.path);
+        setOthers((msg.paths ?? []).filter((p) => p !== msg.path));
         if (msg.scroll) byPath(msg.path)?.scrollIntoView({ block: "center", behavior: "smooth" });
       }
     });
@@ -129,7 +131,12 @@ export function CanvasApp() {
       e.stopPropagation();
       editing.current?.finish(true);
       const path = blockAt(e.target)?.getAttribute("data-sanity-path") ?? null;
+      if ((e.shiftKey || e.metaKey || e.ctrlKey) && path) {
+        post(window.parent, { type: "select", path, add: true }); // the editor echoes the new selection
+        return;
+      }
       setSelected(path);
+      setOthers([]);
       post(window.parent, { type: "select", path });
     };
 
@@ -305,15 +312,23 @@ export function CanvasApp() {
         sel: boxOf(byPath(selected)),
         drop: boxOf(dropEl.current),
         bar: editing.current?.rich ? boxOf(editing.current.el) : null,
+        multi: others.map((p) => boxOf(byPath(p))),
       };
       setBoxes((cur) =>
-        sameBox(cur.hover, next.hover) && sameBox(cur.sel, next.sel) && sameBox(cur.drop, next.drop) && sameBox(cur.bar, next.bar) ? cur : next,
+        sameBox(cur.hover, next.hover) &&
+        sameBox(cur.sel, next.sel) &&
+        sameBox(cur.drop, next.drop) &&
+        sameBox(cur.bar, next.bar) &&
+        cur.multi.length === next.multi.length &&
+        cur.multi.every((b, i) => sameBox(b, next.multi[i]))
+          ? cur
+          : next,
       );
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [selected]);
+  }, [selected, others]);
 
   // Animations are created on mount (layout effects); by the time this effect
   // runs they exist, so later remounts (edits) go back to the still canvas.
@@ -333,6 +348,9 @@ export function CanvasApp() {
       {page ?? <p style={{ padding: 32, font: "14px system-ui", opacity: 0.6 }}>This page has no sections yet. Add one from the editor.</p>}
       <Outline box={boxes.hover} color="#6b8cff" dashed />
       <Outline box={boxes.sel} color="#2f5bff" />
+      {boxes.multi.map((b, i) => (
+        <Outline key={i} box={b} color="#2f5bff" />
+      ))}
       <Outline box={boxes.drop} color="#16a34a" label="Drop image" />
       {boxes.bar ? <FormatBar box={boxes.bar} run={(c) => editing.current?.command(c)} /> : null}
     </>

@@ -1,7 +1,7 @@
 // Run: node --experimental-strip-types src/core/editor/ops.check.ts  (also run by verify)
 import assert from "node:assert/strict";
 
-import { canPlace, duplicate, insert, insertTarget, layers, move, newBlock, nudge, parentBlock, remove } from "./ops.ts";
+import { canPlace, duplicate, duplicateMany, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, topmost } from "./ops.ts";
 
 const h = (k: string) => ({ _type: "heading", _key: k, text: [] });
 const doc = {
@@ -57,6 +57,20 @@ assert.equal(canPlace(doc, "componentRef", "sections"), true);
 assert.equal(canPlace({ ...doc, _type: "component" }, "componentRef", "sections"), false);
 assert.equal(canPlace(doc, "componentRef", `${S1}.content`), false);
 assert.deepEqual(insertTarget(doc, H1, "componentRef"), { arrayPath: "sections", index: 1 }); // climbs to the page level
+
+// Multi-selection
+assert.deepEqual(topmost([G1, C1, H1]), [G1, H1]); // the card is inside the selected grid
+const rm = removeMany(doc, [H1, C1, G1]);
+assert.deepEqual(keysOf(rm.sections![0].content as never), []);
+const dm = duplicateMany(doc, [H1, G1]);
+assert.deepEqual(keysOf(dm.doc.sections![0].content as never).length, 4);
+assert.equal(dm.paths.length, 2);
+const three = { sections: [{ _type: "section", _key: "s", content: [h("a"), h("b"), h("c")] }] };
+const P = (k: string) => `sections[_key=="s"].content[_key=="${k}"]`;
+assert.deepEqual(keysOf(nudgeMany(three, [P("b"), P("c")], -1).doc.sections![0].content as never), ["b", "c", "a"]);
+assert.deepEqual(keysOf(nudgeMany(three, [P("a"), P("b")], -1).doc.sections![0].content as never), ["a", "b", "c"]); // blocked at the top, b doesn't leapfrog a
+const im = insertMany(three, P("a"), [h("x"), h("y")]);
+assert.deepEqual(keysOf(im.doc.sections![0].content as never), ["a", "x", "y", "b", "c"]);
 
 // Helpers
 assert.equal(parentBlock(C1), G1);

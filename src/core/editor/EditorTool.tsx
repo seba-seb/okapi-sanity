@@ -12,7 +12,7 @@ import { randomKey } from "./paths";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
 import { FieldList, PagesContext, UploadContext, type View } from "./FieldControls";
-import { canPlace, duplicate, insert, insertTarget, layers, move, newBlock, nudge, parentBlock, remove, type Doc, type LayerNode } from "./ops";
+import { canPlace, duplicateMany, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
 import { plainToPt } from "./text";
 
 type Row = { _id: string; title?: string; slug?: string };
@@ -123,7 +123,11 @@ function PageEditor({
   const [view, setView] = useState<View>(isTeam ? "team" : "client");
   const canStructure = view === "team";
   const [device, setDevice] = useState<keyof typeof DEVICES>("Desktop");
-  const [selected, setSelected] = useState<string | null>(null);
+  // Selection: several blocks; the last one is the primary (panel, + Add anchor).
+  const [selection, setSelection] = useState<string[]>([]);
+  const selected = selection.at(-1) ?? null;
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
   const [status, setStatus] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -192,46 +196,60 @@ function PageEditor({
   const undo = useCallback(() => travel(past, future), [travel]);
   const redo = useCallback(() => travel(future, past), [travel]);
 
-  const select = useCallback((path: string | null, scroll = false) => {
-    setSelected(path);
-    post(frame.current?.contentWindow, { type: "select", path, scroll });
+  const selectPaths = useCallback((paths: string[], scroll = false) => {
+    setSelection(paths);
+    post(frame.current?.contentWindow, { type: "select", path: paths.at(-1) ?? null, paths, scroll });
   }, []);
+  const select = useCallback((path: string | null, scroll = false) => selectPaths(path ? [path] : [], scroll), [selectPaths]);
+  /** Shift/⌘-click: add or remove one block from the selection. */
+  const toggle = useCallback(
+    (path: string) => {
+      const cur = selectionRef.current;
+      selectPaths(cur.includes(path) ? cur.filter((p) => p !== path) : [...cur, path]);
+    },
+    [selectPaths],
+  );
 
   // ── Actions on the selection
   const act = useCallback(
-    (fn: (d: Doc) => { doc: Doc; path: string | null } | Doc) => {
+    (fn: (d: Doc) => { doc: Doc; path?: string | null; paths?: string[] } | Doc) => {
       const d = docRef.current;
       if (!d) return;
       try {
-        const res = fn(d);
-        const out = "doc" in res && "path" in res ? (res as { doc: Doc; path: string | null }) : { doc: res as Doc, path: null };
-        setSections(out.doc);
-        if (out.path !== undefined) select(out.path, true);
+        const res = fn(d) as { doc?: Doc; path?: string | null; paths?: string[] };
+        const out = res.doc ? res : { doc: res as Doc, path: null };
+        setSections(out.doc!);
+        if (out.paths) selectPaths(out.paths, true);
+        else if (out.path !== undefined) select(out.path, true);
       } catch (e) {
         setStatus((e as Error).message);
       }
     },
-    [select, setSections],
+    [select, selectPaths, setSections],
   );
-  const doRemove = useCallback(() => selected && canStructure && act((d) => ({ doc: remove(d, selected), path: parentBlock(selected) })), [act, canStructure, selected]);
-  const doDuplicate = useCallback(() => selected && canStructure && act((d) => duplicate(d, selected)), [act, canStructure, selected]);
-  const doNudge = useCallback((dir: -1 | 1) => selected && act((d) => nudge(d, selected, dir)), [act, selected]);
+  const doRemove = useCallback(
+    () => selection.length && canStructure && act((d) => ({ doc: removeMany(d, selection), path: parentBlock(selected!) })),
+    [act, canStructure, selected, selection],
+  );
+  const doDuplicate = useCallback(() => selection.length && canStructure && act((d) => duplicateMany(d, selection)), [act, canStructure, selection]);
+  const doNudge = useCallback((dir: -1 | 1) => selection.length && act((d) => nudgeMany(d, selection, dir)), [act, selection]);
   const doCopy = useCallback(() => {
-    const item = selected && docRef.current ? resolveSelection(docRef.current, selected)?.item : null;
-    if (item) {
-      localStorage.setItem(CLIPBOARD, JSON.stringify(item));
-      setStatus(`Copied ${blockMeta(item._type)?.title ?? item._type}`);
+    const items = docRef.current ? topmost(selection).map((p) => resolveSelection(docRef.current!, p)?.item).filter(Boolean) : [];
+    if (items.length) {
+      localStorage.setItem(CLIPBOARD, JSON.stringify(items));
+      setStatus(items.length === 1 ? `Copied ${blockMeta(items[0]!._type)?.title ?? items[0]!._type}` : `Copied ${items.length} blocks`);
     }
-  }, [selected]);
+  }, [selection]);
   const doPaste = useCallback(() => {
     if (!canStructure) return;
     const raw = localStorage.getItem(CLIPBOARD);
     if (!raw) return;
-    const item = reKey(JSON.parse(raw) as Block);
+    const parsed = JSON.parse(raw) as Block | Block[];
+    const items = (Array.isArray(parsed) ? parsed : [parsed]).map((b) => reKey(b));
     act((d) => {
-      const t = insertTarget(d, selected, item._type);
-      if (!t) throw new Error(`Can't paste a ${item._type} here`);
-      return insert(d, t.arrayPath, t.index, item);
+      const r = insertMany(d, selected, items);
+      if (!r.paths.length) throw new Error("Nothing can be pasted here");
+      return r;
     });
   }, [act, canStructure, selected]);
   const doAdd = useCallback(
@@ -323,7 +341,10 @@ function PageEditor({
       listen<ToEditor>(async (msg, source) => {
         if (source !== frame.current?.contentWindow) return;
         if (msg.type === "ready") setCanvasReady(true);
-        else if (msg.type === "select") setSelected(msg.path);
+        else if (msg.type === "select") {
+          if (msg.add && msg.path) toggle(msg.path);
+          else select(msg.path);
+        }
         else if (msg.type === "key") onKeyRef.current(msg);
         else if (msg.type === "text") {
           const rich = msg.kind === "pt";
@@ -395,7 +416,8 @@ function PageEditor({
               nodes={tree}
               depth={0}
               selected={selected}
-              onSelect={(p) => select(p, true)}
+              selection={selection}
+              onSelect={(p, add) => (add ? toggle(p) : select(p, true))}
               canDrag
               onMove={(from, toArray, index) => act((d) => move(d, from, toArray, index))}
               canDrop={(type, arrayPath) => !!docRef.current && canPlace(docRef.current, type, arrayPath)}
@@ -471,7 +493,24 @@ function PageEditor({
             </button>
           ) : null}
         </div>
-        {target ? (
+        {selection.length > 1 ? (
+          <>
+            <p style={{ margin: "0 0 10px", opacity: 0.8 }}>{selection.length} blocks selected</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              <button type="button" onClick={() => doNudge(-1)} style={chip}>▲</button>
+              <button type="button" onClick={() => doNudge(1)} style={chip}>▼</button>
+              <button type="button" onClick={doCopy} style={chip}>Copy</button>
+              {canStructure ? (
+                <>
+                  <button type="button" onClick={doDuplicate} style={chip}>Duplicate</button>
+                  <button type="button" onClick={doRemove} style={{ ...chip, color: "#e5484d" }}>Delete</button>
+                </>
+              ) : null}
+              <button type="button" onClick={() => select(null)} style={chip}>Clear</button>
+            </div>
+            <p style={{ marginTop: 10, fontSize: 11, opacity: 0.55 }}>Shift/⌘-click to add or remove blocks.</p>
+          </>
+        ) : target ? (
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
               <button type="button" onClick={() => select(parentBlock(selected!), true)} style={chip} disabled={!parentBlock(selected!)}>
@@ -549,6 +588,7 @@ function Layers({
   nodes,
   depth,
   selected,
+  selection,
   onSelect,
   onMove,
   canDrop,
@@ -557,7 +597,8 @@ function Layers({
   nodes: LayerNode[];
   depth: number;
   selected: string | null;
-  onSelect: (path: string) => void;
+  onSelect: (path: string, add: boolean) => void;
+  selection?: string[];
   onMove: (from: string, toArray: string, index: number) => void;
   canDrop: (type: string, arrayPath: string) => boolean;
   canDrag: boolean;
@@ -603,7 +644,7 @@ function Layers({
                 const index = zone === "inside" ? siblings.length : siblings.indexOf(n.path) + (zone === "after" ? 1 : 0);
                 onMove(from, toArray, index);
               }}
-              onClick={() => onSelect(n.path)}
+              onClick={(e) => onSelect(n.path, e.shiftKey || e.metaKey || e.ctrlKey)}
               style={{
                 padding: `5px 8px 5px ${8 + depth * 14}px`,
                 borderRadius: 6,
@@ -613,8 +654,8 @@ function Layers({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 fontWeight: n.type === "section" ? 600 : 400,
-                background: selected === n.path ? "#2f5bff" : over?.path === n.path && over.zone === "inside" ? "color-mix(in srgb, #2f5bff 25%, transparent)" : "transparent",
-                color: selected === n.path ? "#fff" : "inherit",
+                background: selected === n.path ? "#2f5bff" : selection?.includes(n.path) ? "color-mix(in srgb, #2f5bff 55%, transparent)" : over?.path === n.path && over.zone === "inside" ? "color-mix(in srgb, #2f5bff 25%, transparent)" : "transparent",
+                color: selected === n.path || selection?.includes(n.path) ? "#fff" : "inherit",
                 boxShadow:
                   over?.path === n.path && over.zone === "before" ? "inset 0 2px 0 #2f5bff" : over?.path === n.path && over.zone === "after" ? "inset 0 -2px 0 #2f5bff" : undefined,
               }}
@@ -623,7 +664,7 @@ function Layers({
               {n.title}
             </div>
             {n.children.length ? (
-              <Layers nodes={n.children} depth={depth + 1} selected={selected} onSelect={onSelect} onMove={onMove} canDrop={canDrop} canDrag={canDrag} />
+              <Layers nodes={n.children} depth={depth + 1} selected={selected} selection={selection} onSelect={onSelect} onMove={onMove} canDrop={canDrop} canDrag={canDrag} />
             ) : null}
           </li>
         );
