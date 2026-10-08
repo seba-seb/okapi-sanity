@@ -1,0 +1,23 @@
+---
+/**
+ * Brings PageBuilder islands to life. Put it once at the end of the <body> of
+ * every layout that renders <PageBuilder islands … />. Pages are plain HTML;
+ * React + the blocks load only if the page has a section that needs JS.
+ */
+---
+
+<noscript><style>[data-split]{visibility:visible}</style></noscript>
+{import.meta.env.DEV && (
+  // Dev only: Astro installs React's Fast Refresh preamble only for client:*
+  // islands; ours (hydrate.tsx) need it too or .tsx modules throw.
+  <script type="module" is:inline>
+    import RefreshRuntime from "/@react-refresh";
+    RefreshRuntime.injectIntoGlobalHook(window);
+    window.$RefreshReg$ = () => {};
+    window.$RefreshSig$ = () => (type) => type;
+    window.__vite_plugin_react_preamble_installed__ = true;
+  </script>
+)}
+<script>
+  if (document.querySelector("[data-island]")) import("@/core/render/hydrate");
+</script>

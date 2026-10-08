@@ -3,7 +3,7 @@ import type { RefObject } from "react";
 import { gsap, SplitText, skipDecorative, useGSAP } from "./gsap";
 
 /**
- * SplitText the way this starter needs it (see CLAUDE.md → animations):
+ * SplitText the way this starter needs it (see AGENTS.md → animations):
  * - `ref` is an INNER element, never the one carrying `data-sanity`.
  * - The caller keys the component by its text, so an edit remounts it instead
  *   of React patching split DOM; useGSAP reverts the split on unmount.

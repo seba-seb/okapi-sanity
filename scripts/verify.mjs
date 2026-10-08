@@ -77,15 +77,24 @@ function jsGraph(html) {
   for (const m of html.matchAll(/\/_astro\/[^"]+?\.js/g)) visit(m[0], true);
   return [...seen];
 }
-const homeGraph = jsGraph(readFileSync(join(outDir, "index.html"), "utf8"));
-const gzKB = Math.round(homeGraph.reduce((n, f) => n + gzipSync(readFileSync(join(outDir, f))).length, 0) / 1024);
-const editorLeak = homeGraph.filter((f) => /comlink|xstate/.test(readFileSync(join(outDir, f), "utf8")));
-check(editorLeak.length === 0, `public pages load no visual-editing runtime (comlink/xstate)${editorLeak.length ? `: ${editorLeak.join(", ")}` : ""}`);
-check(gzKB < 250, `home JS ≤ 250 KB gzip (${gzKB} KB, ${homeGraph.length} files)`);
-const home = readFileSync(join(outDir, "index.html"), "utf8");
-check(!home.includes("Your visual page builder is ready"), "home rendered real content (not <Welcome>) — env + dataset OK");
-check(/<link rel="canonical" href="https?:\/\/[^"]+"/.test(home), "home has an absolute canonical");
-check(existsSync(join(outDir, "sitemap.xml")) && existsSync(join(outDir, "robots.txt")), "sitemap.xml + robots.txt built");
+// The page we measure: the home if Remarkable renders it, else the first page
+// it renders (in a project where Remarkable serves only some routes).
+const isRemarkable = (f) => /data-sanity-path=/.test(readFileSync(f, "utf8"));
+const index = join(outDir, "index.html");
+const pageFile = isRemarkable(index) ? index : sitePages.find(isRemarkable);
+check(!!pageFile, `Remarkable rendered a page (${pageFile ? pageFile.slice(outDir.length) : "none — env, dataset or routes?"})`);
+if (pageFile) {
+  const html = readFileSync(pageFile, "utf8");
+  const graph = jsGraph(html);
+  const gzKB = Math.round(graph.reduce((n, f) => n + gzipSync(readFileSync(join(outDir, f))).length, 0) / 1024);
+  const editorLeak = graph.filter((f) => /comlink|xstate/.test(readFileSync(join(outDir, f), "utf8")));
+  check(editorLeak.length === 0, `public pages load no visual-editing runtime (comlink/xstate)${editorLeak.length ? `: ${editorLeak.join(", ")}` : ""}`);
+  check(gzKB < 250, `page JS ≤ 250 KB gzip (${gzKB} KB, ${graph.length} files)`);
+  check(/<link rel="canonical" href="https?:\/\/[^"]+"/.test(html), "page has an absolute canonical");
+}
+const home = readFileSync(index, "utf8");
+check(!home.includes("Your visual page builder is ready"), "home is not the <Welcome> setup screen — env + dataset OK");
+check(["sitemap.xml", "sitemap-index.xml"].some((f) => existsSync(join(outDir, f))) && existsSync(join(outDir, "robots.txt")), "sitemap + robots.txt built");
 
 if (baseUrl) {
   console.log(`\n4. HTTP (${baseUrl})`);

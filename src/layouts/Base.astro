@@ -5,6 +5,7 @@ import { clean } from "@/core/lib/clean";
 import { pageHref, resolveLink } from "@/core/lib/routes";
 import { SiteHeader } from "@/chrome/SiteHeader";
 import { SiteFooter } from "@/chrome/SiteFooter";
+import Islands from "@/core/render/Islands.astro";
 import type { Site } from "@/core/sanity/site";
 import type { SanityImage } from "@/core/lib/types";
 
@@ -73,27 +74,12 @@ const jsonLd = isHome
     {noindex && <meta name="robots" content="noindex" />}
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     <link rel="sitemap" href="/sitemap.xml" />
-    <noscript><style>[data-split]{visibility:visible}</style></noscript>
-    {import.meta.env.DEV && (
-      // Dev only: Astro installs React's Fast Refresh preamble only for client:*
-      // islands; our own islands (hydrate.tsx) need it too or .tsx modules throw.
-      <script type="module" is:inline>
-        import RefreshRuntime from "/@react-refresh";
-        RefreshRuntime.injectIntoGlobalHook(window);
-        window.$RefreshReg$ = () => {};
-        window.$RefreshSig$ = () => (type) => type;
-        window.__vite_plugin_react_preamble_installed__ = true;
-      </script>
-    )}
     <slot name="head" />
   </head>
   <body>
     <SiteHeader {...chrome} />
     <slot />
     <SiteFooter {...chrome} />
-    <script>
-      // Pages are plain HTML; React + the blocks load only if a section needs JS.
-      if (document.querySelector("[data-island]")) import("@/core/render/hydrate");
-    </script>
+    <Islands />
   </body>
 </html>
