@@ -4,6 +4,7 @@ import { defineField } from "sanity";
 
 import type { BlockType } from "./meta";
 import { section } from "./section/schema";
+import { componentRef } from "./componentRef/schema";
 import { eyebrow } from "./eyebrow/schema";
 import { heading } from "./heading/schema";
 import { paragraph } from "./paragraph/schema";
@@ -27,6 +28,7 @@ import { parallaxMedia } from "./parallaxMedia/schema";
 /** Studio side of the registry. Missing a type from meta.ts = type error. */
 export const BLOCK_SCHEMAS: Record<BlockType, SchemaTypeDefinition> = {
   section,
+  componentRef,
   eyebrow,
   heading,
   paragraph,

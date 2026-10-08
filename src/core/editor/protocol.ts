@@ -1,5 +1,6 @@
 import type { Routes } from "@/core/lib/routes";
 import type { Page } from "@/core/lib/types";
+import type { Components } from "@/core/render/components";
 
 /**
  * Editor (Studio tool) ↔ canvas (/edit-canvas iframe), same origin, via
@@ -7,7 +8,7 @@ import type { Page } from "@/core/lib/types";
  * authenticated editor sends it, so the route itself exposes no drafts.
  */
 export type ToCanvas =
-  | { type: "render"; doc: Page; routes: Routes }
+  | { type: "render"; doc: Page; routes: Routes; components: Components }
   /** `scroll`: bring it into view (selection came from the layers panel). */
   | { type: "select"; path: string | null; scroll?: boolean };
 

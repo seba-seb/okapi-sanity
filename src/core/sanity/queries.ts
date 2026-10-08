@@ -22,6 +22,9 @@ export const ROUTES_QUERY = defineQuery(
   `*[_type == "page" && defined(slug.current)]{ _id, "slug": slug.current }`,
 );
 
+/** Library components (rendered by componentRef instances). */
+export const COMPONENTS_QUERY = defineQuery(`*[_type == "component"]{ _id, title, sections }`);
+
 export const SETTINGS_QUERY = defineQuery(`*[_id == "settings"][0]`);
 
 export const NAVIGATION_QUERY = defineQuery(`*[_id == "navigation"][0]`);

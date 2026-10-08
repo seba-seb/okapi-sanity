@@ -1,5 +1,7 @@
 import { loadQuery } from "./client";
-import { NAVIGATION_QUERY, ROUTES_QUERY, SETTINGS_QUERY } from "./queries";
+import { COMPONENTS_QUERY, NAVIGATION_QUERY, ROUTES_QUERY, SETTINGS_QUERY } from "./queries";
+import type { Components } from "@/core/render/components";
+import type { SectionData } from "@/core/lib/types";
 import { toRoutes, type Routes } from "@/core/lib/routes";
 import type { SanityImage } from "@/core/lib/types";
 
@@ -11,7 +13,7 @@ export type Settings = {
   socialLinks?: NavItem[];
 } | null;
 export type Navigation = { header?: NavItem[]; footer?: NavItem[] } | null;
-export type Site = { settings: Settings; navigation: Navigation; routes: Routes };
+export type Site = { settings: Settings; navigation: Navigation; routes: Routes; components: Components };
 
 // ponytail: module-level cache so a static build fetches site-wide data once,
 // not once per page. Build only: in dev it would pin stale content until
@@ -26,7 +28,13 @@ export function loadSite(): Promise<Site> {
     loadQuery<Settings>(SETTINGS_QUERY),
     loadQuery<Navigation>(NAVIGATION_QUERY),
     loadQuery<{ _id: string; slug: string }[]>(ROUTES_QUERY),
-  ]).then(([settings, navigation, routes]) => ({ settings, navigation, routes: toRoutes(routes) }));
+    loadQuery<{ _id: string; title?: string; sections?: SectionData[] }[]>(COMPONENTS_QUERY),
+  ]).then(([settings, navigation, routes, components]) => ({
+    settings,
+    navigation,
+    routes: toRoutes(routes),
+    components: Object.fromEntries((components ?? []).map((c) => [c._id, c])),
+  }));
   if (CACHE) published = p;
   return p;
 }

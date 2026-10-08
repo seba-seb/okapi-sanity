@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PageBuilder } from "@/core/render/PageBuilder";
 import { resolveSelection } from "@/core/editor/paths";
 import type { Routes } from "@/core/lib/routes";
+import type { Components } from "@/core/render/components";
 import type { Page } from "@/core/lib/types";
 import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
 
@@ -55,13 +56,14 @@ function restore(s: Snap) {
 export function CanvasApp() {
   const [doc, setDoc] = useState<Page | null>(null);
   const [routes, setRoutes] = useState<Routes>({});
+  const [components, setComponents] = useState<Components>({});
   const [selected, setSelected] = useState<string | null>(null);
   const docRef = useRef<Page | null>(null);
   docRef.current = doc;
   // While a text edit is open, renders from the editor wait here (React must
   // not rewrite the nodes the user is typing into).
   const editing = useRef<null | { finish: (commit: boolean) => void }>(null);
-  const pending = useRef<{ doc: Page; routes: Routes } | null>(null);
+  const pending = useRef<{ doc: Page; routes: Routes; components: Components } | null>(null);
   const hoverEl = useRef<Element | null>(null);
   const dropEl = useRef<Element | null>(null);
   const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box }>({ hover: null, sel: null, drop: null });
@@ -69,10 +71,11 @@ export function CanvasApp() {
   useEffect(() => {
     const off = listen<ToCanvas>((msg) => {
       if (msg.type === "render") {
-        if (editing.current) pending.current = { doc: msg.doc, routes: msg.routes };
+        if (editing.current) pending.current = { doc: msg.doc, routes: msg.routes, components: msg.components };
         else {
           setDoc(msg.doc);
           setRoutes(msg.routes);
+          setComponents(msg.components);
         }
       } else if (msg.type === "select") {
         setSelected(msg.path);
@@ -84,7 +87,10 @@ export function CanvasApp() {
   }, []);
 
   useEffect(() => {
-    const blockAt = (t: EventTarget | null) => (t instanceof Element ? t.closest("[data-sanity-path]") : null);
+    // Inside a component instance, the instance itself is the block (its inner
+    // blocks belong to the component document).
+    const blockAt = (t: EventTarget | null) =>
+      t instanceof Element ? (t.closest("[data-instance]") ?? t.closest("[data-sanity-path]")) : null;
 
     const onClick = (e: MouseEvent) => {
       if (editing.current && (e.target as Element).closest("[contenteditable]")) return; // clicking inside the edit
@@ -97,6 +103,7 @@ export function CanvasApp() {
     };
 
     const onDblClick = (e: MouseEvent) => {
+      if ((e.target as Element).closest("[data-instance]")) return; // edit the component instead
       const block = blockAt(e.target);
       const path = block?.getAttribute("data-sanity-path");
       const type = block?.getAttribute("data-sanity-type") ?? "";
@@ -146,6 +153,7 @@ export function CanvasApp() {
         if (p) {
           setDoc(p.doc);
           setRoutes(p.routes);
+          setComponents(p.components);
         }
       };
       const onBlur = () => finish(true);
@@ -229,8 +237,8 @@ export function CanvasApp() {
 
   // Re-render the page only when the document changes, not on overlay moves.
   const page = useMemo(
-    () => (doc?.sections?.length ? <PageBuilder page={doc} routes={routes} /> : null),
-    [doc, routes],
+    () => (doc?.sections?.length ? <PageBuilder page={doc} routes={routes} components={components} /> : null),
+    [doc, routes, components],
   );
 
   if (!doc) return <p style={{ padding: 32, font: "14px system-ui", opacity: 0.6 }}>Waiting for the editor…</p>;

@@ -33,7 +33,7 @@ export const page = defineType({
       description: "Compose the page from sections.",
       type: "array",
       group: "content",
-      of: [defineArrayMember({ type: "section" })],
+      of: [defineArrayMember({ type: "section" }), defineArrayMember({ type: "componentRef" })],
     }),
     // All optional, all with fallbacks (page title → Settings). A <title> is
     // not an <h1>: write it for the search result, not for the page.

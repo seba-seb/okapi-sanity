@@ -47,10 +47,11 @@ export type SectionData = Block & {
 
 export type Page = {
   _id: string;
-  _type: "page";
+  _type: "page" | "component";
   title?: string;
   slug?: { current?: string };
-  sections?: SectionData[];
+  /** Sections and (pages only) component instances. */
+  sections?: (SectionData | Block)[];
   metaTitle?: string;
   metaDescription?: string;
   ogImage?: SanityImage;

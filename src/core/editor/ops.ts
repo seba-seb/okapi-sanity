@@ -9,7 +9,7 @@ import { acceptedTypes, blockMeta } from "@/blocks/meta";
 import { INSERT_DEFAULTS } from "@/blocks/defaults";
 import type { Block } from "@/core/lib/types";
 
-export type Doc = { sections?: Block[] } & Record<string, unknown>;
+export type Doc = { _type?: string; sections?: Block[] } & Record<string, unknown>;
 type Node = Record<string, unknown> | unknown[] | undefined;
 
 /** Copy-on-write update of whatever lives at `path` in `root`. */
@@ -44,7 +44,9 @@ function ownerType(doc: Doc, arrayPath: string): string | null {
 /** May a block of `type` live in the array at `arrayPath`? (registry rules) */
 export function canPlace(doc: Doc, type: string, arrayPath: string): boolean {
   const owner = ownerType(doc, arrayPath);
-  if (owner === "page") return type === "section";
+  // Top level: sections, plus component instances on pages (never inside a
+  // component — instances don't nest).
+  if (owner === "page") return type === "section" || (type === "componentRef" && doc._type !== "component");
   if (!owner) return false;
   const slot = blockMeta(owner)?.slot;
   const field = arrayPath.slice(arrayPath.lastIndexOf(".") + 1);
@@ -54,7 +56,9 @@ export function canPlace(doc: Doc, type: string, arrayPath: string): boolean {
 /** A fresh block with the same defaults the canvas inserts use. */
 export function newBlock(type: string): Block {
   const defaults =
-    type === "section"
+    type === "componentRef"
+      ? {}
+      : type === "section"
       ? { theme: "light", paddingTop: "medium", paddingBottom: "medium", gap: "md", contentAlign: "start", content: [newBlock("heading")] }
       : (INSERT_DEFAULTS[type]?.() ?? {});
   return reKey({ _type: type, _key: randomKey(), ...defaults }) as Block;
@@ -136,7 +140,7 @@ export function parentBlock(path: string): string | null {
 }
 
 /** Tree for the layers panel: every block with its slot children. */
-export type LayerNode = { path: string; type: string; title: string; children: LayerNode[]; childArray?: string };
+export type LayerNode = { path: string; type: string; title: string; children: LayerNode[]; childArray?: string; ref?: string };
 export function layers(doc: Doc): LayerNode[] {
   const walk = (items: Block[] | undefined, arrayPath: string): LayerNode[] =>
     (items ?? []).map((item) => {
@@ -148,6 +152,7 @@ export function layers(doc: Doc): LayerNode[] {
         type: item._type,
         title: `${blockMeta(item._type)?.title ?? item._type}${name}`,
         childArray: slot ? `${path}.${slot.field}` : undefined,
+        ref: (item.component as { _ref?: string } | undefined)?._ref,
         children: slot ? walk(item[slot.field] as Block[] | undefined, `${path}.${slot.field}`) : [],
       };
     });

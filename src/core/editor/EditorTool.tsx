@@ -6,6 +6,7 @@ import { pageHref, toRoutes, type Routes } from "@/core/lib/routes";
 import { reKey, resolveSelection } from "@/core/editor/paths";
 import { blockMeta, blockTypes } from "@/blocks/meta";
 import type { Block, Page } from "@/core/lib/types";
+import type { Components } from "@/core/render/components";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
 import { FieldList, PagesContext, UploadContext, type View } from "./FieldControls";
@@ -30,31 +31,56 @@ export function EditorTool() {
   const [pages, setPages] = useState<Row[]>([]);
   const [routes, setRoutes] = useState<Routes>({});
   const [pageId, setPageId] = useState<string | null>(null);
+  const [components, setComponents] = useState<Components>({});
 
-  useEffect(() => {
-    client
-      .withConfig({ perspective: "drafts" })
-      .fetch<Row[]>(`*[_type == "page" && defined(slug.current)] | order(title asc){ _id, title, "slug": slug.current }`)
-      .then((rows) => {
-        const clean = rows.map((r) => ({ ...r, _id: r._id.replace(/^drafts\./, "") }));
-        setPages(clean.sort((a, b) => (a.slug === "home" ? -1 : b.slug === "home" ? 1 : 0)));
-        setRoutes(toRoutes(clean.map((r) => ({ _id: r._id, slug: r.slug! }))));
-        setPageId((cur) => cur ?? clean[0]?._id ?? null);
-      });
+  // Pages + library components (drafts perspective: the editor sees unpublished
+  // work). Reloaded on every document switch so instances show the latest
+  // component edits.
+  const loadAll = useCallback(async () => {
+    const drafts = client.withConfig({ perspective: "drafts" });
+    const [rows, comps] = await Promise.all([
+      drafts.fetch<Row[]>(`*[_type == "page" && defined(slug.current)] | order(title asc){ _id, title, "slug": slug.current }`),
+      drafts.fetch<{ _id: string; title?: string; sections?: [] }[]>(`*[_type == "component"] | order(title asc){ _id, title, sections }`),
+    ]);
+    const clean = rows.map((r) => ({ ...r, _id: r._id.replace(/^drafts\./, "") }));
+    setPages(clean.sort((a, b) => (a.slug === "home" ? -1 : b.slug === "home" ? 1 : 0)));
+    setRoutes(toRoutes(clean.map((r) => ({ _id: r._id, slug: r.slug! }))));
+    setComponents(Object.fromEntries(comps.map((c) => [c._id.replace(/^drafts\./, ""), c])));
+    setPageId((cur) => cur ?? clean[0]?._id ?? null);
   }, [client]);
+  useEffect(() => {
+    loadAll();
+  }, [loadAll, pageId]);
 
   const upload = useCallback(async (file: File) => {
     const asset = await client.assets.upload("image", file, { filename: file.name });
     return { _type: "image", asset: { _type: "reference", _ref: asset._id } };
   }, [client]);
 
-  const pageOptions = useMemo(() => pages.map((p) => ({ id: p._id, title: p.title || p.slug || p._id })), [pages]);
+  const refOptions = useMemo(
+    () => ({
+      page: pages.map((p) => ({ id: p._id, title: p.title || p.slug || p._id })),
+      component: Object.entries(components).map(([id, c]) => ({ id, title: c.title || id })),
+    }),
+    [pages, components],
+  );
+  const docType = pageId && components[pageId] ? "component" : "page";
   return (
-    <PagesContext.Provider value={pageOptions}>
+    <PagesContext.Provider value={refOptions}>
       <UploadContext.Provider value={upload}>
         <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 320px", height: "100%", minHeight: 0, fontSize: 13 }}>
           {pageId ? (
-            <PageEditor key={pageId} id={pageId} routes={routes} pages={pages} onPage={setPageId} upload={upload} />
+            <PageEditor
+              key={pageId}
+              id={pageId}
+              docType={docType}
+              routes={routes}
+              pages={pages}
+              components={components}
+              onPage={setPageId}
+              onLibraryChange={loadAll}
+              upload={upload}
+            />
           ) : (
             <div style={{ padding: 24, opacity: 0.6 }}>Loading pages…</div>
           )}
@@ -66,22 +92,29 @@ export function EditorTool() {
 
 function PageEditor({
   id,
+  docType,
   routes,
   pages,
+  components,
   onPage,
+  onLibraryChange,
   upload,
 }: {
   id: string;
+  docType: "page" | "component";
   routes: Routes;
   pages: Row[];
+  components: Components;
   onPage: (id: string) => void;
+  onLibraryChange: () => Promise<void>;
   upload: (file: File) => Promise<unknown>;
 }) {
-  const { draft, published, ready } = useEditState(id, "page");
+  const client = useClient({ apiVersion });
+  const { draft, published, ready } = useEditState(id, docType);
   const doc = (draft ?? published) as (Page & Doc) | null;
   const docRef = useRef(doc);
   docRef.current = doc;
-  const ops = useDocumentOperation(id, "page");
+  const ops = useDocumentOperation(id, docType);
   const schema = useSchema();
   const user = useCurrentUser();
   const isTeam = !!user?.roles?.some((r) => r.name === "administrator");
@@ -195,6 +228,46 @@ function PageEditor({
     [act, selected],
   );
 
+  // ── Components
+  const addInstance = useCallback(
+    (componentId: string) => {
+      setAdding(false);
+      act((d) => {
+        const t = insertTarget(d, selected, "componentRef");
+        if (!t) throw new Error("Components go between sections");
+        return insert(d, t.arrayPath, t.index, { ...newBlock("componentRef"), component: { _type: "reference", _ref: componentId } });
+      });
+    },
+    [act, selected],
+  );
+  const makeComponent = useCallback(async () => {
+    const r = selected && docRef.current ? resolveSelection(docRef.current, selected) : null;
+    if (!r || r.item._type !== "section") return;
+    const title = window.prompt("Component name", (r.item.name as string) || "New component");
+    if (!title) return;
+    // Published right away: instances render from published components on the site.
+    const created = await client.create({ _type: "component", title, sections: [reKey(r.item)] });
+    await onLibraryChange();
+    act((d) => {
+      const out = remove(d, selected!);
+      return insert(out, r.parentArrayPath, r.index, { ...newBlock("componentRef"), component: { _type: "reference", _ref: created._id } });
+    });
+    setStatus(`Saved “${title}” to the library`);
+  }, [act, client, onLibraryChange, selected]);
+  const detach = useCallback(() => {
+    const r = selected && docRef.current ? resolveSelection(docRef.current, selected) : null;
+    const ref = (r?.item.component as { _ref?: string } | undefined)?._ref;
+    const comp = ref ? components[ref] : undefined;
+    if (!r || !comp?.sections?.length) return;
+    act((d) => {
+      let out = remove(d, selected!);
+      comp.sections!.forEach((s, i) => {
+        out = insert(out, r.parentArrayPath, r.index + i, reKey(s as Block)).doc;
+      });
+      return { doc: out, path: null };
+    });
+  }, [act, components, selected]);
+
   const onKey = useCallback(
     (k: { key: string; mod: boolean; shift: boolean; alt: boolean }) => {
       if (k.mod && k.key.toLowerCase() === "z") return k.shift ? redo() : undo();
@@ -250,8 +323,8 @@ function PageEditor({
 
   // ── Editor → canvas: every local edit re-renders the canvas immediately.
   useEffect(() => {
-    if (canvasReady && doc) post(frame.current?.contentWindow, { type: "render", doc, routes });
-  }, [canvasReady, doc, routes]);
+    if (canvasReady && doc) post(frame.current?.contentWindow, { type: "render", doc, routes, components });
+  }, [canvasReady, doc, routes, components]);
 
   useEffect(() => {
     if (!status) return;
@@ -261,7 +334,10 @@ function PageEditor({
 
   const target = useMemo(() => (doc && selected ? resolveSelection(doc, selected) : null), [doc, selected]);
   const type = target ? (schema.get(target.item._type) as ObjectSchemaType | undefined) : undefined;
-  const tree = useMemo(() => (doc ? layers(doc) : []), [doc]);
+  const tree = useMemo(
+    () => (doc ? layers(doc).map((n) => (n.type === "componentRef" ? { ...n, title: `◆ ${components[n.ref ?? ""]?.title ?? "Missing component"}` } : n)) : []),
+    [doc, components],
+  );
   const addable = useMemo(() => (doc ? blockTypes.filter((t) => insertTarget(doc, selected, t)) : []), [doc, selected]);
   const publishDisabled = ops.publish.disabled;
 
@@ -269,13 +345,24 @@ function PageEditor({
     <>
       <aside style={{ ...column, borderRight: border, display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
-          <div style={heading}>Pages</div>
+          <div style={heading}>{docType === "component" ? "Editing component ◆" : "Pages"}</div>
           <select style={{ ...select_ }} value={id} onChange={(e) => onPage(e.target.value)}>
-            {pages.map((p) => (
-              <option key={p._id} value={p._id}>
-                {p.title || p.slug} — {pageHref(p.slug)}
-              </option>
-            ))}
+            <optgroup label="Pages">
+              {pages.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.title || p.slug} — {pageHref(p.slug)}
+                </option>
+              ))}
+            </optgroup>
+            {Object.keys(components).length ? (
+              <optgroup label="Components">
+                {Object.entries(components).map(([cid, c]) => (
+                  <option key={cid} value={cid}>
+                    ◆ {c.title || cid}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
           </select>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -317,7 +404,14 @@ function PageEditor({
           ) : null}
           {adding ? (
             <div style={{ position: "absolute", top: 40, left: 220, zIndex: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8, borderRadius: 8, border, background: "var(--card-bg-color, #fff)", color: "inherit", boxShadow: "0 8px 30px #0003", width: 300 }}>
-              {addable.map((t) => (
+              {doc && insertTarget(doc, selected, "componentRef")
+                ? Object.entries(components).map(([cid, c]) => (
+                    <button key={cid} type="button" onClick={() => addInstance(cid)} style={{ ...chip, textAlign: "left" }}>
+                      ◆ {c.title || cid}
+                    </button>
+                  ))
+                : null}
+              {addable.filter((t) => t !== "componentRef").map((t) => (
                 <button key={t} type="button" onClick={() => doAdd(t)} style={{ ...chip, textAlign: "left" }}>
                   {blockMeta(t)?.title ?? t}
                 </button>
@@ -365,6 +459,23 @@ function PageEditor({
               <button type="button" onClick={() => doNudge(1)} style={chip} title="Move down (⌥↓)">
                 ▼
               </button>
+              {canStructure && target.item._type === "section" && docType === "page" ? (
+                <button type="button" onClick={makeComponent} style={chip} title="Save this section to the library and use it as a component">
+                  Make component
+                </button>
+              ) : null}
+              {target.item._type === "componentRef" && (target.item.component as { _ref?: string } | undefined)?._ref ? (
+                <>
+                  <button type="button" onClick={() => onPage((target.item.component as { _ref: string })._ref)} style={chip}>
+                    Edit component
+                  </button>
+                  {canStructure ? (
+                    <button type="button" onClick={detach} style={chip} title="Replace this instance with an editable copy">
+                      Detach
+                    </button>
+                  ) : null}
+                </>
+              ) : null}
               {canStructure ? (
                 <>
                   <button type="button" onClick={doDuplicate} style={chip} title="⌘D">

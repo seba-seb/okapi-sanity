@@ -52,6 +52,12 @@ assert.equal(sec._type, "section");
 assert.equal((sec.content as { _type: string }[])[0]._type, "heading");
 assert.equal(insert(doc, "sections", 0, sec).doc.sections![0]._key, sec._key);
 
+// Component instances: page top level only, never inside a component
+assert.equal(canPlace(doc, "componentRef", "sections"), true);
+assert.equal(canPlace({ ...doc, _type: "component" }, "componentRef", "sections"), false);
+assert.equal(canPlace(doc, "componentRef", `${S1}.content`), false);
+assert.deepEqual(insertTarget(doc, H1, "componentRef"), { arrayPath: "sections", index: 1 }); // climbs to the page level
+
 // Helpers
 assert.equal(parentBlock(C1), G1);
 assert.equal(parentBlock(S1), null);

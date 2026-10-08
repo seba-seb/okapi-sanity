@@ -11,8 +11,8 @@ import { plainToPt, ptToPlainIfSimple } from "./text";
 
 type Field = { name: string; type: SchemaType };
 
-/** Pages the editor knows about, for reference pickers (links to pages). */
-export const PagesContext = createContext<{ id: string; title: string }[]>([]);
+/** Documents a reference can point to, by type (pages for links, components for instances). */
+export const PagesContext = createContext<Record<string, { id: string; title: string }[]>>({});
 /** Uploads an image file and returns the image field value (`{_type:"image", asset}`). */
 export const UploadContext = createContext<((file: File) => Promise<unknown>) | null>(null);
 type Change = (path: string, value: unknown) => void;
@@ -112,7 +112,8 @@ function FieldControl({ field, value, parent, path, onChange, view }: { field: F
       </label>
     );
   }
-  if (controlKind(t) === "reference") return <ReferencePicker label={label} value={value} path={path} onChange={onChange} />;
+  if (controlKind(t) === "reference")
+    return <ReferencePicker label={label} value={value} path={path} onChange={onChange} to={(t as { to?: { name: string }[] }).to?.[0]?.name ?? "page"} />;
   if (isStringArray(t)) {
     const lines = Array.isArray(value) ? (value as string[]).join("\n") : "";
     return (
@@ -211,8 +212,8 @@ const input = {
 const chip = { ...input, width: "auto", padding: "4px 9px", cursor: "pointer", fontSize: 12 } as const;
 const chipOn = { background: "#2f5bff", borderColor: "#2f5bff", color: "#fff" } as const;
 
-function ReferencePicker({ label, value, path, onChange }: { label: React.ReactNode; value: unknown; path: string; onChange: Change }) {
-  const pages = useContext(PagesContext);
+function ReferencePicker({ label, value, path, onChange, to }: { label: React.ReactNode; value: unknown; path: string; onChange: Change; to: string }) {
+  const pages = useContext(PagesContext)[to] ?? [];
   const ref = (value as { _ref?: string } | undefined)?._ref ?? "";
   return (
     <label>

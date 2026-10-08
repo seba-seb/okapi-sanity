@@ -22,6 +22,7 @@ export type BlockMeta = {
 
 export const BLOCKS = {
   section: { title: "Section", slot: { field: "content" }, topLevel: true },
+  componentRef: { title: "Component", topLevel: true },
   eyebrow: { title: "Eyebrow", margin: true },
   heading: { title: "Heading", margin: true },
   paragraph: { title: "Paragraph", margin: true },
@@ -55,7 +56,7 @@ export const BLOCKS = {
 
 export type BlockType = keyof typeof BLOCKS;
 /** Everything except top-level-only types (i.e. what a section can hold). */
-export type ContentBlockType = Exclude<BlockType, "section">;
+export type ContentBlockType = Exclude<BlockType, "section" | "componentRef">;
 
 // Compile-time guard: every `accepts` entry must be a registered type.
 type Accepted = {
