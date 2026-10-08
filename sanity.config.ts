@@ -16,6 +16,9 @@ import { structure } from "./src/core/sanity/structure";
 import { resolve } from "./src/core/sanity/presentation";
 import { PageNavigator } from "./src/core/studio/PageNavigator";
 import { EditorTool } from "./src/core/editor/EditorTool";
+import { installStaleChunkReload } from "./src/core/lib/staleChunkReload";
+
+installStaleChunkReload();
 import { EditIcon } from "@sanity/icons";
 import { PreviewSelect } from "./src/core/studio/PreviewSelect";
 import { TooltipDescriptionField } from "./src/core/studio/TooltipDescriptionField";

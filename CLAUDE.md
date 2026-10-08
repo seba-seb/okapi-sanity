@@ -185,3 +185,7 @@ and any `accepts` that names it (the compiler points at them).
   open (any astro.config change does it). Fix: `npx astro dev stop`,
   `rm -rf node_modules/.vite`, `npm run dev`, then hard-reload the tab
   (⌘⇧R). New heavy client deps belong in `vite.optimizeDeps.include`.
+- A tab opened before a dev restart (or a deploy) requests lazy chunks by old
+  hashes → 504/404 → blank Studio right after sign-in. `core/lib/staleChunkReload`
+  (installed in sanity.config.ts and the editor canvas) reloads once; a second
+  failure within 15s is left alone, so a real broken module can't loop.

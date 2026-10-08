@@ -6,6 +6,9 @@ import type { Routes } from "@/core/lib/routes";
 import type { Page } from "@/core/lib/types";
 
 import { listen, post, type ToCanvas } from "./protocol";
+import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
+
+installStaleChunkReload();
 
 const EMPTY = {};
 
