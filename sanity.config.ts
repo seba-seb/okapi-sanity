@@ -8,9 +8,8 @@ import {
 } from "sanity";
 import { structureTool } from "sanity/structure";
 import { presentationTool } from "sanity/presentation";
-import { visionTool } from "@sanity/vision";
 
-import { apiVersion, dataset, projectId } from "./src/core/sanity/env";
+import { dataset, projectId } from "./src/core/sanity/env";
 import { schemaTypes, SINGLETONS } from "./src/schema";
 import { structure } from "./src/core/sanity/structure";
 import { resolve } from "./src/core/sanity/presentation";
@@ -145,6 +144,5 @@ export default defineConfig({
         },
       },
     }),
-    visionTool({ defaultApiVersion: apiVersion }),
   ],
 });

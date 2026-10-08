@@ -95,7 +95,6 @@ export default defineConfig({
         "sanity",
         "sanity/structure",
         "sanity/presentation",
-        "@sanity/vision",
         "@sanity/ui",
         "@sanity/icons",
         "styled-components",
