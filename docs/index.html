@@ -206,15 +206,65 @@ pre .k { color: var(--accent); }
 .check li::before { content: ""; position: absolute; left: 0; top: 5px; width: 14px; height: 14px; border: 1.5px solid var(--muted); border-radius: 4px; }
 
 footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }
+
+/* Mode switch: vibe coding (default) vs technical */
+.shell[data-mode="vibe"] [data-only="tech"], .shell[data-mode="tech"] [data-only="vibe"] { display: none !important; }
+.mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin-bottom: 6px; }
+.mode button { font: 600 13px/1 var(--font-body); padding: 9px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+.mode button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px var(--line); }
+.mode-hint { font-size: 12.5px; line-height: 1.4; color: var(--muted); margin: 0 0 4px; }
+.index-mobile .mode { margin: 10px 0 0; }
+.switch-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 26px; font-size: 14px; color: var(--muted); }
+.switch-note button { font: 600 14px/1 var(--font-body); color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+/* Prompt cards */
+.prompt-group { margin: 34px 0 10px; font: 600 12px/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.prompts { display: grid; gap: 14px; }
+.prompt { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.prompt-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px 0; }
+.prompt-head h3 { margin: 0; font-size: 1rem; }
+.prompt blockquote { position: relative; margin: 10px 16px 14px; padding: 12px 14px; background: var(--accent-soft); color: var(--fg); border-radius: 8px; font-size: 15px; line-height: 1.55; }
+.prompt .copy { position: static; flex: none; }
+.prompt-meta { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.prompt-meta div { padding: 10px 16px 12px; font-size: 14px; color: var(--muted); min-width: 0; }
+.prompt-meta div + div { border-left: 1px solid var(--line); }
+.prompt-meta b { display: block; font: 600 11.5px/1 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg); margin-bottom: 5px; }
+@media (max-width: 640px) { .prompt-meta { grid-template-columns: 1fr; } .prompt-meta div + div { border-left: 0; border-top: 1px solid var(--line); } }
+
+/* Glossary */
+.glossary { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 22px; margin: 20px 0; }
+.glossary dt { font-weight: 600; }
+.glossary dd { margin: 0; color: var(--muted); }
+@media (max-width: 560px) { .glossary { grid-template-columns: minmax(0, 1fr); gap: 2px; } .glossary dd { margin-bottom: 10px; } }
 </style>
 </head>
 <body>
 
-<div class="shell">
+<div class="shell" data-mode="vibe">
   <nav class="index" aria-label="Índice">
     <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">R</span>Remarkable</a>
-    <h2>Producto</h2>
-    <ol>
+    <div class="mode" role="group" aria-label="Vista de la documentación">
+      <button type="button" data-set-mode="vibe" aria-pressed="true">Vibe coding</button>
+      <button type="button" data-set-mode="tech" aria-pressed="false">Técnico</button>
+    </div>
+    <p class="mode-hint" data-only="vibe">Cómo trabajar pidiéndole a Claude.</p>
+    <p class="mode-hint" data-only="tech">Cómo está hecho por dentro.</p>
+    <h2 data-only="vibe">Trabajar con Claude</h2>
+    <ol data-only="vibe">
+      <li><a href="#que-es">Qué es</a></li>
+      <li><a href="#flujo">Cómo se trabaja</a></li>
+      <li><a href="#prompts">Qué pedirle</a></li>
+      <li><a href="#pedir-bien">Para pedir bien</a></li>
+      <li><a href="#editor">El editor</a></li>
+      <li><a href="#componentes">Componentes</a></li>
+      <li><a href="#bloques">Bloques</a></li>
+      <li><a href="#si-falla">Si algo falla</a></li>
+      <li><a href="#entregar">Antes de entregar</a></li>
+      <li><a href="#glosario">Glosario</a></li>
+      <li><a href="#pendiente">Lo que sigue</a></li>
+    </ol>
+    <h2 data-only="tech">Producto</h2>
+    <ol data-only="tech">
       <li><a href="#que-es">Qué es</a></li>
       <li><a href="#arquitectura">Arquitectura</a></li>
       <li><a href="#sitio">El sitio público</a></li>
@@ -224,8 +274,8 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <li><a href="#bloques">Bloques</a></li>
       <li><a href="#motion">Motion</a></li>
     </ol>
-    <h2>Trabajar con él</h2>
-    <ol>
+    <h2 data-only="tech">Trabajar con él</h2>
+    <ol data-only="tech">
       <li><a href="#nuevo-proyecto">Proyecto nuevo</a></li>
       <li><a href="#codigo">El código</a></li>
       <li><a href="#agregar-bloque">Agregar un bloque</a></li>
@@ -233,8 +283,8 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <li><a href="#calidad">Calidad y pruebas</a></li>
       <li><a href="#problemas">Problemas conocidos</a></li>
     </ol>
-    <h2>Contexto</h2>
-    <ol>
+    <h2 data-only="tech">Contexto</h2>
+    <ol data-only="tech">
       <li><a href="#decisiones">Decisiones</a></li>
       <li><a href="#historial">Historial</a></li>
       <li><a href="#pendiente">Lo que sigue</a></li>
@@ -244,7 +294,24 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
   <main>
     <details class="index-mobile">
       <summary>Remarkable</summary>
-      <ol>
+      <div class="mode" role="group" aria-label="Vista de la documentación">
+        <button type="button" data-set-mode="vibe" aria-pressed="true">Vibe coding</button>
+        <button type="button" data-set-mode="tech" aria-pressed="false">Técnico</button>
+      </div>
+      <ol data-only="vibe">
+        <li><a href="#que-es">Qué es</a></li>
+        <li><a href="#flujo">Cómo se trabaja</a></li>
+        <li><a href="#prompts">Qué pedirle</a></li>
+        <li><a href="#pedir-bien">Para pedir bien</a></li>
+        <li><a href="#editor">El editor</a></li>
+        <li><a href="#componentes">Componentes</a></li>
+        <li><a href="#bloques">Bloques</a></li>
+        <li><a href="#si-falla">Si algo falla</a></li>
+        <li><a href="#entregar">Antes de entregar</a></li>
+        <li><a href="#glosario">Glosario</a></li>
+        <li><a href="#pendiente">Lo que sigue</a></li>
+      </ol>
+      <ol data-only="tech">
         <li><a href="#que-es">Qué es</a></li>
         <li><a href="#arquitectura">Arquitectura</a></li>
         <li><a href="#sitio">El sitio público</a></li>
@@ -270,6 +337,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <p class="eyebrow">Starter + editor visual · uso interno</p>
       <h1>Remarkable</h1>
       <p class="lead">La base con la que arrancamos cada sitio de cliente: un sitio Astro estático y rápido, un editor visual propio para armar y editar páginas sobre el diseño real, y Sanity guardando el contenido.</p>
+      <p class="lead" data-only="vibe">Está pensado para construirse con Claude: le pedís lo que querés en tus palabras, y las reglas del proyecto hacen que el resultado sea consistente, liviano y editable.</p>
       <ul class="stack-line" aria-label="Stack">
         <li><b>Astro</b> 7.3 · estático</li>
         <li><b>Sanity</b> 6.3.0 · fijo</li>
@@ -283,6 +351,8 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <div><strong>0 KB</strong><span>del editor en el sitio público, controlado en cada build</span></div>
         <div><strong>≈4 s</strong><span>de build completo, Studio incluido</span></div>
       </div>
+      <div class="switch-note" data-only="vibe">Estás en la guía para trabajar con Claude. <button type="button" data-set-mode="tech">Ver la documentación técnica</button></div>
+      <div class="switch-note" data-only="tech">Estás en la documentación técnica. <button type="button" data-set-mode="vibe">Ver la guía para trabajar con Claude</button></div>
     </header>
 
     <!-- ───────────────────────── Qué es ───────────────────────── -->
@@ -325,8 +395,134 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <p class="small muted prose">Con <code>editor</code> el cliente publica solo. Con <code>contributor</code> deja borradores y publica alguien del equipo. Los roles disponibles dependen del plan de Sanity.</p>
     </section>
 
+
+    <!-- ───────────────────────── Vibe: flujo ───────────────────────── -->
+    <section id="flujo" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con Claude</p>
+        <h2>Cómo se trabaja</h2>
+        <p>Cada proyecto se construye conversando con Claude Code dentro de la carpeta del sitio. No hace falta explicarle el stack: Claude lee <code>CLAUDE.md</code> al empezar, y ahí están todas las reglas del proyecto.</p>
+      </div>
+      <ol class="steps prose">
+        <li><div><strong>Abrís el proyecto en Claude Code</strong><p>La carpeta del sitio, con <code>npm run dev</code> corriendo en <code>localhost:4321</code>.</p></div></li>
+        <li><div><strong>Pedís el resultado, no la implementación</strong><p>En tus palabras y con una referencia: captura, link de Figma o una web que te guste.</p></div></li>
+        <li><div><strong>Claude lo hace y lo verifica</strong><p>Cambia el código siguiendo las reglas y corre <code>npm run verify</code>.</p></div></li>
+        <li><div><strong>Lo mirás en el sitio y en el editor</strong><p>El sitio en <code>localhost:4321</code>; el editor en <code>/studio#/editor</code>, para confirmar que se puede editar.</p></div></li>
+        <li><div><strong>Lo guardás</strong><p>"Commiteá y pusheá." El contenido (textos, imágenes, orden) se publica desde el editor, no desde el código.</p></div></li>
+      </ol>
+      <div class="note">
+        <strong>Una vez por máquina</strong>
+        <p>Instalá la skill para arrancar proyectos: <code>cp -R skills/remarkable-astro ~/.claude/skills/</code> desde el repo del starter. Después alcanza con pedir "un proyecto nuevo con Remarkable".</p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: prompts ───────────────────────── -->
+    <section id="prompts" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con Claude</p>
+        <h2>Qué pedirle</h2>
+        <p>Ejemplos reales para copiar y adaptar. Cada uno dice qué va a hacer Claude y qué conviene que revises vos.</p>
+      </div>
+      <p class="prompt-group">Arrancar</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Proyecto nuevo</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Arrancá un proyecto nuevo con Remarkable para Estudio Norte. Sanity en la organización de la agencia, hosting en Vercel, dominio estudionorte.com.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Usa la skill: copia el starter, crea el proyecto de Sanity, arma <code>.env</code> y CORS, y levanta el sitio. Frena en lo que necesita tu login.</div><div><b>Vos revisás</b>Correr el comando de importación que te pasa, entrar a <code>/studio</code> y ver la home en el editor.</div></div>
+        </article>
+      </div>
+      <p class="prompt-group">Diseño</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>La marca desde Figma</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Pasá la marca de este Figma a los tokens del proyecto: &lt;link&gt;. Colores para los temas claro, oscuro y brand, tipografía, radios y espaciado.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Actualiza <code>tokens.css</code> y la tipografía. Todos los bloques cambian juntos porque leen los mismos tokens.</div><div><b>Vos revisás</b>Recorrer la home en los tres temas y en mobile.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Una sección desde una captura</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Armá esta sección en la home con los bloques que ya existen [captura]. Si falta algún bloque, decime antes de crearlo.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Compone con Section, Box, Grid y los bloques existentes. Si hace falta uno nuevo, te lo propone.</div><div><b>Vos revisás</b>En el editor, que cada parte se pueda seleccionar y editar.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Header y footer</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Rediseñá el header como esta referencia [captura]. El menú tiene que salir de Navigation y en mobile tiene que ser un menú desplegable.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Edita <code>src/chrome/</code>. Los links salen de Navigation, así que el cliente los cambia desde el Studio.</div><div><b>Vos revisás</b>Cambiar un ítem en Navigation, publicar y verlo en el sitio después del build.</div></div>
+        </article>
+      </div>
+      <p class="prompt-group">Bloques y animación</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Un bloque nuevo</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Creá un bloque Testimonios: foto, cita, nombre y cargo. Grid de 3 en desktop y una columna en mobile. La cita se tiene que poder editar sobre la página.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Crea el schema, el componente, lo registra, le da contenido inicial y hace la cita editable en el canvas. Corre verify.</div><div><b>Vos revisás</b>En el editor: + Add → Testimonios, y escribir la cita sobre la página.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Animaciones</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Que el título del hero entre por palabras y que la sección de servicios sea un scroll horizontal pineado.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Usa los bloques de motion que ya existen o crea uno siguiendo las reglas de motion, y lo marca para que cargue su JS.</div><div><b>Vos revisás</b>Verlo en el sitio. En el canvas las animaciones decorativas quedan quietas: usá ▶ Play.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Sacar lo que no se usa</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Borrá los bloques que no vamos a usar en este proyecto: 3D Logo, Marquee y Stacked Cards.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Borra las carpetas y los registros, y corre verify. Menos bloques con JS significa páginas más livianas.</div><div><b>Vos revisás</b>Que ya no aparezcan en + Add.</div></div>
+        </article>
+      </div>
+      <p class="prompt-group">Publicar y mantener</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Salir a producción</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Dejalo listo para Vercel con el dominio estudionorte.com y decime exactamente qué tengo que configurar yo.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Revisa el build, agrega el dominio a CORS y te pasa las variables, el deploy hook y el webhook paso a paso.</div><div><b>Vos revisás</b>Cargar todo en los paneles. Después: “corré verify contra estudionorte.com”.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Invitar al cliente</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>¿Cómo invito a Ana (ana@cliente.com) para que edite textos pero no publique?</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Te da el comando con el rol <code>contributor</code> y te explica qué va a ver Ana en el editor.</div><div><b>Vos revisás</b>Correrlo y que Ana acepte la invitación.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Un bug del editor</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>En el editor, al arrastrar una card dentro del grid se va al final. Arreglalo en el starter y decime qué copiar a los otros proyectos.</blockquote>
+          <div class="prompt-meta"><div><b>Claude</b>Lo arregla en <code>src/core</code> del starter, agrega un chequeo para que no vuelva y te lista los archivos a copiar.</div><div><b>Vos revisás</b>Probar el caso en el editor.</div></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: pedir bien ───────────────────────── -->
+    <section id="pedir-bien" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con Claude</p>
+        <h2>Para pedir bien</h2>
+        <p>Lo que más cambia el resultado.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Esto va en el editor</th><th>Esto se le pide a Claude</th></tr></thead>
+          <tbody>
+            <tr><td>Textos, links e imágenes</td><td>Colores, tipografía, radios y espaciados (tokens)</td></tr>
+            <tr><td>Agregar, ordenar y duplicar secciones y bloques</td><td>Bloques nuevos y cambios en cómo se ven los existentes</td></tr>
+            <tr><td>Estilo de un bloque dentro de los tokens</td><td>Animaciones e interacciones</td></tr>
+            <tr><td>Armar y reusar componentes</td><td>Header, footer y SEO por defecto</td></tr>
+            <tr><td>Publicar</td><td>Hosting, dominio y deploy</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="prose">
+        <li><strong>Mostrá en vez de describir.</strong> Una captura o un link de Figma ahorra tres idas y vueltas.</li>
+        <li><strong>El diseño son tokens.</strong> Pedí "agregá un verde de marca como token", no "poné este verde acá". Así cambia en todos lados a la vez y el editor lo ofrece.</li>
+        <li><strong>Lo que se mueve carga JavaScript.</strong> Claude lo marca solo. Si algo se ve pero no se anima en el sitio, decíselo así.</li>
+        <li><strong>Pedí que verifique.</strong> "Corré verify" antes de dar algo por terminado.</li>
+        <li><strong>Publicar no es deployar.</strong> Publish deja el contenido listo; el sitio cambia en el próximo build.</li>
+        <li><strong>Los arreglos del editor van al starter.</strong> Si algo falla en el editor, no se arregla solo en un proyecto: se arregla en el starter y se copia.</li>
+        <li><strong>No pidas actualizar Sanity de paso.</strong> Está fijo a propósito; actualizarlo es un trabajo aparte.</li>
+      </ul>
+      <div class="note warn">
+        <strong>Nunca pegues tokens ni contraseñas en el chat</strong>
+        <p>Lo que necesita tu cuenta (importar contenido, invitar usuarios, paneles del hosting) lo corrés vos. Claude te pasa el comando o los pasos exactos.</p>
+      </div>
+    </section>
+
     <!-- ───────────────────────── Arquitectura ───────────────────────── -->
-    <section id="arquitectura">
+    <section id="arquitectura" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>Arquitectura</h2>
@@ -391,7 +587,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
     </section>
 
     <!-- ───────────────────────── Sitio ───────────────────────── -->
-    <section id="sitio">
+    <section id="sitio" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>El sitio público</h2>
@@ -461,7 +657,11 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           </tbody>
         </table>
       </div>
-      <div class="prose">
+      <div class="prose" data-only="vibe">
+        <h3>Guardar y publicar</h3>
+        <p>Todo lo que hacés se guarda solo, como borrador. Nadie lo ve hasta que tocás <strong>Publish</strong>. Después de publicar, el sitio se actualiza en el próximo build: un par de minutos si el proyecto tiene el webhook configurado.</p>
+      </div>
+      <div class="prose" data-only="tech">
         <h3>Cómo guarda</h3>
         <p>El editor usa el almacén de documentos del propio Studio, sin otro SDK. Los cambios se aplican al instante en local y se guardan como borrador. <strong>Publish</strong> publica el documento. Como el sitio es estático, publicar dispara un rebuild (ver <a href="#publicar">Hosting y publicación</a>).</p>
         <h3>Edición de texto sin saltos del cursor</h3>
@@ -469,7 +669,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Protocolo editor ⇄ canvas</h3>
         <p>Son mensajes <code>postMessage</code> del mismo origen, tipados en <code>core/editor/protocol.ts</code>.</p>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" data-only="tech">
         <table>
           <thead><tr><th>Dirección</th><th>Mensaje</th><th>Para qué</th></tr></thead>
           <tbody>
@@ -488,7 +688,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
     </section>
 
     <!-- ───────────────────────── Estilos ───────────────────────── -->
-    <section id="estilos">
+    <section id="estilos" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>Estilos y tokens</h2>
@@ -582,7 +782,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
     </section>
 
     <!-- ───────────────────────── Motion ───────────────────────── -->
-    <section id="motion">
+    <section id="motion" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>Motion</h2>
@@ -611,7 +811,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
     </section>
 
     <!-- ───────────────────────── Nuevo proyecto ───────────────────────── -->
-    <section id="nuevo-proyecto">
+    <section id="nuevo-proyecto" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Trabajar con él</p>
         <h2>Proyecto nuevo</h2>
@@ -638,7 +838,7 @@ cp -R /tmp/remarkable/skills/remarkable-astro ~/.claude/skills/</pre><button cla
     </section>
 
     <!-- ───────────────────────── Código ───────────────────────── -->
-    <section id="codigo">
+    <section id="codigo" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Trabajar con él</p>
         <h2>El código</h2>
@@ -676,7 +876,7 @@ CLAUDE.md          <span class="c">reglas para trabajar en el código (fuente de
     </section>
 
     <!-- ───────────────────────── Agregar bloque ───────────────────────── -->
-    <section id="agregar-bloque">
+    <section id="agregar-bloque" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Trabajar con él</p>
         <h2>Agregar un bloque</h2>
@@ -704,7 +904,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     </section>
 
     <!-- ───────────────────────── Publicar ───────────────────────── -->
-    <section id="publicar">
+    <section id="publicar" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Trabajar con él</p>
         <h2>Hosting y publicación</h2>
@@ -745,7 +945,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     </section>
 
     <!-- ───────────────────────── Calidad ───────────────────────── -->
-    <section id="calidad">
+    <section id="calidad" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Trabajar con él</p>
         <h2>Calidad y pruebas</h2>
@@ -787,7 +987,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     </section>
 
     <!-- ───────────────────────── Problemas ───────────────────────── -->
-    <section id="problemas">
+    <section id="problemas" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Trabajar con él</p>
         <h2>Problemas conocidos</h2>
@@ -812,7 +1012,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     </section>
 
     <!-- ───────────────────────── Decisiones ───────────────────────── -->
-    <section id="decisiones">
+    <section id="decisiones" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Contexto</p>
         <h2>Decisiones</h2>
@@ -863,7 +1063,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
     </section>
 
     <!-- ───────────────────────── Historial ───────────────────────── -->
-    <section id="historial">
+    <section id="historial" data-only="tech">
       <div class="prose">
         <p class="eyebrow">Contexto</p>
         <h2>Historial</h2>
@@ -911,6 +1111,75 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
       </ol>
     </section>
 
+
+    <!-- ───────────────────────── Vibe: si falla ───────────────────────── -->
+    <section id="si-falla" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con Claude</p>
+        <h2>Si algo falla</h2>
+        <p>Contale a Claude lo que ves, tal cual. Estos ya pasaron y tienen solución.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ves</th><th>Lo más probable</th><th>Decile a Claude</th></tr></thead>
+          <tbody>
+            <tr><td>"Connect this studio to your project"</td><td>Entraste por otro puerto. El local es <code>:4321</code>.</td><td>"Me aparece Connect this studio en localhost:&lt;puerto&gt;"</td></tr>
+            <tr><td>El Studio queda en blanco</td><td>La pestaña quedó vieja después de reiniciar el server.</td><td>Primero <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>. Si sigue: "El Studio queda en blanco, mirá la consola"</td></tr>
+            <tr><td>La home muestra "Your visual page builder is ready"</td><td>Falta la configuración o el contenido.</td><td>"La home muestra la pantalla de bienvenida"</td></tr>
+            <tr><td>Un bloque se ve pero no se anima en el sitio</td><td>No está marcado como bloque con JS.</td><td>"El bloque X no se anima en el sitio publicado"</td></tr>
+            <tr><td>Publiqué y el sitio no cambió</td><td>Falta el webhook o el build todavía no terminó.</td><td>"Publiqué y el sitio no cambió"</td></tr>
+            <tr><td><code>npm install</code> falla en patch-package</td><td>Cambió la versión de Sanity.</td><td>"npm install falla en patch-package"</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: entregar ───────────────────────── -->
+    <section id="entregar" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con Claude</p>
+        <h2>Antes de entregar</h2>
+        <p>Pedile a Claude "corré verify". Después, con tu usuario y en una página descartable:</p>
+        <ol class="check">
+          <li>Escribir en un título sobre la página, recargar, y que el texto siga ahí.</li>
+          <li>Negrita, itálica y link en un párrafo. Insertar, duplicar, borrar y arrastrar un bloque. Deshacer y rehacer.</li>
+          <li>Soltar una imagen sobre un bloque Image: se sube y aparece.</li>
+          <li>Crear un componente, cambiar el texto de una instancia (cambia solo esa) y editar el original (cambian todas).</li>
+          <li>Publicar y ver el cambio en el sitio después del build.</li>
+          <li>Entrar como el cliente: no ve estilos ni acciones de estructura.</li>
+          <li>Settings completos: nombre del sitio, descripción e imagen para redes.</li>
+          <li>El dominio está en CORS y el webhook de publicación funciona.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: glosario ───────────────────────── -->
+    <section id="glosario" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con Claude</p>
+        <h2>Glosario</h2>
+        <dl class="glossary">
+          <dt>Bloque</dt><dd>Una pieza de la página: título, párrafo, imagen, card, slider…</dd>
+          <dt>Sección</dt><dd>Una franja de la página que contiene bloques. Tiene tema (claro, oscuro o brand), espaciado y fondo.</dd>
+          <dt>Box</dt><dd>Un contenedor libre para poner bloques en columna, en fila o en grilla.</dd>
+          <dt>Componente</dt><dd>Una sección guardada en la librería para reusarla en varias páginas.</dd>
+          <dt>Instancia</dt><dd>Cada uso de un componente en una página. Si cambiás el componente, cambian todas.</dd>
+          <dt>Override</dt><dd>Un texto o una imagen cambiados solo en una instancia, sin tocar el componente.</dd>
+          <dt>Token</dt><dd>Un valor de diseño con nombre: un color, un espaciado, un radio. Cambiarlo cambia todo el sitio.</dd>
+          <dt>Borrador</dt><dd>Lo que editaste y todavía no publicaste. Solo lo ve el equipo.</dd>
+          <dt>Publicar</dt><dd>Dejar el contenido listo para el sitio. Se ve después del próximo build.</dd>
+          <dt>Build</dt><dd>Cuando se genera el sitio con el contenido publicado. Tarda unos segundos más la instalación.</dd>
+          <dt>Webhook</dt><dd>El aviso que manda Sanity al publicar para que el hosting haga un build.</dd>
+          <dt>Studio</dt><dd>El panel de Sanity en <code>/studio</code>. Adentro está el editor.</dd>
+          <dt>Canvas</dt><dd>La vista de la página dentro del editor, donde hacés clic y escribís.</dd>
+          <dt>verify</dt><dd>El chequeo automático del proyecto: si pasa, lo importante funciona.</dd>
+          <dt>Skill</dt><dd>Instrucciones empaquetadas para Claude. <code>remarkable-astro</code> arranca proyectos nuevos.</dd>
+          <dt>CLAUDE.md</dt><dd>Las reglas del proyecto que Claude lee siempre antes de trabajar.</dd>
+          <dt>Starter</dt><dd>El repo Remarkable del que se copia cada proyecto.</dd>
+        </dl>
+      </div>
+    </section>
+
     <!-- ───────────────────────── Pendiente ───────────────────────── -->
     <section id="pendiente">
       <div class="prose">
@@ -939,32 +1208,51 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
 </div>
 
 <script>
-  // Index: highlight the section in view.
+  var shell = document.querySelector(".shell");
+
+  // Mode switch: vibe coding (default) / technical. Remembered per viewer.
+  function setMode(mode, save) {
+    shell.setAttribute("data-mode", mode);
+    document.querySelectorAll("[data-set-mode]").forEach(function (b) {
+      if (b.closest(".mode")) b.setAttribute("aria-pressed", String(b.getAttribute("data-set-mode") === mode));
+    });
+    if (save) { try { localStorage.setItem("remarkable-docs-mode", mode); } catch (e) {} }
+  }
+  try { var saved = localStorage.getItem("remarkable-docs-mode"); if (saved === "tech" || saved === "vibe") setMode(saved, false); } catch (e) {}
+  document.querySelectorAll("[data-set-mode]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      setMode(b.getAttribute("data-set-mode"), true);
+      var target = location.hash && document.getElementById(location.hash.slice(1));
+      if (target && target.offsetParent === null) window.scrollTo({ top: 0 });
+    });
+  });
+
+  // Index: highlight the section in view (a section can appear in both lists).
   (function () {
-    var links = Array.prototype.slice.call(document.querySelectorAll('.index a[href^="#"]'));
     var map = {};
-    links.forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
+    document.querySelectorAll('.index a[href^="#"]').forEach(function (a) {
+      var id = a.getAttribute("href").slice(1);
+      (map[id] = map[id] || []).push(a);
+    });
     var current = null;
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        var a = map[e.target.id];
-        if (!a || a === current) return;
-        if (current) current.removeAttribute("aria-current");
-        a.setAttribute("aria-current", "true");
-        current = a;
+        if (!e.isIntersecting || !map[e.target.id] || current === e.target.id) return;
+        if (current) map[current].forEach(function (a) { a.removeAttribute("aria-current"); });
+        map[e.target.id].forEach(function (a) { a.setAttribute("aria-current", "true"); });
+        current = e.target.id;
       });
     }, { rootMargin: "-20% 0px -70% 0px" });
     document.querySelectorAll("main section[id]").forEach(function (s) { io.observe(s); });
   })();
 
-  // Copy buttons.
+  // Copy buttons (code blocks and prompt cards).
   document.querySelectorAll(".copy").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      var pre = btn.parentElement.querySelector("pre");
-      var text = pre.innerText;
+      var src = btn.closest(".code, .prompt").querySelector("pre, blockquote");
+      var text = src.innerText.trim();
       var done = function () { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar"; }, 1600); };
-      var fallback = function () { var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Seleccionado"; };
+      var fallback = function () { var r = document.createRange(); r.selectNodeContents(src); var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Seleccionado"; };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
       else fallback();
     });
