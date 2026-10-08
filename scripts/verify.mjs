@@ -10,6 +10,7 @@
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { gzipSync } from "node:zlib";
 
 const baseUrl = process.argv[2];
 let failed = 0;
@@ -22,7 +23,6 @@ const check = (cond, msg) => (cond ? ok(msg) : fail(msg));
 
 console.log("\n1. Unit checks");
 execSync("node --experimental-strip-types --no-warnings src/core/lib/routes.check.ts", { stdio: "inherit" });
-execSync("node --experimental-strip-types --no-warnings src/core/canvas/channels.check.ts", { stdio: "inherit" });
 // Every block field gets a control in the Remarkable Editor panel.
 execSync("npx sanity exec scripts/check-editor-schema.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // Structural edits (insert/move/remove/duplicate) keep the document valid.
@@ -32,8 +32,8 @@ console.log("\n2. Build");
 execSync("npx astro build", { stdio: ["ignore", "ignore", "inherit"] });
 ok("astro build");
 
-// Static output location depends on the adapter.
-const outDir = [".vercel/output/static", "dist/client", ".netlify/static", "dist"].find((d) =>
+// Static output location (dist/ with no adapter; kept flexible if one is added).
+const outDir = ["dist", "dist/client", ".vercel/output/static", ".netlify/static"].find((d) =>
   existsSync(join(d, "index.html")),
 );
 if (!outDir) {
@@ -51,9 +51,27 @@ const htmlFiles = [];
 const publicHtml = htmlFiles.filter((f) => !f.includes(`${outDir}/studio/`));
 
 console.log(`\n3. Static output (${outDir}, ${publicHtml.length} public pages)`);
-check(!htmlFiles.some((f) => f.includes("/preview/")), "/preview is not prerendered (it must render on demand)");
-const leaks = publicHtml.filter((f) => /PreviewTools|studio-component/.test(readFileSync(f, "utf8")));
+const sitePages = publicHtml.filter((f) => !f.includes("edit-canvas"));
+const leaks = sitePages.filter((f) => /EditorTool|CanvasApp|studio-component/.test(readFileSync(f, "utf8")));
 check(leaks.length === 0, `no editor/Studio bundle in public HTML${leaks.length ? `: ${leaks.join(", ")}` : ""}`);
+
+// The JS a public page actually loads: entry scripts + their static imports.
+function jsGraph(html) {
+  const seen = new Set();
+  const visit = (f) => {
+    if (seen.has(f) || !existsSync(join(outDir, f))) return;
+    seen.add(f);
+    const src = readFileSync(join(outDir, f), "utf8");
+    for (const m of src.matchAll(/(?:from|import)\s*\(?\s*["'](\.\/[^"']+\.js)["']/g)) visit(join(f, "..", m[1]));
+  };
+  for (const m of html.matchAll(/\/_astro\/[^"]+?\.js/g)) visit(m[0]);
+  return [...seen];
+}
+const homeGraph = jsGraph(readFileSync(join(outDir, "index.html"), "utf8"));
+const gzKB = Math.round(homeGraph.reduce((n, f) => n + gzipSync(readFileSync(join(outDir, f))).length, 0) / 1024);
+const editorLeak = homeGraph.filter((f) => /comlink|xstate/.test(readFileSync(join(outDir, f), "utf8")));
+check(editorLeak.length === 0, `public pages load no visual-editing runtime (comlink/xstate)${editorLeak.length ? `: ${editorLeak.join(", ")}` : ""}`);
+check(gzKB < 250, `home JS ≤ 250 KB gzip (${gzKB} KB, ${homeGraph.length} files)`);
 const home = readFileSync(join(outDir, "index.html"), "utf8");
 check(!home.includes("Your visual page builder is ready"), "home rendered real content (not <Welcome>) — env + dataset OK");
 check(/<link rel="canonical" href="https?:\/\/[^"]+"/.test(home), "home has an absolute canonical");
@@ -63,13 +81,8 @@ if (baseUrl) {
   console.log(`\n4. HTTP (${baseUrl})`);
   const status = async (path, init) => (await fetch(new URL(path, baseUrl), { redirect: "manual", ...init })).status;
   check((await status("/")) === 200, "/ → 200");
-  check((await status("/preview")) === 401, "/preview without cookie → 401");
-  check((await status("/preview", { headers: { cookie: "__remarkable_draft=forged" } })) === 401, "/preview with a forged cookie → 401");
-  check(
-    (await status("/api/draft-mode/enable?sanity-preview-secret=nope&sanity-preview-pathname=/preview")) === 401,
-    "enable with a fake secret → 401",
-  );
   check((await status("/studio")) === 200, "/studio → 200");
+  check((await status("/edit-canvas")) === 200, "/edit-canvas → 200");
 }
 
 console.log(failed ? `\n${failed} check(s) failed.\n` : "\nAll checks passed.\n");

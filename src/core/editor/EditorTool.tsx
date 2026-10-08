@@ -3,7 +3,7 @@ import { useClient, useCurrentUser, useDocumentOperation, useEditState, useSchem
 
 import { apiVersion } from "@/core/sanity/env";
 import { pageHref, toRoutes, type Routes } from "@/core/lib/routes";
-import { reKey, resolveSelection } from "@/core/canvas/editorOps";
+import { reKey, resolveSelection } from "@/core/editor/paths";
 import { blockMeta, blockTypes } from "@/blocks/meta";
 import type { Block, Page } from "@/core/lib/types";
 

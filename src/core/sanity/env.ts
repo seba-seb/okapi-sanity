@@ -12,11 +12,9 @@ export const apiVersion = env("PUBLIC_SANITY_API_VERSION") || "2024-10-01";
 export const dataset = env("PUBLIC_SANITY_DATASET") || "production";
 export const projectId = env("PUBLIC_SANITY_PROJECT_ID") || "";
 
-/** Server-only. Never read this from client code. */
+/** Build-time only, for private datasets. Never read this from client code. */
 export const readToken = () => env("SANITY_API_READ_TOKEN");
 
 /** Where the embedded Studio lives, used for click-to-edit links. */
 export const studioUrl = "/studio";
 
-/** Prefix of the on-demand draft routes that mirror the public ones. */
-export const previewPrefix = "/preview";

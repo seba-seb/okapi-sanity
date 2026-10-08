@@ -1,11 +1,7 @@
 import { editable, keyed } from "@/core/sanity/dataAttr";
 import { clean } from "@/core/lib/clean";
 import { pageHref, resolveLink, type Routes } from "@/core/lib/routes";
-import { NAVIGATION_QUERY } from "@/core/sanity/queries";
-import { useLiveQuery } from "@/core/render/useLiveQuery";
 import type { Navigation, Settings } from "@/core/sanity/site";
-
-const EMPTY = {};
 
 /**
  * Project chrome, not core: restyle or replace per project. Renders nothing
@@ -21,7 +17,7 @@ export function SiteHeader({
   settings: Settings;
   routes: Routes;
 }) {
-  const nav = useLiveQuery(NAVIGATION_QUERY, EMPTY, navigation);
+  const nav = navigation;
   const items = nav?.header ?? [];
   if (!items.length) return null;
   return (

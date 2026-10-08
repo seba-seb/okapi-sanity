@@ -13,6 +13,6 @@ const [page, site] = await Promise.all([loadQuery<Page>(PAGE_QUERY, params), loa
 
 <Base site={site} meta={page}>
   {page
-    ? <PageBuilder client:load page={page} query={PAGE_QUERY} params={params} routes={site.routes} />
+    ? <PageBuilder client:load page={page} routes={site.routes} />
     : <Welcome />}
 </Base>

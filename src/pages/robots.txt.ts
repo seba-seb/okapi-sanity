@@ -4,9 +4,7 @@ export const GET: APIRoute = ({ site }) =>
   new Response(
     [
       "User-agent: *",
-      "Disallow: /preview",
       "Disallow: /studio",
-      "Disallow: /api",
       "Disallow: /edit-canvas",
       "",
       `Sitemap: ${new URL("/sitemap.xml", site).href}`,

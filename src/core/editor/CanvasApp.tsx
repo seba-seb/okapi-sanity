@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PageBuilder } from "@/core/render/PageBuilder";
-import { PAGE_QUERY } from "@/core/sanity/queries";
-import { resolveSelection } from "@/core/canvas/editorOps";
+import { resolveSelection } from "@/core/editor/paths";
 import type { Routes } from "@/core/lib/routes";
 import type { Page } from "@/core/lib/types";
 import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
@@ -230,7 +229,7 @@ export function CanvasApp() {
 
   // Re-render the page only when the document changes, not on overlay moves.
   const page = useMemo(
-    () => (doc?.sections?.length ? <PageBuilder page={doc} query={PAGE_QUERY} params={EMPTY} routes={routes} /> : null),
+    () => (doc?.sections?.length ? <PageBuilder page={doc} routes={routes} /> : null),
     [doc, routes],
   );
 

@@ -1,25 +1,4 @@
 import { blockMeta } from "@/blocks/meta";
-import { createDataAttribute } from "@sanity/visual-editing/create-data-attribute";
-
-import { dataset, projectId, studioUrl } from "@/core/sanity/env";
-
-/**
- * Produces the `data-sanity` attribute string that turns a rendered element
- * into a click-to-edit target in the Presentation tool.
- *
- * `path` is a GROQ-style path to the field, e.g.
- * `sections[_key=="abc"].content[_key=="def"]`.
- */
-export function dataAttr(id: string, type: string, path: string): string {
-  return createDataAttribute({
-    projectId,
-    dataset,
-    baseUrl: studioUrl,
-    id,
-    type,
-    path,
-  }).toString();
-}
 
 /** Appends an array-item selector to a path. */
 export function keyed(path: string, key: string): string {
@@ -46,29 +25,23 @@ export function blockTitle(type?: string): string {
  * click-to-edit `data-sanity` attribute plus a `data-sanity-title` the overlay
  * shows on hover (the element's name, e.g. "Heading", instead of the page).
  */
+/**
+ * The attributes that make a rendered element a selectable target on the
+ * Remarkable Editor canvas: its GROQ path (what the editor writes to), its
+ * block type, and the label the selection outline shows. The id/type
+ * arguments are kept for call-site compatibility.
+ */
 export function editable(
-  id: string,
-  type: string,
+  _id: string,
+  _type: string,
   path: string,
   blockType?: string,
-  /** Overrides the overlay label — e.g. a section passes "Section — <name>". */
+  /** Overrides the label — e.g. a section passes "Section — <name>". */
   title?: string,
-): {
-  "data-sanity": string;
-  "data-sanity-title": string;
-  "data-sanity-path": string;
-  "data-sanity-type": string;
-  "data-sanity-id": string;
-} {
+): { "data-sanity-title": string; "data-sanity-path": string; "data-sanity-type": string } {
   return {
-    "data-sanity": dataAttr(id, type, path),
     "data-sanity-title": title || blockTitle(blockType),
-    // Raw GROQ path (e.g. sections[_key=="a"].content[_key=="b"]) used to match
-    // this element from the Studio for live hover-preview. See previewBridge.ts.
     "data-sanity-path": path,
-    // Block `_type` and document id — read by the on-canvas resize handle to
-    // know which blocks are resizable and where to write the change back.
     "data-sanity-type": blockType ?? "",
-    "data-sanity-id": id,
   };
 }

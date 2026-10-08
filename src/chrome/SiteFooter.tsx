@@ -1,11 +1,7 @@
 import { editable, keyed } from "@/core/sanity/dataAttr";
 import { clean } from "@/core/lib/clean";
 import { resolveLink, type Routes } from "@/core/lib/routes";
-import { NAVIGATION_QUERY } from "@/core/sanity/queries";
-import { useLiveQuery } from "@/core/render/useLiveQuery";
 import type { Navigation, Settings } from "@/core/sanity/site";
-
-const EMPTY = {};
 
 /** Project chrome, not core. Renders nothing until there are footer items. */
 export function SiteFooter({
@@ -17,7 +13,7 @@ export function SiteFooter({
   settings: Settings;
   routes: Routes;
 }) {
-  const nav = useLiveQuery(NAVIGATION_QUERY, EMPTY, navigation);
+  const nav = navigation;
   const items = [...(nav?.footer ?? []), ...(settings?.socialLinks ?? [])];
   if (!items.length) return null;
   return (

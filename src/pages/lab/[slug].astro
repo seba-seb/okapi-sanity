@@ -20,6 +20,6 @@ const { slug } = Astro.params;
 const [page, site] = await Promise.all([loadQuery<Page>(PAGE_QUERY, { slug }), loadSite()]);
 ---
 
-<Base site={site} meta={page} preview>
+<Base site={site} meta={{ ...page, noindex: true }}>
   {page ? <LabHarness client:only="react" page={page} routes={site.routes} /> : <p>No page “{slug}”.</p>}
 </Base>

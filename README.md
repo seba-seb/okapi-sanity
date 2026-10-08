@@ -1,7 +1,7 @@
 # Remarkable
 
 A creative-agency site built with **Astro 7** + **Sanity 6**, designed around
-Sanity's **visual editing** (Presentation). Instead of rigid, pre-baked page
+our own visual editor (the **Remarkable Editor**, a tab in the Studio). Instead of rigid, pre-baked page
 templates, you compose pages from a set of **core building blocks** and build
 highly custom sections from scratch — all visually, with drag controls and
 live click-to-edit overlays.
@@ -29,7 +29,7 @@ npm run dev
 
 - Site: <http://localhost:3000>
 - Studio: <http://localhost:3000/studio>
-- Visual editor: open the **Presentation** tab inside the Studio.
+- Visual editor: the **Editor** tab inside the Studio (`/studio#/editor`).
 
 ### Environment variables (`.env`)
 
@@ -38,7 +38,7 @@ npm run dev
 | `PUBLIC_SANITY_PROJECT_ID` | Your Sanity project ID |
 | `PUBLIC_SANITY_DATASET` | Usually `production` |
 | `PUBLIC_SANITY_API_VERSION` | API date, e.g. `2024-10-01` |
-| `SANITY_API_READ_TOKEN` | A **Viewer** token — required for draft mode / Presentation |
+| `SANITY_API_READ_TOKEN` | Optional — only for a private dataset (read at build time) |
 
 Until these are set, the homepage shows a friendly setup screen instead of
 crashing.
@@ -85,29 +85,18 @@ consistent across all nested blocks.
 
 ## How the visual editing works
 
-- **Static public site** — `/` and `/[slug]` are prerendered at build time.
-  Publishing does not redeploy on its own: hook a Sanity webhook to a Vercel
-  deploy hook if you want that.
-- **Draft previews** — `/preview/*` mirrors the public routes on demand
-  (`prerender = false`). It is locked by [`draftMode.ts`](src/core/sanity/draftMode.ts):
-  Presentation hits `/api/draft-mode/enable` with a one-time secret, which is
-  validated against the dataset and then sets the cookie.
-- **Live edits** — `PageBuilder` is a React island. `usePresentationQuery` +
-  `useOptimistic` stream Studio edits straight into it, with no page reload.
-- **Click-to-edit** — every rendered block carries a `data-sanity` attribute
-  built by [`dataAttr`](src/core/sanity/dataAttr.ts), so you can click any element in
-  Presentation to jump straight to its field.
-- **Drag controls** — custom Studio inputs power the sliders:
-  [`RangeSliderInput`](src/core/studio/RangeSliderInput.tsx) (single value)
-  and [`ResponsiveNumberInput`](src/core/studio/ResponsiveNumberInput.tsx)
-  (one slider per breakpoint).
-
----
+- **Static public site** — every page is prerendered at build time
+  (`dist/`, any static host). Publishing does not redeploy on its own: hook a
+  Sanity webhook to your host's deploy hook.
+- **Remarkable Editor** — a Studio tool: pages + layers, a canvas that renders
+  the real site from the draft as you edit it, and a properties panel
+  generated from the schema. Double-click text to edit it in place, drag
+  layers, drop images, undo. See [`CLAUDE.md`](CLAUDE.md).
 
 ## Project structure
 
 See [`CLAUDE.md`](CLAUDE.md): folder layout, how to add or remove a block, the
-rules that keep the preview working, and the checklist for starting a new
+rules that keep the editor working, and the checklist for starting a new
 project from this starter.
 
 ## Scripts

@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
     "typecheck": "astro check && tsc --noEmit",
     "typegen": "sanity typegen generate",
     "postinstall": "patch-package",
@@ -14,17 +13,13 @@
   },
   "dependencies": {
     "@astrojs/react": "^7.0.0",
-    "@astrojs/vercel": "latest",
     "@gsap/react": "^2.1.2",
     "@portabletext/react": "^6.2.0",
     "@sanity/astro": "^3.5.1",
     "@sanity/client": "^7.14.1",
     "@sanity/icons": "^3.7.0",
     "@sanity/image-url": "^2.1.1",
-    "@sanity/mutate": "^0.18.1",
-    "@sanity/preview-url-secret": "^4.1.5",
     "@sanity/ui": "^3.3.1",
-    "@sanity/visual-editing": "5.4.5",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
     "embla-carousel-react": "^8.6.0",
@@ -49,7 +44,6 @@
     "vite": "*"
   },
   "overrides": {
-    "@sanity/visual-editing": "5.4.5",
     "sanity": "6.3.0"
   }
 }

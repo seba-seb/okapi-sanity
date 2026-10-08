@@ -15,18 +15,18 @@ export type Site = { settings: Settings; navigation: Navigation; routes: Routes 
 
 // ponytail: module-level cache so a static build fetches site-wide data once,
 // not once per page. Build only: in dev it would pin stale content until
-// restart. Drafts (preview) are never cached.
+// restart.
 const CACHE = !import.meta.env.DEV;
 let published: Promise<Site> | undefined;
 
 /** Settings, menus and the page-id → slug map every page needs. */
-export function loadSite({ drafts = false } = {}): Promise<Site> {
-  if (CACHE && !drafts && published) return published;
+export function loadSite(): Promise<Site> {
+  if (CACHE && published) return published;
   const p = Promise.all([
-    loadQuery<Settings>(SETTINGS_QUERY, {}, { drafts }),
-    loadQuery<Navigation>(NAVIGATION_QUERY, {}, { drafts }),
-    loadQuery<{ _id: string; slug: string }[]>(ROUTES_QUERY, {}, { drafts }),
+    loadQuery<Settings>(SETTINGS_QUERY),
+    loadQuery<Navigation>(NAVIGATION_QUERY),
+    loadQuery<{ _id: string; slug: string }[]>(ROUTES_QUERY),
   ]).then(([settings, navigation, routes]) => ({ settings, navigation, routes: toRoutes(routes) }));
-  if (CACHE && !drafts) published = p;
+  if (CACHE) published = p;
   return p;
 }

@@ -1,7 +1,6 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { PageBuilder } from "@/core/render/PageBuilder";
-import { PAGE_QUERY } from "@/core/sanity/queries";
 import { ScrollTrigger } from "@/core/motion/gsap";
 import type { Routes } from "@/core/lib/routes";
 import type { Page } from "@/core/lib/types";
@@ -153,7 +152,6 @@ export function LabHarness({ page, routes }: { page: Doc; routes: Routes }) {
   docRef.current = doc;
   const [log, setLog] = useState<string[]>([]);
   const errors = useRef<string[]>([]);
-  const params = { slug: page.slug?.current };
 
   useEffect(() => {
     const onErr = (e: ErrorEvent) => errors.current.push(e.message);
@@ -216,7 +214,7 @@ export function LabHarness({ page, routes }: { page: Doc; routes: Routes }) {
   return (
     <>
       <Boundary onError={(e) => errors.current.push(`BOUNDARY ${e.message}`)}>
-        <PageBuilder page={doc} query={PAGE_QUERY} params={params} routes={routes} />
+        <PageBuilder page={doc} routes={routes} />
       </Boundary>
       <aside
         style={{ position: "fixed", right: 12, bottom: 12, zIndex: 2147483647, width: 360, maxHeight: "45vh", overflow: "auto", background: "#111", color: "#eee", font: "12px/1.4 ui-monospace, monospace", padding: 12, borderRadius: 10, boxShadow: "0 10px 40px #0008" }}

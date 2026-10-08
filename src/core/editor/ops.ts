@@ -4,7 +4,7 @@
  * snapshots and the canvas re-renders from plain props. Paths are the same
  * GROQ-style strings blocks stamp as `data-sanity-path`.
  */
-import { parsePath, randomKey, reKey, resolveSelection } from "@/core/canvas/editorOps";
+import { parsePath, randomKey, reKey, resolveSelection } from "@/core/editor/paths";
 import { acceptedTypes, blockMeta } from "@/blocks/meta";
 import { INSERT_DEFAULTS } from "@/blocks/defaults";
 import type { Block } from "@/core/lib/types";

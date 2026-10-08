@@ -20,11 +20,9 @@ type Meta = {
 interface Props {
   site: Site;
   meta?: Meta;
-  /** Preview routes: hydrate the chrome so menu edits stream in live. */
-  preview?: boolean;
 }
 
-const { site, meta, preview = false } = Astro.props;
+const { site, meta } = Astro.props;
 const { settings, navigation, routes } = site;
 
 // Every SEO value is optional in the CMS and falls back: page → settings → code.
@@ -38,11 +36,11 @@ const ogSource = meta?.ogImage?.asset ? meta.ogImage : settings?.ogImage?.asset 
 const ogImage = ogSource ? urlForImage(ogSource).width(1200).height(630).fit("crop").url() : undefined;
 const chrome = { navigation, settings, routes };
 
-// Canonical = the public URL of this page, even when rendered under /preview.
+// Canonical = the public URL of this page.
 const canonical = meta?.slug?.current
   ? new URL(pageHref(clean(meta.slug.current)), Astro.site).href
   : undefined;
-const noindex = preview || !!meta?.noindex;
+const noindex = !!meta?.noindex;
 const jsonLd = isHome
   ? {
       "@context": "https://schema.org",
@@ -79,8 +77,8 @@ const jsonLd = isHome
     <slot name="head" />
   </head>
   <body>
-    {preview ? <SiteHeader client:load {...chrome} /> : <SiteHeader {...chrome} />}
+    <SiteHeader {...chrome} />
     <slot />
-    {preview ? <SiteFooter client:load {...chrome} /> : <SiteFooter {...chrome} />}
+    <SiteFooter {...chrome} />
   </body>
 </html>

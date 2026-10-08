@@ -25,5 +25,5 @@ const site = await loadSite();
 ---
 
 <Base site={site} meta={page}>
-  {page && <PageBuilder client:load page={page} query={PAGE_QUERY} params={{ slug }} routes={site.routes} />}
+  {page && <PageBuilder client:load page={page} routes={site.routes} />}
 </Base>

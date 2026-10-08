@@ -1,8 +1,3 @@
-"use client";
-
-import { useRef } from "react";
-import { useOptimistic, usePresentationQuery } from "@sanity/visual-editing/react";
-
 import { keyed } from "@/core/sanity/dataAttr";
 import { dedupeByKey } from "@/core/lib/dedupe";
 import type { Page } from "@/core/lib/types";
@@ -12,68 +7,24 @@ import { ScrollRefresh } from "@/core/motion/ScrollRefresh";
 import { Section } from "@/blocks/section/Section";
 
 /** Normalizes a Sanity id: strips `drafts.` and `versions.<release>.` prefixes. */
-function baseIdOf(id: string | undefined): string {
-  return (id ?? "").replace(/^drafts\./, "").replace(/^versions\.[^.]+\./, "");
-}
+const baseIdOf = (id: string | undefined) => (id ?? "").replace(/^drafts\./, "").replace(/^versions\.[^.]+\./, "");
 
-export function PageBuilder({
-  page,
-  query,
-  params,
-  routes,
-}: {
-  page: Page;
-  query: string;
-  params: Record<string, unknown>;
-  routes: Routes;
-}) {
-  const baseId = baseIdOf(page._id);
-
-  // 1) Live query results from the Studio — reflects form edits (typing) as they
-  //    happen, streamed over postMessage. Null on the published site.
-  //    `stega: false` on purpose: stega-encoded text makes visual-editing draw a
-  //    separate click-to-edit overlay box around every heading / paragraph /
-  //    label, nested inside the block. We don't want those — each block already
-  //    has its own overlay via `editable()`. Text still updates live through this
-  //    query stream (+ `useOptimistic` below), just without the per-word boxes.
-  const live = usePresentationQuery({ query, params, stega: false });
-
-  // Keep the last non-null live result so a transient null doesn't flash the
-  // stale server `page` mid-edit.
-  const lastLive = useRef<Page | null>(null);
-  if (live.data) lastLive.current = live.data as Page;
-  const base = (lastLive.current ?? page) as Page;
-
-  // 2) Optimistic layer — preview-initiated mutations (Insert / Duplicate /
-  //    Remove / Move from the overlay context menu) are applied locally the
-  //    instant they happen, instead of waiting for the Content Lake round-trip.
-  const data = useOptimistic<Page, Page>(base, (state, action) => {
-    const matches =
-      baseIdOf(action.id) === baseId || baseIdOf(action.originalId) === baseId;
-    if (matches && action.document) {
-      return action.document as Page;
-    }
-    return state;
-  });
-
-  const ctx = { documentId: baseId, documentType: "page" };
-  const sections = data?.sections;
-
+/**
+ * Renders a page document. The same component serves the public site
+ * (static data) and the editor canvas (whatever document the editor posts).
+ */
+export function PageBuilder({ page, routes }: { page: Page; routes: Routes }) {
+  const ctx = { documentId: baseIdOf(page._id), documentType: "page" };
+  const sections = page.sections;
   if (!sections?.length) return null;
-
   return (
     <RoutesContext.Provider value={routes}>
-    <ScrollRefresh />
-    <main>
-      {dedupeByKey(sections).map((section) => (
-        <Section
-          key={section._key}
-          section={section}
-          path={keyed("sections", section._key)}
-          ctx={ctx}
-        />
-      ))}
-    </main>
+      <ScrollRefresh />
+      <main>
+        {dedupeByKey(sections).map((section) => (
+          <Section key={section._key} section={section} path={keyed("sections", section._key)} ctx={ctx} />
+        ))}
+      </main>
     </RoutesContext.Provider>
   );
 }

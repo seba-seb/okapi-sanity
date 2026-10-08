@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 
-/** Draft-mode canvas-edit hook, published on `globalThis` by CanvasLogo3dEditor. */
+/** Optional edit hook on `globalThis` (no longer set; kept for a future editor control). */
 type Logo3dEditor = {
   /** Patches numeric fields (rotationX/Y/Z, grain) on the block in the draft. */
   persist: (

@@ -1,4 +1,4 @@
-import { randomKey } from "@/core/canvas/editorOps";
+import { randomKey } from "@/core/editor/paths";
 
 /** Plain text of a Portable Text value, or null if it has marks/links/styles we'd lose. */
 export function ptToPlainIfSimple(v: unknown): string | null {

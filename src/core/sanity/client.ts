@@ -1,6 +1,6 @@
 import { createClient, type QueryParams } from "@sanity/client";
 
-import { apiVersion, dataset, projectId, readToken, studioUrl } from "@/core/sanity/env";
+import { apiVersion, dataset, projectId, readToken } from "@/core/sanity/env";
 
 export const client = createClient({
   projectId: projectId || "missing",
@@ -9,26 +9,19 @@ export const client = createClient({
   // No CDN: pages are fetched at build time (a handful of requests), and a
   // publish-triggered rebuild must never read a stale cached response.
   useCdn: false,
-  stega: { studioUrl },
+  perspective: "published",
+  // Only needed when the dataset is private; public datasets read without it.
+  token: readToken(),
 });
 
 /**
- * Published content for static pages, drafts for the preview routes. Stega is
- * off in both — click-to-edit runs off the explicit `data-sanity` attributes
- * stamped by `editable()`. Returns `null` on failure so pages can fall back
- * (e.g. <Welcome /> before the project is configured).
+ * Published content for the static site. Returns `null` on failure so pages
+ * can fall back (e.g. <Welcome /> before the project is configured).
  */
-export async function loadQuery<T>(
-  query: string,
-  params: QueryParams = {},
-  { drafts = false } = {},
-): Promise<T | null> {
+export async function loadQuery<T>(query: string, params: QueryParams = {}): Promise<T | null> {
   if (!projectId) return null;
   try {
-    const c = drafts
-      ? client.withConfig({ token: readToken(), perspective: "drafts" })
-      : client.withConfig({ perspective: "published" });
-    return ((await c.fetch<T>(query, params, { stega: false })) ?? null) as T | null;
+    return ((await client.fetch<T>(query, params)) ?? null) as T | null;
   } catch (error) {
     console.error("[loadQuery] Sanity fetch failed:", error);
     return null;

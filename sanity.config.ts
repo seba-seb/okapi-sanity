@@ -7,13 +7,10 @@ import {
   type StringInputProps,
 } from "sanity";
 import { structureTool } from "sanity/structure";
-import { presentationTool } from "sanity/presentation";
 
 import { dataset, projectId } from "./src/core/sanity/env";
 import { schemaTypes, SINGLETONS } from "./src/schema";
 import { structure } from "./src/core/sanity/structure";
-import { resolve } from "./src/core/sanity/presentation";
-import { PageNavigator } from "./src/core/studio/PageNavigator";
 import { EditorTool } from "./src/core/editor/EditorTool";
 import { installStaleChunkReload } from "./src/core/lib/staleChunkReload";
 
@@ -21,13 +18,10 @@ installStaleChunkReload();
 import { EditIcon } from "@sanity/icons";
 import { PreviewSelect } from "./src/core/studio/PreviewSelect";
 import { TooltipDescriptionField } from "./src/core/studio/TooltipDescriptionField";
-import { CanvasResizeListener } from "./src/core/studio/CanvasResizeListener";
-import { EditorKeyForwarder } from "./src/core/studio/EditorKeyForwarder";
-import { CanvasAutofocusGuard } from "./src/core/studio/CanvasAutofocusGuard";
 
 /**
- * Renders enum string fields (those with an `options.list`) with the hoverable
- * `PreviewSelect` so editors can live-preview each option in Presentation.
+ * Renders enum string fields (those with an `options.list`) as segmented
+ * buttons (`PreviewSelect`).
  * Every other input falls through to Sanity's default.
  */
 function inputComponent(props: InputProps) {
@@ -69,16 +63,6 @@ function fieldComponent(props: FieldProps) {
   return props.renderDefault(props);
 }
 
-/**
- * Wraps the whole Studio so the Presentation-preview listeners are always
- * mounted: `CanvasResizeListener` receives drag-to-resize commits and patches
- * the draft, `EditorKeyForwarder` relays block shortcuts (delete / duplicate /
- * copy / paste) pressed while focus is in the Studio to the preview, and
- * `CanvasAutofocusGuard` suppresses the click-to-edit autofocus (keeping the
- * pane navigation) so keyboard focus stays on the canvas.
- * See the matching `CanvasResizer` / `EditorShortcuts` components on the front
- * end.
- */
 // Sanity UI sets its font on its own components only; the page root stays at
 // the browser default (Times), so any plain HTML in custom tools and panels
 // (Editor, page navigator) rendered serif. Give the root Sanity's stack.
@@ -90,9 +74,6 @@ function studioLayout(props: LayoutProps) {
     null,
     createElement("style", null, STUDIO_FONT),
     props.renderDefault(props),
-    createElement(CanvasResizeListener),
-    createElement(EditorKeyForwarder),
-    createElement(CanvasAutofocusGuard),
   );
 }
 
@@ -100,8 +81,8 @@ export default defineConfig({
   name: "default",
   title: "Remarkable",
   // The Studio is served at /studio (astro.config studioBasePath) with HASH
-  // routing, so the workspace lives at the root of the hash: #/structure,
-  // #/presentation. With "/studio" here the hash had to be #/studio/…, and
+  // routing, so the workspace lives at the root of the hash: #/editor,
+  // #/structure. With "/studio" here the hash had to be #/studio/…, and
   // any other hash — #/, or the empty one left after Brave's cookieless
   // login consumes #sid=… — matched no workspace and rendered a blank page.
   basePath: "/",
@@ -135,20 +116,5 @@ export default defineConfig({
   tools: (prev) => [{ name: "editor", title: "Editor", icon: EditIcon, component: EditorTool }, ...prev],
   plugins: [
     structureTool({ structure }),
-    presentationTool({
-      resolve,
-      // Page picker in the side panel. `unstable_navigator` lives under
-      // `components` in sanity@6 (not top-level `navigator`).
-      components: {
-        unstable_navigator: { component: PageNavigator, minWidth: 200, maxWidth: 320 },
-      },
-      previewUrl: {
-        // Relative: the Studio is embedded, so its origin IS the site.
-        initial: "/preview",
-        previewMode: {
-          enable: "/api/draft-mode/enable",
-        },
-      },
-    }),
   ],
 });

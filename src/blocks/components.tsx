@@ -20,7 +20,6 @@ import { Marquee } from "./marquee/Marquee";
 import { TextScrub } from "./textScrub/TextScrub";
 import { BigType } from "./bigType/BigType";
 import { ParallaxMedia } from "./parallaxMedia/ParallaxMedia";
-import { CanvasLogo3dEditor } from "./logo3d/CanvasLogo3dEditor";
 
 /** Site side of the registry. Missing a type from meta.ts = type error. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,5 +45,3 @@ export const BLOCK_COMPONENTS: Record<ContentBlockType, ComponentType<BlockProps
   parallaxMedia: ParallaxMedia,
 };
 
-/** Block-specific canvas tools, mounted in the preview next to the core ones. */
-export const BLOCK_CANVAS_TOOLS: ComponentType[] = [CanvasLogo3dEditor];

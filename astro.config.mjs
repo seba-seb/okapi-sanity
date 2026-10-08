@@ -1,6 +1,5 @@
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
-import vercel from "@astrojs/vercel";
 import sanity from "@sanity/astro";
 import { loadEnv } from "vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -37,10 +36,9 @@ function resolveSite() {
 
 export default defineConfig({
   site: resolveSite(),
-  // Public pages stay static; only /preview/* and /api/draft-mode/* opt out
-  // with `export const prerender = false`.
+  // Fully static: the editor writes to Sanity from the Studio; the site has
+  // no server routes. Any static host works (dist/).
   output: "static",
-  adapter: vercel(),
   integrations: [
     sanity({
       projectId: PUBLIC_SANITY_PROJECT_ID || "missing",
@@ -59,31 +57,19 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
-    // @sanity/visual-editing pulls these through paths Vite's optimizer misses
-    // → "504 Outdated Optimize Dep" and the overlay never mounts in dev.
     optimizeDeps: {
-      // Crawl EVERY source file at startup — the public pages, /preview (the
-      // visual editor's deps) and the Studio — so no dependency is discovered
-      // mid-session. A late discovery re-optimizes, and the open tab's lazy
-      // chunks (e.g. visual-editing's LoaderComlink) then 504: blank Studio,
-      // or a preview you can see but not edit.
+      // Crawl EVERY source file at startup — the public pages, the editor
+      // canvas and the Studio — so no dependency is discovered mid-session. A
+      // late discovery re-optimizes, and the open tab's lazy chunks then 504
+      // (blank Studio after sign-in, or a canvas that never hydrates).
       entries: ["src/**/*.{ts,tsx,astro}", "sanity.config.ts"],
       include: [
-        "@sanity/visual-editing",
-        "@sanity/visual-editing/react",
-        "@sanity/visual-editing/create-data-attribute",
-        "@sanity/mutate",
         "@sanity/client",
         "@sanity/client/stega",
         "@sanity/image-url",
         "@portabletext/react",
         "groq",
         "react/compiler-runtime",
-        "lodash/isObject.js",
-        "lodash/groupBy.js",
-        "lodash/keyBy.js",
-        "lodash/partition.js",
-        "lodash/sortedIndex.js",
         "embla-carousel-react",
         "three",
         "gsap",
@@ -95,7 +81,6 @@ export default defineConfig({
         // tab's lazy chunks then 504 → blank Studio after sign-in.
         "sanity",
         "sanity/structure",
-        "sanity/presentation",
         "@sanity/ui",
         "@sanity/icons",
         "styled-components",
