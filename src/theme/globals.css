@@ -71,6 +71,14 @@ body { overflow-x: clip; }
 .parallax__fallback { background: radial-gradient(120% 90% at 20% 10%, var(--brand), transparent 60%), radial-gradient(90% 90% at 90% 90%, var(--surface-2), var(--bg)); }
 @media (prefers-reduced-motion: reduce) { .hscroll__track { overflow-x: auto; width: auto; } }
 
+/* Box: free layout container (src/blocks/box). */
+.box { display: flex; flex-direction: column; align-self: stretch; min-width: 0; }
+.box--row { flex-direction: row; }
+.box--grid { display: grid; grid-template-columns: repeat(var(--box-cols, 3), minmax(0, 1fr)); }
+.box--row > *, .box--grid > * { min-width: 0; }
+@media (max-width: 1023px) { .box--grid { grid-template-columns: repeat(min(var(--box-cols, 3), 2), minmax(0, 1fr)); } }
+@media (max-width: 767px) { .box--row { flex-direction: column; } .box--grid { grid-template-columns: 1fr; } }
+
 /* Room for ascenders/descenders: tight display line-heights would clip them. */
 .split-line-mask { padding-block: 0.12em; margin-block: -0.12em; }
 * {

@@ -120,6 +120,14 @@ const DEFAULTS = {
   textScrub: () => ({ size: "xl", text: PARAGRAPH_TEXT }),
   bigType: () => ({ text: "Remarkable", effect: "rise" }),
   parallaxMedia: () => ({ height: 80, strength: 15, reveal: true }),
+  box: () => ({
+    layout: "stack",
+    gap: "md",
+    items: [
+      { _type: "heading", _key: "boxHeading", text: ptFromString(HEADING_TEXT) },
+      { _type: "paragraph", _key: "boxParagraph", text: ptFromString(PARAGRAPH_TEXT) },
+    ],
+  }),
 };
 // Keys are checked against the registry; callers look up by raw `_type` string.
 export const INSERT_DEFAULTS: Record<string, Factory | undefined> =

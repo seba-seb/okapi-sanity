@@ -14,6 +14,7 @@ import { Card } from "./card/Card";
 import { Slider } from "./slider/Slider";
 import { Grid } from "./grid/Grid";
 import { Logo3d } from "./logo3d/Logo3d";
+import { Box } from "./box/Box";
 import { HorizontalScroll } from "./horizontalScroll/HorizontalScroll";
 import { StackCards } from "./stackCards/StackCards";
 import { Marquee } from "./marquee/Marquee";
@@ -37,6 +38,7 @@ export const BLOCK_COMPONENTS: Record<ContentBlockType, ComponentType<BlockProps
   slider: Slider,
   grid: Grid,
   logo3d: Logo3d,
+  box: Box,
   horizontalScroll: HorizontalScroll,
   stackCards: StackCards,
   marquee: Marquee,

@@ -16,6 +16,7 @@ import { card } from "./card/schema";
 import { slider } from "./slider/schema";
 import { grid } from "./grid/schema";
 import { logo3d } from "./logo3d/schema";
+import { box } from "./box/schema";
 import { horizontalScroll } from "./horizontalScroll/schema";
 import { stackCards } from "./stackCards/schema";
 import { marquee } from "./marquee/schema";
@@ -38,6 +39,7 @@ export const BLOCK_SCHEMAS: Record<BlockType, SchemaTypeDefinition> = {
   slider,
   grid,
   logo3d,
+  box,
   horizontalScroll,
   stackCards,
   marquee,

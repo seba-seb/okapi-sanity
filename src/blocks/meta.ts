@@ -40,6 +40,7 @@ export const BLOCKS = {
     slot: { field: "items", accepts: ["card", "contentWrapper", "imageBlock", "logo3d"] },
   },
   logo3d: { title: "3D Logo" },
+  box: { title: "Box", slot: { field: "items" } },
   // Creative / motion blocks
   horizontalScroll: {
     title: "Horizontal Scroll",
