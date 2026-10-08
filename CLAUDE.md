@@ -67,6 +67,27 @@ patches/        patch-package fixes for sanity@6.3.0 + @sanity/visual-editing@5.
 - Pinned: `sanity@6.3.0`, `@sanity/visual-editing@5.4.5` (overrides in
   package.json). Upgrading either means re-making `patches/` — see its README.
 
+## Remarkable Editor (phase 0)
+
+Studio tool at `/studio#/editor` (the Studio's landing tool): pages | canvas |
+properties. `src/core/editor/`:
+- `EditorTool.tsx` — reads the page with `useEditState` (local edits applied
+  at once) and writes with `useDocumentOperation(...).patch` / `.publish` —
+  the Studio's own document store, no extra SDK. Team = `administrator` role;
+  others get the client view (content fields only). Team can toggle it.
+- `CanvasApp.tsx` + `src/pages/edit-canvas.astro` — the canvas iframe: the real
+  PageBuilder rendering whatever the editor posts (`protocol.ts`, same-origin
+  postMessage). It fetches nothing, so the route exposes no drafts. Own
+  hover/selection overlay; clicks select, never navigate. Motion follows the
+  editor-preview policy.
+- `FieldControls.tsx` — the properties panel, generated from the compiled
+  Studio schema (`controlKind`). `scripts/check-editor-schema.ts` (run by
+  verify) fails if any block field has no control. Content vs design:
+  `isContent` (text, rich text, links, images, references = client-visible).
+
+Next (phase 1): inline text editing on the canvas, layers tree + drag,
+insert/duplicate/delete, undo/redo, image drop. See the plan in the session.
+
 ## Motion blocks
 
 Horizontal Scroll (pinned), Stacked Cards (sticky + scrub), Marquee (loop +

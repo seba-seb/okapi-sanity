@@ -1,0 +1,20 @@
+---
+// The editor's canvas (loaded in an iframe by the Studio "Editor" tool).
+// Static and data-free: it renders only what the authenticated editor posts.
+import "@/theme/globals.css";
+import { CanvasApp } from "@/core/editor/CanvasApp";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Editor canvas</title>
+    <style>[data-split]{visibility:visible}</style>
+  </head>
+  <body>
+    <CanvasApp client:only="react" />
+  </body>
+</html>

@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
 import { previewPrefix } from "@/core/sanity/env";
+import { CANVAS_PATH } from "@/core/editor/protocol";
 
 // One registration for the whole site; import GSAP from here, not from "gsap".
 if (typeof window !== "undefined") gsap.registerPlugin(SplitText, ScrollTrigger, useGSAP);
@@ -26,6 +27,7 @@ export { gsap, SplitText, ScrollTrigger, useGSAP };
 export const inPreview = () =>
   typeof location !== "undefined" &&
   (location.pathname.startsWith(previewPrefix) ||
+    location.pathname.startsWith(CANVAS_PATH) ||
     // Dev-only: lets /lab exercise the editor's motion policy without a draft cookie.
     (import.meta.env.DEV && new URLSearchParams(location.search).has("as-preview")));
 export const reducedMotion = () =>

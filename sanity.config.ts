@@ -15,6 +15,8 @@ import { schemaTypes, SINGLETONS } from "./src/schema";
 import { structure } from "./src/core/sanity/structure";
 import { resolve } from "./src/core/sanity/presentation";
 import { PageNavigator } from "./src/core/studio/PageNavigator";
+import { EditorTool } from "./src/core/editor/EditorTool";
+import { EditIcon } from "@sanity/icons";
 import { PreviewSelect } from "./src/core/studio/PreviewSelect";
 import { TooltipDescriptionField } from "./src/core/studio/TooltipDescriptionField";
 import { CanvasResizeListener } from "./src/core/studio/CanvasResizeListener";
@@ -121,6 +123,8 @@ export default defineConfig({
       layout: studioLayout,
     },
   },
+  // Remarkable Editor first, so it's the Studio's landing tool.
+  tools: (prev) => [{ name: "editor", title: "Editor", icon: EditIcon, component: EditorTool }, ...prev],
   plugins: [
     structureTool({ structure }),
     presentationTool({
