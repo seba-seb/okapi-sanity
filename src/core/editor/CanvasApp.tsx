@@ -9,6 +9,7 @@ import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
 
 import { listen, post, type ToCanvas } from "./protocol";
 import { htmlToPt, ptPlain, ptToHtml } from "./richtext";
+import { applyOverrides, splitInstancePath, type Override } from "@/core/render/overrides";
 
 installStaleChunkReload();
 
@@ -60,6 +61,27 @@ export function CanvasApp() {
   const [selected, setSelected] = useState<string | null>(null);
   const docRef = useRef<Page | null>(null);
   docRef.current = doc;
+  const componentsRef = useRef<Components>({});
+  componentsRef.current = components;
+  /** A field's current value — for blocks inside an instance, the component's value with overrides applied. */
+  const valueAt = (path: string, field: string): unknown => {
+    const d = docRef.current;
+    if (!d) return undefined;
+    const inst = splitInstancePath(path);
+    if (!inst) return resolveSelection(d, path)?.item?.[field];
+    const ref = resolveSelection(d, inst.instancePath)?.item as { component?: { _ref?: string }; overrides?: Override[] } | undefined;
+    const sections = applyOverrides(componentsRef.current[ref?.component?._ref ?? ""]?.sections ?? [], ref?.overrides);
+    let found: unknown;
+    const walk = (v: unknown) => {
+      if (found !== undefined || !v || typeof v !== "object") return;
+      if (Array.isArray(v)) return v.forEach(walk);
+      const o = v as Record<string, unknown>;
+      if (o._key === inst.blockKey) found = o[field] ?? null;
+      else Object.values(o).forEach(walk);
+    };
+    walk(sections);
+    return found ?? undefined;
+  };
   // While a text edit is open, renders from the editor wait here (React must
   // not rewrite the nodes the user is typing into).
   const editing = useRef<null | {
@@ -112,8 +134,8 @@ export function CanvasApp() {
     };
 
     const onDblClick = (e: MouseEvent) => {
-      if ((e.target as Element).closest("[data-instance]")) return; // edit the component instead
-      const block = blockAt(e.target);
+      // Inside an instance the inner block is the target (its edit becomes an override).
+      const block = (e.target as Element).closest("[data-sanity-path]");
       const path = block?.getAttribute("data-sanity-path");
       const type = block?.getAttribute("data-sanity-type") ?? "";
       if (!block || !path || editing.current) return;
@@ -122,8 +144,7 @@ export function CanvasApp() {
       if (!target) return;
       const el = (target.sel ? (e.target as Element).closest(target.sel) : block) as HTMLElement | null;
       if (!el || !block.contains(el)) return;
-      const item = docRef.current && resolveSelection(docRef.current, path)?.item;
-      const current = item?.[target.field];
+      const current = valueAt(path, target.field);
       e.preventDefault();
       startEdit(el, path, target.field, target.kind, !!target.multiline, current);
     };
@@ -219,7 +240,8 @@ export function CanvasApp() {
 
     const onMove = (e: MouseEvent) => (hoverEl.current = blockAt(e.target));
     const imageTarget = (t: EventTarget | null) => {
-      let el = blockAt(t);
+      // Inside an instance: the inner image block (the drop becomes an override).
+      let el = t instanceof Element ? t.closest("[data-sanity-path]") : null;
       while (el && !IMAGE_FIELDS[el.getAttribute("data-sanity-type") ?? ""]) el = el.parentElement?.closest("[data-sanity-path]") ?? null;
       return el;
     };

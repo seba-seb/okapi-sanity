@@ -114,6 +114,12 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   *Detach* (editable copy). The canvas selects an instance as one block.
   The site loads the library in `loadSite()`; instances' block styles are
   included in the page stylesheet.
+- **Instance overrides** (like Webflow component props): double-click text or
+  drop an image *inside* an instance on the canvas → stored on that instance
+  as `overrides` (`target` = "<blockKey>.<field>"), applied at render
+  (`core/render/overrides.ts`); the master is untouched. The panel lists them
+  with Reset. Inner blocks carry synthetic paths (`….__component.…`) — that
+  marker is what routes an edit to an override.
 
 ## Motion blocks
 

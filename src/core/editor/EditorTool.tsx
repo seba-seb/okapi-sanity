@@ -7,6 +7,8 @@ import { reKey, resolveSelection } from "@/core/editor/paths";
 import { blockMeta, blockTypes } from "@/blocks/meta";
 import type { Block, Page } from "@/core/lib/types";
 import type { Components } from "@/core/render/components";
+import { splitInstancePath, type Override } from "@/core/render/overrides";
+import { randomKey } from "./paths";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
 import { FieldList, PagesContext, UploadContext, type View } from "./FieldControls";
@@ -152,6 +154,22 @@ function PageEditor({
       ops.patch.execute([value === undefined ? { unset: [path] } : { set: { [path]: value } }]);
     },
     [ops.patch, record],
+  );
+  /**
+   * Write `value` to `path.field` — or, if the path is inside a component
+   * instance, upsert a per-instance override instead (the master stays put).
+   */
+  const writeField = useCallback(
+    (path: string, field: string, value: unknown, kind: "text" | "rich" | "image", coalesce?: string) => {
+      const inst = splitInstancePath(path);
+      if (!inst) return setField(`${path}.${field}`, value, coalesce);
+      const target = `${inst.blockKey}.${field}`;
+      const current = (docRef.current && (resolveSelection(docRef.current, inst.instancePath)?.item.overrides as Override[] | undefined)) ?? [];
+      const prev = current.find((o) => o.target === target);
+      const next = [...current.filter((o) => o.target !== target), { _key: prev?._key ?? randomKey(), _type: "componentOverride", target, [kind]: value }];
+      setField(`${inst.instancePath}.overrides`, next, coalesce ?? `override:${inst.instancePath}:${target}`);
+    },
+    [setField],
   );
   const setSections = useCallback(
     (next: Doc) => {
@@ -307,19 +325,21 @@ function PageEditor({
         if (msg.type === "ready") setCanvasReady(true);
         else if (msg.type === "select") setSelected(msg.path);
         else if (msg.type === "key") onKeyRef.current(msg);
-        else if (msg.type === "text")
-          setField(`${msg.path}.${msg.field}`, msg.pt ?? (msg.kind === "pt" ? plainToPt(msg.value) : msg.value), `text:${msg.path}.${msg.field}`);
+        else if (msg.type === "text") {
+          const rich = msg.kind === "pt";
+          writeField(msg.path, msg.field, msg.pt ?? (rich ? plainToPt(msg.value) : msg.value), rich ? "rich" : "text", `text:${msg.path}.${msg.field}`);
+        }
         else if (msg.type === "drop") {
           setStatus(`Uploading ${msg.file.name}…`);
           try {
-            setField(`${msg.path}.${msg.field}`, await upload(msg.file));
+            writeField(msg.path, msg.field, await upload(msg.file), "image");
             setStatus("Image uploaded");
           } catch (e) {
             setStatus(`Upload failed: ${(e as Error).message}`);
           }
         }
       }),
-    [setField, upload],
+    [setField, upload, writeField],
   );
 
   // ── Editor → canvas: every local edit re-renders the canvas immediately.
@@ -491,6 +511,25 @@ function PageEditor({
                 </>
               ) : null}
             </div>
+            {target.item._type === "componentRef" && (target.item.overrides as Override[] | undefined)?.length ? (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, opacity: 0.85 }}>This instance overrides</div>
+                {(target.item.overrides as Override[]).map((o) => (
+                  <div key={o._key ?? o.target} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", fontSize: 12 }}>
+                    <span style={{ flex: 1, opacity: 0.8 }}>{o.target?.split(".")[1]} · {o.text ? `“${o.text.slice(0, 24)}”` : o.rich ? "rich text" : "image"}</span>
+                    <button
+                      type="button"
+                      style={chip}
+                      onClick={() =>
+                        setField(`${selected}.overrides`, (target.item.overrides as Override[]).filter((x) => x.target !== o.target))
+                      }
+                    >
+                      Reset
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             {type ? (
               <FieldList type={type} value={target.item as Record<string, unknown>} basePath={selected!} onChange={(p, v) => setField(p, v)} view={view} />
             ) : (
