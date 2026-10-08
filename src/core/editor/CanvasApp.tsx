@@ -8,7 +8,7 @@ import type { Page } from "@/core/lib/types";
 import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
 
 import { listen, post, type ToCanvas } from "./protocol";
-import { ptToPlainIfSimple } from "./text";
+import { htmlToPt, ptPlain, ptToHtml } from "./richtext";
 
 installStaleChunkReload();
 
@@ -62,12 +62,17 @@ export function CanvasApp() {
   docRef.current = doc;
   // While a text edit is open, renders from the editor wait here (React must
   // not rewrite the nodes the user is typing into).
-  const editing = useRef<null | { finish: (commit: boolean) => void }>(null);
+  const editing = useRef<null | {
+    finish: (commit: boolean) => void;
+    el: HTMLElement;
+    rich: boolean;
+    command: (name: "bold" | "italic" | "link" | "unlink") => void;
+  }>(null);
   const pending = useRef<{ doc: Page; routes: Routes; components: Components } | null>(null);
   const hoverEl = useRef<Element | null>(null);
   const dropEl = useRef<Element | null>(null);
   const [replayKey, setReplayKey] = useState(0);
-  const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box }>({ hover: null, sel: null, drop: null });
+  const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box; bar: Box }>({ hover: null, sel: null, drop: null, bar: null });
 
   useEffect(() => {
     const off = listen<ToCanvas>((msg) => {
@@ -119,25 +124,59 @@ export function CanvasApp() {
       if (!el || !block.contains(el)) return;
       const item = docRef.current && resolveSelection(docRef.current, path)?.item;
       const current = item?.[target.field];
-      if (target.kind === "pt" && ptToPlainIfSimple(current) === null) return; // formatted text: the form handles it
       e.preventDefault();
-      startEdit(el, path, target.field, target.kind, !!target.multiline);
+      startEdit(el, path, target.field, target.kind, !!target.multiline, current);
     };
 
-    const startEdit = (el: HTMLElement, path: string, field: string, kind: "pt" | "string", multiline: boolean) => {
+    /**
+     * Strings edit as plain text. Rich text (Portable Text) edits with bold /
+     * italic / links: the element shows HTML we generate from the PT (links
+     * tagged with their markDef key), and is parsed back to PT on every input.
+     * Either way React's own DOM is snapshotted first and restored after.
+     */
+    const startEdit = (el: HTMLElement, path: string, field: string, kind: "pt" | "string", multiline: boolean, current: unknown) => {
       const snap = snapshot(el);
-      const original = el.innerText;
+      const rich = kind === "pt";
+      const original = rich ? JSON.stringify(current ?? []) : el.innerText;
       let timer: number | undefined;
-      const value = () => el.innerText.replace(/\n+$/, "");
-      const send = (final: boolean) => post(window.parent, { type: "text", path, field, kind, value: value(), final });
+      let suspendBlur = false;
+      const pt = () => htmlToPt(el, current);
+      const value = () => (rich ? JSON.stringify(pt()) : el.innerText.replace(/\n+$/, ""));
+      const send = (final: boolean) => {
+        if (!rich) return post(window.parent, { type: "text", path, field, kind, value: value(), final });
+        const blocks = pt();
+        post(window.parent, { type: "text", path, field, kind, value: ptPlain(blocks), pt: blocks, final });
+      };
       const onInput = () => {
         clearTimeout(timer);
         timer = window.setTimeout(() => send(false), 250);
       };
+      const command = (name: "bold" | "italic" | "link" | "unlink") => {
+        if (!rich) return;
+        if (name === "link") {
+          const sel = window.getSelection();
+          const range = sel?.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+          suspendBlur = true;
+          const url = window.prompt("Link URL", "https://");
+          suspendBlur = false;
+          el.focus();
+          if (range) {
+            sel!.removeAllRanges();
+            sel!.addRange(range);
+          }
+          if (url) document.execCommand("createLink", false, url);
+        } else document.execCommand(name);
+        onInput();
+      };
       const onKey = (e: KeyboardEvent) => {
         e.stopPropagation();
+        const mod = e.metaKey || e.ctrlKey;
         if (e.key === "Escape") finish(false);
-        else if (e.key === "Enter" && !(multiline && e.shiftKey)) {
+        else if (rich && mod && e.key.toLowerCase() === "k") {
+          e.preventDefault();
+          command("link");
+        } else if (e.key === "Enter" && (rich ? !multiline : !(multiline && e.shiftKey))) {
+          // Headings/labels: Enter commits. Rich paragraphs: Enter = new paragraph.
           e.preventDefault();
           finish(true);
         }
@@ -149,7 +188,10 @@ export function CanvasApp() {
         el.removeEventListener("blur", onBlur);
         el.removeAttribute("contenteditable");
         if (commit && value() !== original) send(true);
-        else if (!commit) post(window.parent, { type: "text", path, field, kind, value: original, final: true });
+        else if (!commit)
+          post(window.parent, rich
+            ? { type: "text", path, field, kind, value: "", pt: JSON.parse(original), final: true }
+            : { type: "text", path, field, kind, value: original, final: true });
         restore(snap); // React's own nodes, exactly as React left them
         editing.current = null;
         const p = pending.current;
@@ -160,13 +202,18 @@ export function CanvasApp() {
           setComponents(p.components);
         }
       };
-      const onBlur = () => finish(true);
-      el.setAttribute("contenteditable", "plaintext-only");
-      if (el.contentEditable !== "plaintext-only") el.setAttribute("contenteditable", "true"); // Firefox < 136
+      const onBlur = () => !suspendBlur && finish(true);
+      if (rich) {
+        el.innerHTML = ptToHtml(current);
+        el.setAttribute("contenteditable", "true");
+      } else {
+        el.setAttribute("contenteditable", "plaintext-only");
+        if (el.contentEditable !== "plaintext-only") el.setAttribute("contenteditable", "true"); // Firefox < 136
+      }
       el.addEventListener("input", onInput);
       el.addEventListener("keydown", onKey);
       el.addEventListener("blur", onBlur);
-      editing.current = { finish };
+      editing.current = { finish, el, rich, command };
       el.focus();
     };
 
@@ -231,8 +278,15 @@ export function CanvasApp() {
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      const next = { hover: boxOf(hoverEl.current), sel: boxOf(byPath(selected)), drop: boxOf(dropEl.current) };
-      setBoxes((cur) => (sameBox(cur.hover, next.hover) && sameBox(cur.sel, next.sel) && sameBox(cur.drop, next.drop) ? cur : next));
+      const next = {
+        hover: boxOf(hoverEl.current),
+        sel: boxOf(byPath(selected)),
+        drop: boxOf(dropEl.current),
+        bar: editing.current?.rich ? boxOf(editing.current.el) : null,
+      };
+      setBoxes((cur) =>
+        sameBox(cur.hover, next.hover) && sameBox(cur.sel, next.sel) && sameBox(cur.drop, next.drop) && sameBox(cur.bar, next.bar) ? cur : next,
+      );
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -258,6 +312,7 @@ export function CanvasApp() {
       <Outline box={boxes.hover} color="#6b8cff" dashed />
       <Outline box={boxes.sel} color="#2f5bff" />
       <Outline box={boxes.drop} color="#16a34a" label="Drop image" />
+      {boxes.bar ? <FormatBar box={boxes.bar} run={(c) => editing.current?.command(c)} /> : null}
     </>
   );
 }
@@ -285,6 +340,34 @@ function Outline({ box, color, dashed, label }: { box: Box; color: string; dashe
           {text}
         </span>
       ) : null}
+    </div>
+  );
+}
+
+/** Floating format bar for rich text edits. mousedown is prevented so the selection survives. */
+function FormatBar({ box, run }: { box: NonNullable<Box>; run: (c: "bold" | "italic" | "link" | "unlink") => void }) {
+  const btn = (c: "bold" | "italic" | "link" | "unlink", label: React.ReactNode, title: string) => (
+    <button
+      type="button"
+      title={title}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        run(c);
+      }}
+      style={{ border: 0, background: "transparent", color: "#fff", font: "600 13px system-ui", padding: "4px 8px", cursor: "pointer" }}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div
+      data-format-bar=""
+      style={{ position: "fixed", top: Math.max(4, box.top - 38), left: box.left, zIndex: 2147483647, display: "flex", background: "#111", borderRadius: 6, boxShadow: "0 4px 16px #0005" }}
+    >
+      {btn("bold", <b>B</b>, "Bold (⌘B)")}
+      {btn("italic", <i>I</i>, "Italic (⌘I)")}
+      {btn("link", "Link", "Link (⌘K)")}
+      {btn("unlink", "Unlink", "Remove link")}
     </div>
   );
 }

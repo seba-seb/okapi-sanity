@@ -307,7 +307,8 @@ function PageEditor({
         if (msg.type === "ready") setCanvasReady(true);
         else if (msg.type === "select") setSelected(msg.path);
         else if (msg.type === "key") onKeyRef.current(msg);
-        else if (msg.type === "text") setField(`${msg.path}.${msg.field}`, msg.kind === "pt" ? plainToPt(msg.value) : msg.value, `text:${msg.path}.${msg.field}`);
+        else if (msg.type === "text")
+          setField(`${msg.path}.${msg.field}`, msg.pt ?? (msg.kind === "pt" ? plainToPt(msg.value) : msg.value), `text:${msg.path}.${msg.field}`);
         else if (msg.type === "drop") {
           setStatus(`Uploading ${msg.file.name}…`);
           try {

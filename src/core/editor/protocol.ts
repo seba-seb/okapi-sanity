@@ -18,7 +18,7 @@ export type ToEditor =
   | { type: "ready" }
   | { type: "select"; path: string | null }
   /** Inline text edit. `final` on Enter/blur; intermediate ones keep the draft live. */
-  | { type: "text"; path: string; field: string; kind: "pt" | "string"; value: string; final: boolean }
+  | { type: "text"; path: string; field: string; kind: "pt" | "string"; value: string; pt?: unknown[]; final: boolean }
   /** A file dropped on an image-bearing block. */
   | { type: "drop"; path: string; field: string; file: File }
   /** Shortcut pressed while focus is in the canvas. */

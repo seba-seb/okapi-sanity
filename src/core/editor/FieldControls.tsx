@@ -105,7 +105,7 @@ function FieldControl({ field, value, parent, path, onChange, view }: { field: F
       <label>
         {label}
         {plain === null ? (
-          <p style={muted}>Formatted text (bold, links…) — edit it in the Structure form.</p>
+          <p style={muted}>Formatted text — double-click it on the canvas to edit (bold, italic, links).</p>
         ) : (
           <textarea rows={3} style={input} value={plain} onChange={(e) => onChange(path, plainToPt(e.target.value))} />
         )}

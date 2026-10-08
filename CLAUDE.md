@@ -90,7 +90,9 @@ no caret jumps); layers tree with drag (before/after/inside); + Add, duplicate,
 delete, move, copy/paste between pages; undo/redo (typing coalesced); drop an
 image file on any image block/card/parallax/section or upload from the panel;
 device widths. Client view: content fields + reorder only.
-Formatted rich text (bold, links) still edits in the Structure form.
+Rich text edits in place too: a floating bar (B, I, Link, Unlink; ⌘B ⌘I ⌘K) —
+`core/editor/richtext.ts` maps PT ⇄ editable HTML, keeping existing link
+targets (internal/external) via their markDef key; new links are external.
 **▶ Play** remounts the canvas once with decorative motion on (the canvas
 keeps it still while you edit); a block you edit afterwards goes still again.
 
