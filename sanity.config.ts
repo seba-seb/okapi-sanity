@@ -79,10 +79,16 @@ function fieldComponent(props: FieldProps) {
  * See the matching `CanvasResizer` / `EditorShortcuts` components on the front
  * end.
  */
+// Sanity UI sets its font on its own components only; the page root stays at
+// the browser default (Times), so any plain HTML in custom tools and panels
+// (Editor, page navigator) rendered serif. Give the root Sanity's stack.
+const STUDIO_FONT = `[data-ui="AstroStudioLayout"] { font-family: Inter, -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", "Liberation Sans", Helvetica, Arial, system-ui, sans-serif; }`;
+
 function studioLayout(props: LayoutProps) {
   return createElement(
     Fragment,
     null,
+    createElement("style", null, STUDIO_FONT),
     props.renderDefault(props),
     createElement(CanvasResizeListener),
     createElement(EditorKeyForwarder),
