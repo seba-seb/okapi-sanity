@@ -8,7 +8,7 @@
     "build": "astro build",
     "typecheck": "astro check && tsc --noEmit",
     "typegen": "sanity typegen generate",
-    "postinstall": "patch-package",
+    "postinstall": "patch-package --error-on-fail",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {

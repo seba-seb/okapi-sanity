@@ -69,7 +69,8 @@ patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
   renders but never runs on the public site. The editor canvas is unaffected.
 - **Design assets don't go in the CMS** (logos, textures): they're code.
 - Pinned: `sanity@6.3.0` (override in package.json). Upgrading means
-  re-making `patches/` — see its README.
+  re-making `patches/` — see its README. `npm install` fails if the patch
+  doesn't apply, and verify fails if the installed version has no patch.
 
 ## Remarkable Editor
 
@@ -170,6 +171,18 @@ travel, no dangling ScrollTriggers, no nested/stuck splits, no horizontal
 overflow, edited text rendered. Scripted: `await window.__lab.run()`.
 Seed the three test pages with `SANITY_WRITE_TOKEN=… node scripts/seed-lab.mjs`
 (/lab-noir, /lab-kinetic, /lab-stack — noindex).
+
+## Editor smoke test (logged in, before handing a site to a client)
+
+Automated checks cover the canvas side only; these need a real login, in
+`/studio#/editor` on a throwaway page:
+1. Click a heading, type on the page → "Saved" draft; reload → text is still there.
+2. Bold/italic/link in a paragraph; insert, duplicate, delete, drag a layer; undo/redo.
+3. Drop an image on an Image block → uploads and shows.
+4. Make component from a section → edit text on an instance → only that
+   instance changes; Reset override; Edit component → all instances change.
+5. Publish → `npm run build` → the change is on the static page.
+6. Log in as a client-role user → style fields and structural actions hidden.
 
 ## Add a block
 
