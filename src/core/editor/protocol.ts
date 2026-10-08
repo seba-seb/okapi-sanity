@@ -10,7 +10,9 @@ import type { Components } from "@/core/render/components";
 export type ToCanvas =
   | { type: "render"; doc: Page; routes: Routes; components: Components }
   /** `scroll`: bring it into view (selection came from the layers panel). */
-  | { type: "select"; path: string | null; scroll?: boolean };
+  | { type: "select"; path: string | null; scroll?: boolean }
+  /** Remount the page once with decorative motion on ("Play" in the editor). */
+  | { type: "replay" };
 
 export type ToEditor =
   | { type: "ready" }

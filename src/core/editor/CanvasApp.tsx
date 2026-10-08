@@ -66,6 +66,7 @@ export function CanvasApp() {
   const pending = useRef<{ doc: Page; routes: Routes; components: Components } | null>(null);
   const hoverEl = useRef<Element | null>(null);
   const dropEl = useRef<Element | null>(null);
+  const [replayKey, setReplayKey] = useState(0);
   const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box }>({ hover: null, sel: null, drop: null });
 
   useEffect(() => {
@@ -77,6 +78,9 @@ export function CanvasApp() {
           setRoutes(msg.routes);
           setComponents(msg.components);
         }
+      } else if (msg.type === "replay") {
+        (globalThis as { __remarkableReplay?: boolean }).__remarkableReplay = true;
+        setReplayKey((k) => k + 1);
       } else if (msg.type === "select") {
         setSelected(msg.path);
         if (msg.scroll) byPath(msg.path)?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -235,10 +239,16 @@ export function CanvasApp() {
     return () => cancelAnimationFrame(raf);
   }, [selected]);
 
+  // Animations are created on mount (layout effects); by the time this effect
+  // runs they exist, so later remounts (edits) go back to the still canvas.
+  useEffect(() => {
+    if (replayKey) (globalThis as { __remarkableReplay?: boolean }).__remarkableReplay = false;
+  }, [replayKey]);
+
   // Re-render the page only when the document changes, not on overlay moves.
   const page = useMemo(
-    () => (doc?.sections?.length ? <PageBuilder page={doc} routes={routes} components={components} /> : null),
-    [doc, routes, components],
+    () => (doc?.sections?.length ? <PageBuilder key={replayKey} page={doc} routes={routes} components={components} /> : null),
+    [doc, routes, components, replayKey],
   );
 
   if (!doc) return <p style={{ padding: 32, font: "14px system-ui", opacity: 0.6 }}>Waiting for the editor…</p>;

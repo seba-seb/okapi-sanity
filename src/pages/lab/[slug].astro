@@ -21,5 +21,5 @@ const [page, site] = await Promise.all([loadQuery<Page>(PAGE_QUERY, { slug }), l
 ---
 
 <Base site={site} meta={{ ...page, noindex: true }}>
-  {page ? <LabHarness client:only="react" page={page} routes={site.routes} /> : <p>No page “{slug}”.</p>}
+  {page ? <LabHarness client:only="react" page={page} routes={site.routes} components={site.components} /> : <p>No page “{slug}”.</p>}
 </Base>

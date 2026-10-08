@@ -91,6 +91,27 @@ delete, move, copy/paste between pages; undo/redo (typing coalesced); drop an
 image file on any image block/card/parallax/section or upload from the panel;
 device widths. Client view: content fields + reorder only.
 Formatted rich text (bold, links) still edits in the Structure form.
+**▶ Play** remounts the canvas once with decorative motion on (the canvas
+keeps it still while you edit); a block you edit afterwards goes still again.
+
+### Compose & style (phase 2)
+- **Style panel** (`design` field on every block, added in `blocks/schemas.ts`):
+  margin, padding, background, text color, radius, max width, text align,
+  hide — tokens only (`core/style/tokens.ts`) — for all screens / tablet /
+  mobile. `core/style/stylesheet.ts` renders one scoped stylesheet per page
+  (`[data-b=key][data-b]`, desktop-first `@media`, `!important` because the
+  panel is authoritative). Named `design` because Button already has `style`.
+- **Box** block: free layout container (stack / row / grid, token gaps,
+  align/justify/wrap); nests; grids collapse to 2 columns on tablet and 1 on
+  mobile, rows stack on mobile.
+- **Components** (`documents/component.ts` + `componentRef` instances): a
+  library of reusable sections. Editing a component updates every instance;
+  instances only live at a page's top level (no nesting). In the editor:
+  components appear in the document picker, in + Add, and as actions —
+  *Make component* (section → library + instance), *Edit component*,
+  *Detach* (editable copy). The canvas selects an instance as one block.
+  The site loads the library in `loadSite()`; instances' block styles are
+  included in the page stylesheet.
 
 ## Motion blocks
 

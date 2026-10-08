@@ -22,7 +22,10 @@ export { gsap, SplitText, ScrollTrigger, useGSAP };
  * `inPreview` is checked synchronously from the URL: the editor canvas lives at
  * /edit-canvas.
  */
+/** Set briefly by the editor canvas's "Play" button: decorative motion runs on that mount. */
+const replaying = () => !!(globalThis as { __remarkableReplay?: boolean }).__remarkableReplay;
 export const inPreview = () =>
+  !replaying() &&
   typeof location !== "undefined" &&
   (location.pathname.startsWith(CANVAS_PATH) ||
     // Dev-only: lets /lab exercise the editor's motion policy without a draft cookie.

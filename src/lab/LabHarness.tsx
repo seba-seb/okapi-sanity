@@ -3,6 +3,7 @@ import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { PageBuilder } from "@/core/render/PageBuilder";
 import { ScrollTrigger } from "@/core/motion/gsap";
 import type { Routes } from "@/core/lib/routes";
+import type { Components } from "@/core/render/components";
 import type { Page } from "@/core/lib/types";
 
 /**
@@ -146,7 +147,7 @@ class Boundary extends Component<{ children: ReactNode; onError: (e: Error) => v
   }
 }
 
-export function LabHarness({ page, routes }: { page: Doc; routes: Routes }) {
+export function LabHarness({ page, routes, components }: { page: Doc; routes: Routes; components?: Components }) {
   const [doc, setDoc] = useState<Doc>(page);
   const docRef = useRef(doc);
   docRef.current = doc;
@@ -214,7 +215,7 @@ export function LabHarness({ page, routes }: { page: Doc; routes: Routes }) {
   return (
     <>
       <Boundary onError={(e) => errors.current.push(`BOUNDARY ${e.message}`)}>
-        <PageBuilder page={doc} routes={routes} />
+        <PageBuilder page={doc} routes={routes} components={components} />
       </Boundary>
       <aside
         style={{ position: "fixed", right: 12, bottom: 12, zIndex: 2147483647, width: 360, maxHeight: "45vh", overflow: "auto", background: "#111", color: "#eee", font: "12px/1.4 ui-monospace, monospace", padding: 12, borderRadius: 10, boxShadow: "0 10px 40px #0008" }}
