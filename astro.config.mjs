@@ -47,7 +47,7 @@ export default defineConfig({
       useCdn: false,
       studioBasePath: "/studio",
       // The build emits a single /studio/index.html; hash routing keeps
-      // /studio#/presentation reloadable without a hosting catch-all.
+      // /studio#/editor reloadable without a hosting catch-all.
       studioRouterHistory: "hash",
     }),
     react(),

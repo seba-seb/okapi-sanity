@@ -33,6 +33,8 @@ src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
                 /lab/[slug] = dev-only stress harness (not built in production).
 src/lab/        LabHarness: replays editor mutations + checks (see "Testing motion").
 patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
+skills/         remarkable-astro: the Claude Code skill that starts a new project
+docs/           index.html — the team documentation (keep it in sync with this file)
 ```
 
 ## Rules
@@ -200,6 +202,9 @@ Remove a block: delete its folder, its `meta.ts` entry and the two map entries,
 and any `accepts` that names it (the compiler points at them).
 
 ## New project from this starter
+
+Use the `remarkable-astro` skill (`skills/remarkable-astro/SKILL.md`; install
+with `cp -R skills/remarkable-astro ~/.claude/skills/`). Summary:
 
 1. Copy the repo (keep `src/core` untouched), `npm install` (applies patches).
 2. Sanity (MCP): `create_project` in the client's org with

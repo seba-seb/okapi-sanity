@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Remarkable Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: documentation shell — sticky index on the left, one readable column, wide blocks for tables and diagrams. */
+:root {
+  --bg: #fbfbfe;
+  --panel: #f2f2f9;
+  --panel-2: #e8e8f3;
+  --line: #dcdcea;
+  --fg: #12121c;
+  --muted: #5d5d72;
+  --accent: #4f46e5;
+  --accent-soft: #ecebff;
+  --accent-ink: #3730a3;
+  --ok: #0f7b4a;
+  --ok-soft: #e3f5ec;
+  --warn: #9a5b00;
+  --warn-soft: #fdf1dc;
+  --code-bg: #f3f3fa;
+  --font-display: "Bricolage Grotesque", "Schibsted Grotesk", system-ui, sans-serif;
+  --font-body: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 10px;
+  --nav-w: 248px;
+  --col: 46rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0c13; --panel: #14141e; --panel-2: #1c1c29; --line: #2a2a3b; --fg: #ececf6; --muted: #9c9cb4;
+    --accent: #8b83ff; --accent-soft: #1d1b3d; --accent-ink: #c4c0ff; --ok: #4ccf8f; --ok-soft: #0f2a1e;
+    --warn: #f0b54d; --warn-soft: #2b2110; --code-bg: #12121b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c0c13; --panel: #14141e; --panel-2: #1c1c29; --line: #2a2a3b; --fg: #ececf6; --muted: #9c9cb4;
+  --accent: #8b83ff; --accent-soft: #1d1b3d; --accent-ink: #c4c0ff; --ok: #4ccf8f; --ok-soft: #0f2a1e;
+  --warn: #f0b54d; --warn-soft: #2b2110; --code-bg: #12121b; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 400 16px/1.65 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  padding-inline: 20px;
+}
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, kbd, pre { font-family: var(--font-mono); font-size: 0.86em; }
+:not(pre) > code { background: var(--code-bg); border: 1px solid var(--line); padding: 0.08em 0.38em; border-radius: 5px; overflow-wrap: anywhere; }
+kbd { display: inline-block; min-width: 1.7em; text-align: center; padding: 0.05em 0.45em; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; background: var(--panel); font-size: 0.8em; }
+
+.shell { display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr); gap: 56px; max-width: 1240px; margin: 0 auto; }
+@media (max-width: 1023px) { .shell { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+
+/* Index */
+.index { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; max-height: 100vh; overflow-y: auto; padding-block: 36px 40px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 18px/1 var(--font-display); letter-spacing: -0.01em; color: var(--fg); text-decoration: none; margin-bottom: 28px; }
+.brand-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; color: var(--bg); font-size: 15px; }
+.index h2 { font: 600 11px/1 var(--font-body); text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 22px 0 8px; }
+.index ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.index a { display: block; padding: 5px 10px; border-radius: 7px; color: var(--muted); text-decoration: none; font-size: 14px; line-height: 1.35; }
+.index a:hover { color: var(--fg); background: var(--panel); }
+.index a[aria-current="true"] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+.index-mobile { display: none; }
+@media (max-width: 1023px) {
+  .index { display: none; }
+  .index-mobile { display: block; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); margin-inline: -20px; padding: 10px 20px; }
+  .index-mobile summary { cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; display: flex; justify-content: space-between; }
+  .index-mobile summary::after { content: "Índice ▾"; color: var(--muted); font-weight: 500; }
+  .index-mobile[open] summary::after { content: "Cerrar ▴"; }
+  .index-mobile ol { columns: 2; column-gap: 16px; padding: 10px 0 4px; margin: 0; list-style: none; }
+  .index-mobile a { display: block; padding: 4px 0; color: var(--muted); text-decoration: none; font-size: 14px; break-inside: avoid; }
+}
+
+/* Content */
+main { min-width: 0; padding-block: 36px 120px; }
+.prose { max-width: var(--col); }
+section { padding-top: 64px; }
+section + section { border-top: 1px solid var(--line); margin-top: 64px; }
+.eyebrow { font: 600 12px/1 var(--font-body); letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; letter-spacing: -0.02em; }
+h1 { font-size: clamp(2.6rem, 2rem + 3vw, 4.25rem); line-height: 1; margin: 0 0 20px; font-weight: 700; }
+h2 { font-size: clamp(1.7rem, 1.4rem + 1.2vw, 2.25rem); line-height: 1.1; margin: 0 0 16px; font-weight: 700; }
+h3 { font-size: 1.2rem; line-height: 1.25; margin: 36px 0 10px; font-weight: 600; letter-spacing: -0.01em; }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 6px; }
+li::marker { color: var(--muted); }
+.lead { font-size: 1.18rem; line-height: 1.55; color: var(--muted); max-width: 40rem; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+
+/* Hero */
+.hero { padding-top: 24px; }
+.stack-line { display: flex; flex-wrap: wrap; gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; }
+.stack-line li { margin: 0; font: 500 13px/1 var(--font-mono); padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.stack-line li b { color: var(--fg); font-weight: 500; }
+.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: var(--radius); margin-top: 32px; overflow: hidden; }
+.figures div { padding: 18px 18px 16px; border-left: 1px solid var(--line); min-width: 0; }
+.figures div:first-child { border-left: 0; }
+.figures strong { display: block; font: 700 1.9rem/1 var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.figures span { display: block; margin-top: 8px; font-size: 13.5px; line-height: 1.4; color: var(--muted); }
+@media (max-width: 720px) { .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } .figures div:nth-child(3) { border-left: 0; } .figures div:nth-child(n+3) { border-top: 1px solid var(--line); } }
+
+/* Three-part split */
+.parts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 24px 0 8px; }
+@media (max-width: 860px) { .parts { grid-template-columns: minmax(0, 1fr); } }
+.part { border-top: 2px solid var(--accent); padding-top: 14px; min-width: 0; }
+.part h3 { margin: 0 0 6px; }
+.part p { font-size: 15px; color: var(--muted); margin: 0; }
+.part code { font-size: 0.82em; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin: 18px 0 22px; border: 1px solid var(--line); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; line-height: 1.5; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font: 600 12px/1.3 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--panel); white-space: nowrap; }
+td code { white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-block; font: 600 11.5px/1 var(--font-body); padding: 4px 7px; border-radius: 999px; white-space: nowrap; }
+.pill.js { background: var(--accent-soft); color: var(--accent-ink); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.no { background: var(--panel-2); color: var(--muted); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+/* Code */
+.code { position: relative; margin: 16px 0 22px; }
+pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; overflow-x: auto; line-height: 1.6; font-size: 13.5px; }
+.copy { position: absolute; top: 8px; right: 8px; font: 500 12px/1 var(--font-body); padding: 6px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); cursor: pointer; }
+.copy:hover { color: var(--fg); }
+pre .c { color: var(--muted); }
+pre .k { color: var(--accent); }
+
+/* Diagrams */
+.diagram { overflow-x: auto; margin: 22px 0 26px; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.diagram-inner { min-width: 680px; }
+.lanes { display: grid; grid-template-columns: 1fr 64px 1fr 64px 1fr; align-items: stretch; }
+.node { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; font-size: 13.5px; line-height: 1.45; }
+.node h4 { margin: 0 0 4px; font: 600 14px/1.3 var(--font-body); }
+.node .route { font: 500 12px/1 var(--font-mono); color: var(--accent); display: block; margin-bottom: 6px; }
+.node.hl { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.node ul { margin: 6px 0 0; padding-left: 16px; color: var(--muted); }
+.node li { margin: 0; }
+.arrow { display: grid; place-items: center; color: var(--muted); font: 500 11px/1.2 var(--font-mono); text-align: center; position: relative; }
+.arrow::before { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; border-top: 1.5px dashed var(--muted); opacity: 0.6; }
+.arrow span { position: relative; background: var(--panel); padding: 2px 4px; }
+.arrow.both span::before { content: "⇄ "; }
+.arrow.right span::before { content: "→ "; }
+.col-stack { display: grid; gap: 12px; }
+.row-caption { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.flow { display: flex; align-items: stretch; gap: 0; }
+.flow .node { flex: 1 1 0; min-width: 0; }
+.flow .arrow { flex: 0 0 44px; }
+
+/* Callouts */
+.note { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--panel); border-radius: 8px; padding: 12px 16px; margin: 18px 0; font-size: 15px; }
+.note.warn { border-left-color: var(--warn); }
+.note p:last-child { margin-bottom: 0; }
+.note strong:first-child { display: block; margin-bottom: 2px; }
+
+/* Steps */
+.steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 14px; margin: 18px 0; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; margin: 0; }
+.steps > li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font: 600 13px/1 var(--font-mono); color: var(--accent); background: var(--bg); }
+.steps > li > div { min-width: 0; }
+.steps strong { display: block; }
+.steps p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+
+/* Tree */
+.tree { font-family: var(--font-mono); font-size: 13px; line-height: 1.7; white-space: pre; }
+.tree .d { color: var(--accent); }
+.tree .c { color: var(--muted); }
+
+/* Decisions */
+.decisions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 20px 0; }
+@media (max-width: 760px) { .decisions { grid-template-columns: minmax(0, 1fr); } }
+.decision { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; min-width: 0; }
+.decision h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.decision p { margin: 0 0 8px; font-size: 14.5px; color: var(--muted); }
+.decision p:last-child { margin: 0; }
+.decision b { color: var(--fg); font-weight: 600; }
+
+/* Timeline */
+.timeline { list-style: none; padding: 0; margin: 20px 0; border-left: 1px solid var(--line); }
+.timeline > li { position: relative; padding: 0 0 22px 22px; margin: 0; }
+.timeline > li::before { content: ""; position: absolute; left: -5px; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+.timeline time { font: 500 12.5px/1 var(--font-mono); color: var(--muted); }
+.timeline h3 { margin: 4px 0 6px; font-size: 1.05rem; }
+.timeline ul { font-size: 14.5px; color: var(--muted); padding-left: 18px; margin: 0; }
+.timeline code { font-size: 0.8em; }
+
+/* Checklist */
+.check { list-style: none; padding: 0; }
+.check li { position: relative; padding-left: 26px; }
+.check li::before { content: ""; position: absolute; left: 0; top: 5px; width: 14px; height: 14px; border: 1.5px solid var(--muted); border-radius: 4px; }
+
+footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="index" aria-label="Índice">
+    <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">R</span>Remarkable</a>
+    <h2>Producto</h2>
+    <ol>
+      <li><a href="#que-es">Qué es</a></li>
+      <li><a href="#arquitectura">Arquitectura</a></li>
+      <li><a href="#sitio">El sitio público</a></li>
+      <li><a href="#editor">Remarkable Editor</a></li>
+      <li><a href="#estilos">Estilos y tokens</a></li>
+      <li><a href="#componentes">Componentes</a></li>
+      <li><a href="#bloques">Bloques</a></li>
+      <li><a href="#motion">Motion</a></li>
+    </ol>
+    <h2>Trabajar con él</h2>
+    <ol>
+      <li><a href="#nuevo-proyecto">Proyecto nuevo</a></li>
+      <li><a href="#codigo">El código</a></li>
+      <li><a href="#agregar-bloque">Agregar un bloque</a></li>
+      <li><a href="#publicar">Hosting y publicación</a></li>
+      <li><a href="#calidad">Calidad y pruebas</a></li>
+      <li><a href="#problemas">Problemas conocidos</a></li>
+    </ol>
+    <h2>Contexto</h2>
+    <ol>
+      <li><a href="#decisiones">Decisiones</a></li>
+      <li><a href="#historial">Historial</a></li>
+      <li><a href="#pendiente">Lo que sigue</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <details class="index-mobile">
+      <summary>Remarkable</summary>
+      <ol>
+        <li><a href="#que-es">Qué es</a></li>
+        <li><a href="#arquitectura">Arquitectura</a></li>
+        <li><a href="#sitio">El sitio público</a></li>
+        <li><a href="#editor">Remarkable Editor</a></li>
+        <li><a href="#estilos">Estilos y tokens</a></li>
+        <li><a href="#componentes">Componentes</a></li>
+        <li><a href="#bloques">Bloques</a></li>
+        <li><a href="#motion">Motion</a></li>
+        <li><a href="#nuevo-proyecto">Proyecto nuevo</a></li>
+        <li><a href="#codigo">El código</a></li>
+        <li><a href="#agregar-bloque">Agregar un bloque</a></li>
+        <li><a href="#publicar">Hosting y publicación</a></li>
+        <li><a href="#calidad">Calidad y pruebas</a></li>
+        <li><a href="#problemas">Problemas conocidos</a></li>
+        <li><a href="#decisiones">Decisiones</a></li>
+        <li><a href="#historial">Historial</a></li>
+        <li><a href="#pendiente">Lo que sigue</a></li>
+      </ol>
+    </details>
+
+    <!-- ───────────────────────── Hero ───────────────────────── -->
+    <header id="inicio" class="hero">
+      <p class="eyebrow">Starter + editor visual · uso interno</p>
+      <h1>Remarkable</h1>
+      <p class="lead">La base con la que arrancamos cada sitio de cliente: un sitio Astro estático y rápido, un editor visual propio para armar y editar páginas sobre el diseño real, y Sanity guardando el contenido.</p>
+      <ul class="stack-line" aria-label="Stack">
+        <li><b>Astro</b> 7.3 · estático</li>
+        <li><b>Sanity</b> 6.3.0 · fijo</li>
+        <li><b>React</b> 19</li>
+        <li><b>Tailwind</b> 4 sobre tokens</li>
+        <li><b>GSAP</b> 3.15</li>
+      </ul>
+      <div class="figures">
+        <div><strong>≈1 KB</strong><span>de JS en una página sin bloques animados</span></div>
+        <div><strong>138 KB</strong><span>de JS (gzip) en una página con motion</span></div>
+        <div><strong>0 KB</strong><span>del editor en el sitio público, controlado en cada build</span></div>
+        <div><strong>≈4 s</strong><span>de build completo, Studio incluido</span></div>
+      </div>
+    </header>
+
+    <!-- ───────────────────────── Qué es ───────────────────────── -->
+    <section id="que-es">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Qué es y para quién</h2>
+        <p>Remarkable es un repo plantilla. Cada proyecto nuevo se copia de él y se personaliza en tokens, header, footer y bloques. La infraestructura (<code>src/core</code>) es la misma en todos los proyectos. Tiene tres partes:</p>
+      </div>
+      <div class="parts">
+        <div class="part">
+          <h3>Sitio público</h3>
+          <p>Astro genera HTML estático en el build. Solo las secciones con animaciones o sliders cargan JavaScript. Funciona en cualquier hosting estático.</p>
+        </div>
+        <div class="part">
+          <h3>Remarkable Editor</h3>
+          <p>Nuestro editor visual, como pestaña del Studio en <code>/studio#/editor</code>. Se edita texto sobre la página, se arrastran bloques, se estilan con tokens y se arman componentes.</p>
+        </div>
+        <div class="part">
+          <h3>Sanity</h3>
+          <p>La base de datos. Login, roles, borradores, historial, imágenes y CDN. No lo mantenemos nosotros; el Studio queda para settings, menús y colecciones.</p>
+        </div>
+      </div>
+
+      <h3>Equipo y cliente</h3>
+      <p class="prose">El mismo editor muestra dos vistas según el rol en Sanity. El equipo (rol <code>administrator</code>) puede alternar a la vista de cliente para revisar lo que ve el cliente.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Puede…</th><th>Equipo</th><th>Cliente</th></tr></thead>
+          <tbody>
+            <tr><td>Editar textos, rich text, links e imágenes</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
+            <tr><td>Reordenar bloques dentro de lo diseñado</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
+            <tr><td>Insertar, duplicar y borrar bloques</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Panel de estilo (espaciado, color, radio, breakpoints)</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Crear, editar y separar componentes</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Publicar</td><td><span class="pill ok">Sí</span></td><td><span class="pill warn">Según rol</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted prose">Con <code>editor</code> el cliente publica solo. Con <code>contributor</code> deja borradores y publica alguien del equipo. Los roles disponibles dependen del plan de Sanity.</p>
+    </section>
+
+    <!-- ───────────────────────── Arquitectura ───────────────────────── -->
+    <section id="arquitectura">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Arquitectura</h2>
+        <p>La idea central: <strong>el mismo componente <code>PageBuilder</code> dibuja la página en el editor y en el sitio</strong>. Lo que ves mientras editás es el sitio real, con sus estilos y animaciones.</p>
+      </div>
+
+      <div class="diagram" role="img" aria-label="Diagrama: el editor en el Studio se comunica con el canvas por postMessage y guarda en Sanity; el build lee Sanity y genera HTML estático con islas.">
+        <div class="diagram-inner">
+          <div class="lanes">
+            <div class="col-stack">
+              <div class="node hl">
+                <span class="route">/studio#/editor</span>
+                <h4>Remarkable Editor</h4>
+                Herramienta del Studio: páginas y capas, canvas, propiedades.
+                <ul><li>Lee con <code>useEditState</code></li><li>Escribe con <code>useDocumentOperation</code></li></ul>
+              </div>
+            </div>
+            <div class="arrow both"><span>postMessage</span></div>
+            <div class="col-stack">
+              <div class="node hl">
+                <span class="route">/edit-canvas</span>
+                <h4>Canvas (iframe)</h4>
+                PageBuilder renderizando el documento que manda el editor. No busca datos.
+                <ul><li>Selección y overlay propios</li><li>Edición de texto en el lugar</li></ul>
+              </div>
+            </div>
+            <div class="arrow"><span></span></div>
+            <div class="col-stack">
+              <div class="node">
+                <h4>Sanity</h4>
+                Content Lake: borradores, publicados, historial, assets en CDN.
+              </div>
+            </div>
+          </div>
+          <div class="row-caption">El editor guarda borradores en Sanity a medida que editás. Publicar los vuelve públicos.</div>
+          <div class="flow" style="margin-top:18px">
+            <div class="node"><h4>Sanity</h4>Contenido publicado</div>
+            <div class="arrow right"><span>build</span></div>
+            <div class="node"><h4>astro build</h4><code>loadSite()</code> + una query por página, sin CDN</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node hl"><h4>dist/</h4>HTML + islas <code>[data-island]</code> + Studio en <code>/studio</code></div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Visitante</h4>HTML puro; hidrata solo lo que se mueve</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3>Por qué un iframe</h3>
+        <p>El canvas vive en su propia ruta (<code>/edit-canvas</code>), igual que en Webflow:</p>
+        <ul>
+          <li><strong>CSS aislado:</strong> el CSS del sitio no se mezcla con el del Studio.</li>
+          <li><strong>Breakpoints reales:</strong> desktop, tablet y mobile cambian el ancho del iframe.</li>
+          <li><strong>Motion con la misma política que el sitio</strong> (ver <a href="#motion">Motion</a>).</li>
+          <li><strong>Sin borradores expuestos:</strong> la ruta es pública pero no tiene datos propios. Solo dibuja lo que le manda, por <code>postMessage</code> del mismo origen, un editor ya autenticado.</li>
+        </ul>
+        <h3>Rutas de un bloque</h3>
+        <p>Cada bloque lleva en su raíz <code>data-sanity-path</code> con su ruta GROQ dentro del documento, por ejemplo:</p>
+      </div>
+      <div class="code"><pre>sections[_key=="a1f3"].content[_key=="9c2e"].items[_key=="77d0"]</pre></div>
+      <p class="prose">Esa ruta une el clic en el canvas, la capa seleccionada, el panel de propiedades y la escritura en Sanity. Las operaciones de estructura (<code>core/editor/ops.ts</code>) son funciones puras sobre esas rutas, validadas contra el registro de bloques. El historial de deshacer es una pila de snapshots del documento.</p>
+    </section>
+
+    <!-- ───────────────────────── Sitio ───────────────────────── -->
+    <section id="sitio">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>El sitio público</h2>
+        <p>El sitio es 100% estático (<code>output: "static"</code>, sin adapter). En el build, cada página pide su documento a Sanity y <code>loadSite()</code> trae settings, navegación, el mapa de rutas y la librería de componentes. Las lecturas del build salen sin la CDN de Sanity, a propósito: un rebuild disparado por una publicación podría leer una respuesta vieja de la caché.</p>
+        <h3>HTML primero, JavaScript solo donde hace falta</h3>
+        <p>El PageBuilder se renderiza en el servidor. Cada sección de primer nivel que contiene un bloque con <code>js</code> en el registro se envuelve como isla:</p>
+      </div>
+      <div class="code"><pre><span class="c">&lt;!-- display: contents → no altera el layout --&gt;</span>
+&lt;div data-island='{"section":{…},"ctx":{…},"components":{…}}'&gt;
+  &lt;section class="section" data-theme="dark"&gt;…HTML ya renderizado…&lt;/section&gt;
+&lt;/div&gt;</pre></div>
+      <div class="prose">
+        <p><code>Base.astro</code> incluye un script mínimo. Si la página tiene al menos una isla, importa <code>core/render/hydrate.tsx</code>, que hace <code>hydrateRoot</code> sobre cada isla con los mismos props. Si no tiene ninguna, la página no carga React.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Quién descarga qué</th><th class="num">JS (gzip)</th><th>Cuándo</th></tr></thead>
+          <tbody>
+            <tr><td>Página sin bloques con <code>js</code></td><td class="num">≈1 KB</td><td>Siempre (solo el script que busca islas)</td></tr>
+            <tr><td>Página con motion: React DOM, bloques, GSAP, Portable Text</td><td class="num">138 KB</td><td>Si hay al menos una isla</td></tr>
+            <tr><td>three.js del bloque 3D Logo</td><td class="num">140 KB</td><td>Solo si la página tiene ese bloque</td></tr>
+            <tr><td>Studio + Remarkable Editor</td><td class="num">≈1.650 KB</td><td>Solo quien entra a <code>/studio</code></td></tr>
+            <tr><td>Canvas del editor</td><td class="num">144 KB</td><td>Solo dentro del editor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p><code>npm run verify</code> controla esto en cada build: ningún HTML público referencia código del editor ni del Studio, y la home no supera 250 KB de JS.</p>
+        <h3>SEO incluido</h3>
+        <ul>
+          <li><strong>Títulos y descripción:</strong> cada página tiene <code>metaTitle</code>, <code>metaDescription</code>, <code>ogImage</code> y <code>noindex</code>. Si están vacíos, usan los valores de Settings, y si tampoco hay ahí, los del código.</li>
+          <li><strong>Etiquetas generadas:</strong> canonical absoluto, <code>og:*</code>, Twitter card, <code>sitemap.xml</code>, <code>robots.txt</code> y JSON-LD <code>Organization</code> en la home.</li>
+          <li><strong>URLs:</strong> todas salen de <code>pageHref()</code> y <code>resolveLink()</code>. Los links internos son referencias a páginas, no paths escritos a mano. Agregar idiomas más adelante es cambiar esas dos funciones.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Editor ───────────────────────── -->
+    <section id="editor">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Remarkable Editor</h2>
+        <p>Es la primera pestaña del Studio. Tiene tres columnas: <strong>páginas y capas</strong>, <strong>canvas</strong> y <strong>propiedades</strong>. Arriba están deshacer y rehacer, <strong>+ Add</strong>, el selector de dispositivo, <strong>▶ Play</strong> y <strong>Publish</strong>.</p>
+        <h3>Qué se puede hacer</h3>
+        <ul>
+          <li><strong>Texto en el lugar.</strong> Doble clic en headings, párrafos, eyebrows, botones, título y cuerpo de cards, Big Type y Scroll Text. El rich text tiene una barra flotante con negrita, itálica, link y quitar link.</li>
+          <li><strong>Capas.</strong> Árbol con arrastre (antes, después o adentro), insertar, duplicar, borrar, mover, y copiar y pegar entre páginas.</li>
+          <li><strong>Arrastre en el canvas.</strong> El bloque seleccionado muestra un agarre ⠿. Una línea azul indica dónde cae, y se valida con las mismas reglas que las capas.</li>
+          <li><strong>Selección múltiple.</strong> Con ⇧ o ⌘ + clic en el canvas o en capas. Borrar, duplicar, copiar y mover aplican a todos.</li>
+          <li><strong>Imágenes.</strong> Se arrastra un archivo sobre una imagen, card, parallax o fondo de sección, o se sube desde el panel.</li>
+          <li><strong>Propiedades generadas del schema.</strong> Cada campo de cada bloque tiene su control; verify falla si alguno queda sin control.</li>
+          <li><strong>▶ Play.</strong> Reproduce las animaciones decorativas una vez. Mientras editás quedan quietas.</li>
+        </ul>
+        <h3>Atajos</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Atajo</th><th>Acción</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>⌘</kbd> <kbd>Z</kbd> · <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>Z</kbd></td><td>Deshacer · rehacer (el tipeo se agrupa)</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>D</kbd></td><td>Duplicar la selección</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>C</kbd> · <kbd>⌘</kbd> <kbd>V</kbd></td><td>Copiar · pegar bloques (también entre páginas)</td></tr>
+            <tr><td><kbd>⌫</kbd></td><td>Borrar la selección</td></tr>
+            <tr><td><kbd>⌥</kbd> <kbd>↑</kbd> · <kbd>⌥</kbd> <kbd>↓</kbd></td><td>Mover un lugar arriba · abajo</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Seleccionar el bloque padre</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>B</kbd> · <kbd>⌘</kbd> <kbd>I</kbd> · <kbd>⌘</kbd> <kbd>K</kbd></td><td>Negrita · itálica · link, mientras editás rich text</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <h3>Cómo guarda</h3>
+        <p>El editor usa el almacén de documentos del propio Studio, sin otro SDK. Los cambios se aplican al instante en local y se guardan como borrador. <strong>Publish</strong> publica el documento. Como el sitio es estático, publicar dispara un rebuild (ver <a href="#publicar">Hosting y publicación</a>).</p>
+        <h3>Edición de texto sin saltos del cursor</h3>
+        <p>Mientras escribís, el canvas retiene los renders que llegan del editor. Al terminar, restaura el DOM exacto que React espera y recién ahí aplica el valor nuevo. El rich text se convierte entre Portable Text y HTML editable en <code>core/editor/richtext.ts</code>, y mantiene los destinos de los links existentes por su clave.</p>
+        <h3>Protocolo editor ⇄ canvas</h3>
+        <p>Son mensajes <code>postMessage</code> del mismo origen, tipados en <code>core/editor/protocol.ts</code>.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dirección</th><th>Mensaje</th><th>Para qué</th></tr></thead>
+          <tbody>
+            <tr><td>Editor → canvas</td><td><code>render</code></td><td>Documento, rutas y componentes a dibujar</td></tr>
+            <tr><td>Editor → canvas</td><td><code>select</code></td><td>Resaltar la selección, con scroll opcional</td></tr>
+            <tr><td>Editor → canvas</td><td><code>replay</code></td><td>▶ Play: remontar con motion decorativo</td></tr>
+            <tr><td>Canvas → editor</td><td><code>ready</code></td><td>El iframe cargó</td></tr>
+            <tr><td>Canvas → editor</td><td><code>select</code></td><td>Clic en un bloque (con <code>add</code> para multi-selección)</td></tr>
+            <tr><td>Canvas → editor</td><td><code>text</code></td><td>Texto editado (string o Portable Text)</td></tr>
+            <tr><td>Canvas → editor</td><td><code>move</code></td><td>Arrastre en el canvas: antes o después de otro bloque</td></tr>
+            <tr><td>Canvas → editor</td><td><code>drop</code></td><td>Archivo de imagen soltado sobre un bloque</td></tr>
+            <tr><td>Canvas → editor</td><td><code>key</code></td><td>Atajos presionados con el foco en el canvas</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Estilos ───────────────────────── -->
+    <section id="estilos">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Estilos y tokens</h2>
+        <p>Todo el diseño sale de <code>src/theme/tokens.css</code>, el primer archivo que se toca en cada proyecto. Ahí están los colores por tema (<code>light</code>, <code>dark</code>, <code>brand</code>), los radios, la escala tipográfica, el espaciado y el ancho de página. Tailwind 4 los expone como utilities (<code>bg-surface text-fg gap-md rounded-main</code>), y como los colores leen el <code>data-theme</code> de la sección, cada bloque se adapta solo al tema. La paleta por defecto de Tailwind no está, a propósito: un color nuevo se agrega como token.</p>
+        <h3>Panel de estilo</h3>
+        <p>Cada bloque tiene un campo <code>design</code> que el editor muestra como panel de estilo. Hay solo tokens, no CSS libre, y se puede definir para todas las pantallas, tablet y mobile.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Propiedad</th><th>Valores</th></tr></thead>
+          <tbody>
+            <tr><td>Margin, padding</td><td><code>none xs sm md lg xl 2xl 3xl</code></td></tr>
+            <tr><td>Fondo, color de texto</td><td><code>bg surface surface-2 fg muted brand brand-contrast border</code></td></tr>
+            <tr><td>Radio</td><td><code>none sm md lg main pill</code></td></tr>
+            <tr><td>Ancho máximo</td><td><code>prose</code> 65ch · <code>narrow</code> 40rem · <code>page</code> · <code>full</code></td></tr>
+            <tr><td>Alineación de texto, ocultar</td><td><code>left center right</code> · ocultar por breakpoint</td></tr>
+            <tr><td>Breakpoints</td><td>tablet ≤ 1023px · mobile ≤ 767px (desktop-first)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><code>core/style/stylesheet.ts</code> convierte esos valores en una sola hoja de estilos por página, con un selector por bloque. Los valores del panel van con <code>!important</code> porque el panel es la autoridad final sobre ese bloque:</p>
+      <div class="code"><pre>[data-b="9c2e"][data-b] { padding-top: var(--space-lg) !important; }
+@media (max-width: 767px) {
+  [data-b="9c2e"][data-b] { padding-top: var(--space-sm) !important; }
+}</pre></div>
+      <div class="prose">
+        <h3>Box</h3>
+        <p>Es el contenedor libre: apila, pone en fila o arma una grilla, con gaps de token, alineación y wrap. Se puede anidar. En tablet las grillas pasan a 2 columnas y en mobile a 1; las filas se apilan en mobile.</p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Componentes ───────────────────────── -->
+    <section id="componentes">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Componentes</h2>
+        <p>Funcionan como los de Webflow. Un componente es un documento <code>component</code> con secciones. Una página lo usa con un bloque <code>componentRef</code> (una instancia). Si editás el componente, cambian todas sus instancias.</p>
+        <h3>En el editor</h3>
+        <ul>
+          <li><strong>Make component:</strong> guarda la sección seleccionada en la librería y la reemplaza por una instancia.</li>
+          <li><strong>+ Add:</strong> lista los componentes de la librería para insertarlos como instancia.</li>
+          <li><strong>Edit component:</strong> abre el componente original para editarlo.</li>
+          <li><strong>Detach:</strong> convierte la instancia en una copia suelta y editable.</li>
+          <li>El canvas selecciona una instancia como un solo bloque.</li>
+        </ul>
+        <h3>Overrides por instancia</h3>
+        <p>Si hacés doble clic en un texto o soltás una imagen <em>dentro</em> de una instancia, el cambio se guarda solo en esa instancia, en su lista <code>overrides</code>. El original no se toca. Cada override apunta a <code>"&lt;claveDelBloque&gt;.&lt;campo&gt;"</code>, se aplica al renderizar (<code>core/render/overrides.ts</code>) y el panel los lista con un botón Reset.</p>
+        <div class="note">
+          <strong>Límite actual</strong>
+          <p>Los componentes son secciones enteras y solo viven en el primer nivel de una página. No se anidan ni se insertan adentro de otra sección. Ver <a href="#pendiente">Lo que sigue</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Bloques ───────────────────────── -->
+    <section id="bloques">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Bloques</h2>
+        <p>El registro único está en <code>src/blocks/meta.ts</code>. Define qué tipos existen, qué pueden contener, cuáles necesitan JS y qué ofrece el editor en cada lugar. <code>schemas.ts</code> y <code>components.tsx</code> están tipados contra el registro: si falta algo, el compilador lo marca.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bloque</th><th>Contiene</th><th>JS</th><th>En el canvas</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Section</strong></td><td>Cualquier bloque</td><td><span class="pill no">No</span></td><td>Tema, espaciado, fondo (soltar imagen)</td></tr>
+            <tr><td><strong>Component</strong> <code>componentRef</code></td><td>Una instancia de la librería</td><td>Según contenido</td><td>Overrides de texto e imagen</td></tr>
+            <tr><td><strong>Eyebrow</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Texto en el lugar</td></tr>
+            <tr><td><strong>Heading</strong></td><td>—</td><td><span class="pill js">Si tiene animación</span></td><td>Rich text en el lugar</td></tr>
+            <tr><td><strong>Paragraph</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Rich text en el lugar</td></tr>
+            <tr><td><strong>Button Group</strong></td><td>Button</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Button</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Label en el lugar</td></tr>
+            <tr><td><strong>Image</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Soltar imagen</td></tr>
+            <tr><td><strong>Looping Video</strong></td><td>—</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Content</strong></td><td>Eyebrow, Heading, Paragraph, Button Group</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Card</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Título y cuerpo en el lugar, soltar imagen</td></tr>
+            <tr><td><strong>Grid</strong></td><td>Card, Content, Image, 3D Logo</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Box</strong></td><td>Cualquier bloque</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Slider</strong></td><td>Card, Image</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>3D Logo</strong></td><td>—</td><td><span class="pill js">Sí · three.js aparte</span></td><td>—</td></tr>
+            <tr><td><strong>Horizontal Scroll</strong></td><td>Card, Image, Content</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>Stacked Cards</strong></td><td>Card</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>Marquee</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>Scroll Text</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Texto en el lugar</td></tr>
+            <tr><td><strong>Big Type</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Texto en el lugar</td></tr>
+            <tr><td><strong>Parallax Media</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Soltar imagen</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose small muted">Todos los bloques tienen además el panel de estilo. "JS" indica si hacen que su sección se hidrate en el sitio público.</p>
+    </section>
+
+    <!-- ───────────────────────── Motion ───────────────────────── -->
+    <section id="motion">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Motion</h2>
+        <p>GSAP se importa en un solo lugar, <code>core/motion/gsap.ts</code>, que además define cuándo corre cada tipo de animación. La regla es distinguir el movimiento que hace falta para llegar al contenido del que es decorativo:</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tipo</th><th>Ejemplos</th><th>Sitio</th><th>Canvas del editor</th><th>Reduced motion</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Layout</strong></td><td>Pin, scroll horizontal, sticky con scrub, parallax</td><td><span class="pill ok">Corre</span></td><td><span class="pill ok">Corre</span></td><td>Alternativa nativa</td></tr>
+            <tr><td><strong>Decorativo</strong></td><td>Splits de texto, entradas, loop del marquee, reveals</td><td><span class="pill ok">Corre</span></td><td><span class="pill no">Quieto</span> · ▶ Play</td><td><span class="pill no">No corre</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <h3>Reglas para bloques animados</h3>
+        <ul>
+          <li><code>useGSAP</code> con <code>scope</code>, dentro del componente React. Nunca un <code>&lt;script&gt;</code> de Astro con <code>querySelector</code>: el editor re-renderiza bloques y el script no ve los nodos nuevos.</li>
+          <li>Si el bloque tiene hijos: <code>dependencies: [claves]</code> y <code>revertOnUpdate: true</code>, para que insertar o borrar reconstruya la animación.</li>
+          <li>Pinear un elemento <em>interno</em>, nunca el que lleva <code>data-sanity-path</code>. React es dueño del nodo exterior y el pin-spacer de GSAP va en el medio.</li>
+          <li>El texto se divide en un wrapper con <code>key</code> por texto. <code>SplitReveal</code> y <code>useSplit</code> ya lo hacen; reusarlos.</li>
+          <li>Lo que está en pantalla al cargar entra por tiempo, no por scrub, porque arrancaría a mitad de camino.</li>
+          <li>Declarar <code>js</code> en <code>meta.ts</code>. Si no, en el sitio público el bloque se ve pero no se mueve.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Nuevo proyecto ───────────────────────── -->
+    <section id="nuevo-proyecto">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Proyecto nuevo</h2>
+        <p>El arranque está empaquetado como una skill de Claude Code, <code>remarkable-astro</code>, que vive en <code>skills/</code> del repo. Se instala una vez por máquina:</p>
+      </div>
+      <div class="code"><pre>gh repo clone seba-seb/Remarkable-Astro /tmp/remarkable -- --depth 1
+cp -R /tmp/remarkable/skills/remarkable-astro ~/.claude/skills/</pre><button class="copy" type="button">Copiar</button></div>
+      <p class="prose">Después alcanza con pedirle a Claude <em>"un proyecto nuevo con Remarkable para &lt;cliente&gt;"</em>. La skill sigue estos pasos y frena en los que te tocan a vos:</p>
+      <ol class="steps prose">
+        <li><div><strong>Datos mínimos</strong><p>Nombre, organización de Sanity del cliente, hosting y dominio, si existe.</p></div></li>
+        <li><div><strong>Repo</strong><p>Copia el starter, inicia git y corre <code>npm install</code>, que aplica <code>patches/</code> y falla si Sanity no es 6.3.0.</p></div></li>
+        <li><div><strong>Sanity</strong><p>Crea el proyecto y el dataset <code>production</code> público, agrega <code>http://localhost:4321</code> a CORS con credenciales y arma <code>.env</code>.</p></div></li>
+        <li><div><strong>Contenido demo</strong> <span class="pill warn">Vos</span><p><code>npx sanity login &amp;&amp; npx sanity dataset import sanity/seed.ndjson production</code>. Usa tu login, sin tokens.</p></div></li>
+        <li><div><strong>Primer arranque</strong><p><code>npm run dev</code>: la home, <code>/studio</code> y el editor con la página.</p></div></li>
+        <li><div><strong>Hacerlo del cliente</strong><p>Tokens, tipografía, header y footer, bloques que sobran, bloques propios, Settings y Navigation.</p></div></li>
+        <li><div><strong>Roles</strong> <span class="pill warn">Vos</span><p>Invitar al cliente como <code>editor</code> o <code>contributor</code>.</p></div></li>
+        <li><div><strong>Hosting y publicación</strong> <span class="pill warn">Vos</span><p>Variables de entorno, CORS del dominio y el webhook de Sanity al deploy hook del host.</p></div></li>
+        <li><div><strong>Cierre</strong><p><code>npm run verify</code> en verde y el <a href="#calidad">smoke test logueado</a>.</p></div></li>
+      </ol>
+      <div class="note warn">
+        <strong>Tokens</strong>
+        <p>Nunca van al chat ni a un archivo commiteado. El único lugar es <code>.env</code>, que está en <code>.gitignore</code>. Lo que necesita permisos de escritura lo corrés en tu terminal con tu login.</p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Código ───────────────────────── -->
+    <section id="codigo">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>El código</h2>
+        <p>La regla que sostiene el starter: <strong><code>src/core</code> es igual en todos los proyectos</strong>. Un arreglo en core va primero al starter y después se copia a los proyectos. Lo de cada cliente vive en <code>theme</code>, <code>chrome</code> y <code>blocks</code>. Cuando haya 3 o más proyectos en producción, core pasa a ser un paquete privado y los arreglos llegan con <code>npm update</code>.</p>
+      </div>
+      <div class="diagram"><div class="tree" style="min-width:560px">
+<span class="d">src/core/</span>          <span class="c">infraestructura · igual en todos los proyectos</span>
+  <span class="d">editor/</span>         <span class="c">EditorTool, CanvasApp, FieldControls, ops, paths, protocol, richtext</span>
+  <span class="d">render/</span>         <span class="c">PageBuilder, BlockRenderer, components (instancias), overrides, hydrate</span>
+  <span class="d">style/</span>          <span class="c">tokens del panel, stylesheet por página, schema del campo design</span>
+  <span class="d">motion/</span>         <span class="c">gsap.ts (política), ScrollRefresh, useSplit, SplitReveal</span>
+  <span class="d">sanity/</span>         <span class="c">client + loadQuery, site loader, queries, editable(), env</span>
+  <span class="d">studio/</span>         <span class="c">inputs propios del Studio (sliders, enums, responsive)</span>
+  <span class="d">lib/</span>            <span class="c">routes (pageHref/resolveLink), clean, staleChunkReload, types</span>
+<span class="d">src/blocks/</span>        <span class="c">una carpeta por bloque · meta.ts = el registro</span>
+<span class="d">src/theme/</span>         <span class="c">tokens.css (lo primero que se cambia) + globals.css</span>
+<span class="d">src/chrome/</span>        <span class="c">header y footer del proyecto</span>
+<span class="d">src/documents/</span>     <span class="c">page, component, settings, navigation</span>
+<span class="d">src/pages/</span>         <span class="c">rutas · /edit-canvas = canvas · /lab/[slug] = banco de motion (solo dev)</span>
+<span class="d">patches/</span>           <span class="c">ajustes a sanity@6.3.0 (ver su README)</span>
+<span class="d">scripts/</span>           <span class="c">verify, check-editor-schema, seeds</span>
+<span class="d">skills/</span>            <span class="c">skill remarkable-astro para proyectos nuevos</span>
+<span class="d">docs/</span>              <span class="c">esta documentación</span>
+CLAUDE.md          <span class="c">reglas para trabajar en el código (fuente de verdad)</span>
+      </div></div>
+      <div class="prose">
+        <h3>Reglas que más se rompen</h3>
+        <ul>
+          <li>Los bloques reciben todo por props y llevan <code>{...editable(…)}</code> en su raíz. Nunca hacen fetch: el canvas los dibuja con el documento que recibe.</li>
+          <li>Estilos con utilities de Tailwind sobre tokens. Sin colores literales.</li>
+          <li>Los assets de diseño (logos, texturas) son código, no van al CMS.</li>
+          <li>macOS no distingue mayúsculas: nunca <code>Foo.tsx</code> y <code>foo.ts</code> en la misma carpeta.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Agregar bloque ───────────────────────── -->
+    <section id="agregar-bloque">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Agregar un bloque</h2>
+      </div>
+      <ol class="steps prose">
+        <li><div><strong>Schema y componente</strong><p><code>src/blocks/&lt;tipo&gt;/schema.ts</code> con <code>defineType</code> y un ícono de <code>@sanity/icons</code>, más <code>&lt;Tipo&gt;.tsx</code>, que recibe <code>{ block, path, ctx }</code>.</p></div></li>
+        <li><div><strong>Registro</strong><p>Entrada en <code>meta.ts</code>: título, <code>slot</code> si contiene otros bloques, <code>margin</code>, y <code>js</code> si corre algo en el navegador.</p></div></li>
+        <li><div><strong>Mapas</strong><p>Registrarlo en <code>schemas.ts</code> y <code>components.tsx</code>. El compilador marca error hasta que esté.</p></div></li>
+        <li><div><strong>Editor (opcional)</strong><p>Contenido al insertarlo en <code>defaults.ts</code>, texto editable en <code>TEXT_TARGETS</code> y soltar imagen en <code>IMAGE_FIELDS</code> (ambos en <code>CanvasApp.tsx</code>).</p></div></li>
+      </ol>
+      <div class="code"><pre><span class="c">// src/blocks/meta.ts</span>
+quote: { title: <span class="k">"Quote"</span>, margin: true },
+ticker: { title: <span class="k">"Ticker"</span>, js: true },
+heading: { title: <span class="k">"Heading"</span>, js: (b) =&gt; !!b.animation &amp;&amp; b.animation !== <span class="k">"none"</span> },</pre></div>
+      <div class="code"><pre><span class="c">// src/blocks/quote/Quote.tsx</span>
+export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
+  return (
+    &lt;blockquote className="text-h-lg text-fg"
+      {...editable(ctx.documentId, ctx.documentType, path, block._type)}&gt;
+      {block.text}
+    &lt;/blockquote&gt;
+  );
+}</pre></div>
+      <p class="prose">Para borrar un bloque: su carpeta, su entrada en <code>meta.ts</code>, las dos entradas de los mapas y cualquier <code>accepts</code> que lo nombre. El compilador te lleva a cada una.</p>
+    </section>
+
+    <!-- ───────────────────────── Publicar ───────────────────────── -->
+    <section id="publicar">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Hosting y publicación</h2>
+        <p>Cualquier hosting estático sirve: Vercel, Netlify, Cloudflare Pages u otro. Se configura con build <code>npm run build</code>, output <code>dist</code> y Node 22.</p>
+      </div>
+      <div class="diagram" role="img" aria-label="Flujo de publicación: Publish en el editor, Sanity dispara un webhook, el host reconstruye y sirve el HTML nuevo.">
+        <div class="diagram-inner">
+          <div class="flow">
+            <div class="node hl"><h4>Publish</h4>En el editor</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Sanity</h4>Webhook al publicar</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Deploy hook</h4>Del host</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Build</h4>≈4 s + instalación</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Sitio</h4>HTML nuevo en el CDN</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Publicar no cambia el sitio hasta el próximo build</strong>
+        <p>Sin el webhook, el cambio queda publicado en Sanity pero el sitio sigue mostrando la versión anterior. El webhook se crea en sanity.io/manage → API → Webhooks, con filtro <code>_type in ["page","settings","navigation","component"]</code>.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Para qué</th></tr></thead>
+          <tbody>
+            <tr><td><code>PUBLIC_SANITY_PROJECT_ID</code></td><td>Proyecto de Sanity</td></tr>
+            <tr><td><code>PUBLIC_SANITY_DATASET</code></td><td>Normalmente <code>production</code></td></tr>
+            <tr><td><code>PUBLIC_SANITY_API_VERSION</code></td><td>Fecha de la API, por ejemplo <code>2024-10-01</code></td></tr>
+            <tr><td><code>PUBLIC_SITE_URL</code></td><td>Origen para canonical, og:url y sitemap. En Vercel, Netlify y Cloudflare usa la URL del deploy si falta. Vacía cuenta como no definida.</td></tr>
+            <tr><td><code>SANITY_API_READ_TOKEN</code></td><td>Solo si el dataset es privado: token <em>Viewer</em>, leído en el build</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Cada dominio desde el que se abra <code>/studio</code> tiene que estar en los orígenes CORS del proyecto, <strong>con credenciales</strong>. Sin eso, el Studio pide "Connect this studio to your project".</p>
+    </section>
+
+    <!-- ───────────────────────── Calidad ───────────────────────── -->
+    <section id="calidad">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Calidad y pruebas</h2>
+        <h3><code>npm run verify</code></h3>
+        <p>Corre antes de cada entrega y después de cualquier cambio en core. Revisa lo que se rompe sin avisar:</p>
+        <ul>
+          <li>La versión de Sanity instalada tiene su parche.</li>
+          <li>Los links y las rutas resuelven bien (<code>routes.check</code>).</li>
+          <li>Cada campo de cada bloque tiene un control en el panel (<code>check-editor-schema</code>).</li>
+          <li>Insertar, mover, borrar y duplicar mantienen el documento válido, y la detección de islas es correcta (<code>ops.check</code>).</li>
+          <li>Los tokens generan el CSS esperado, sin inyección de selectores (<code>stylesheet.check</code>).</li>
+          <li>Los overrides se aplican al bloque correcto y nunca tocan el original (<code>overrides.check</code>).</li>
+          <li>El build pasa, el HTML público no tiene código del editor ni del Studio, y la home queda en 250 KB de JS o menos.</li>
+          <li>La home tiene contenido real, canonical absoluto, sitemap y robots.</li>
+          <li>Con una URL (<code>npm run verify -- https://dominio</code>), además responden <code>/</code>, <code>/studio</code> y <code>/edit-canvas</code>.</li>
+        </ul>
+        <h3>Banco de motion</h3>
+        <p><code>/lab/&lt;slug&gt;</code>, solo en dev, repite sobre el PageBuilder real lo que hace el editor. Escribe en cada texto, inserta y borra dentro de bandas pineadas, invierte y duplica secciones, cicla animaciones y temas, y hace 25 ediciones rápidas, la mitad scrolleado dentro de un pin. Después de cada paso verifica:</p>
+        <ul>
+          <li>sin errores de React;</li>
+          <li>un pin-spacer por banda;</li>
+          <li>el recorrido del pin coincide con el del track;</li>
+          <li>sin ScrollTriggers colgados;</li>
+          <li>sin splits trabados;</li>
+          <li>sin overflow horizontal.</li>
+        </ul>
+        <p>Las páginas de prueba son <code>/lab-noir</code>, <code>/lab-kinetic</code> y <code>/lab-stack</code>.</p>
+        <h3>Smoke test logueado</h3>
+        <p>Los flujos que necesitan login no se pueden automatizar sin credenciales. Se prueban a mano, en una página descartable, antes de entregar un sitio:</p>
+        <ol class="check">
+          <li>Escribir en un heading sobre la página, recargar, y que el texto siga ahí.</li>
+          <li>Negrita, itálica y link en un párrafo. Insertar, duplicar, borrar y arrastrar una capa. Deshacer y rehacer.</li>
+          <li>Soltar una imagen sobre un bloque Image: se sube y aparece.</li>
+          <li>Make component sobre una sección. Editar texto en una instancia: cambia solo esa. Reset. Edit component: cambian todas.</li>
+          <li>Publish, después <code>npm run build</code>, y el cambio está en la página estática.</li>
+          <li>Entrar con un usuario de rol cliente: no ve estilos ni acciones de estructura.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Problemas ───────────────────────── -->
+    <section id="problemas">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Problemas conocidos</h2>
+        <p>Todos ya aparecieron alguna vez y tienen solución.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Síntoma</th><th>Causa</th><th>Arreglo</th></tr></thead>
+          <tbody>
+            <tr><td>"Connect this studio to your project"</td><td>El origen no está en CORS. Cada puerto cuenta como un origen distinto.</td><td>Agregar el origen exacto con credenciales. En local se usa <code>:4321</code>.</td></tr>
+            <tr><td>Studio o canvas en blanco + <code>504 (Outdated Optimize Dep)</code></td><td>Vite re-optimizó dependencias con la pestaña abierta.</td><td>Parar el server, <code>rm -rf node_modules/.vite</code>, <code>npm run dev</code>, <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>.</td></tr>
+            <tr><td>Studio en blanco justo después del login</td><td>La pestaña pide chunks de un server o deploy anterior.</td><td><code>staleChunkReload</code> recarga una vez sola. Si sigue: <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>.</td></tr>
+            <tr><td>Studio en blanco solo en Brave</td><td>Shields y el routing.</td><td>Resuelto con hash routing y <code>basePath: "/"</code>.</td></tr>
+            <tr><td>La home muestra la pantalla de bienvenida</td><td>Falta <code>.env</code> o el contenido.</td><td>Completar <code>.env</code> e importar el seed.</td></tr>
+            <tr><td>Un bloque se ve pero no se anima en el sitio</td><td>Le falta <code>js</code> en <code>meta.ts</code>.</td><td>Agregarlo.</td></tr>
+            <tr><td><code>npm install</code> falla en patch-package</td><td><code>sanity</code> no está en 6.3.0.</td><td>Volver a 6.3.0. Actualizar es un trabajo aparte: rehacer <code>patches/</code>.</td></tr>
+            <tr><td>"can't detect preamble" en dev</td><td>Falta el preámbulo de React para las islas.</td><td>Ya está en <code>Base.astro</code>; no borrarlo.</td></tr>
+            <tr><td>Publiqué y el sitio no cambió</td><td>El sitio es estático.</td><td>Revisar el webhook al deploy hook o correr un build.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Decisiones ───────────────────────── -->
+    <section id="decisiones">
+      <div class="prose">
+        <p class="eyebrow">Contexto</p>
+        <h2>Decisiones</h2>
+        <p>Por qué está hecho así. Antes de cambiar alguna de estas, conviene leer el motivo.</p>
+      </div>
+      <div class="decisions">
+        <div class="decision">
+          <h3>Editor propio en vez de Sanity Presentation</h3>
+          <p><b>Problema.</b> Presentation era lento para editar: había que hacer clic en el overlay, buscar el campo en un formulario y esperar la ida y vuelta. No se podía escribir sobre la página y dependía de 7 parches.</p>
+          <p><b>Decisión.</b> Reemplazar solo la UI de edición, con APIs públicas del Studio. Presentation, <code>/preview</code>, el draft mode y visual-editing se eliminaron.</p>
+        </div>
+        <div class="decision">
+          <h3>Sanity como base de datos</h3>
+          <p><b>Problema.</b> Login, roles, borradores, historial, tiempo real e imágenes son meses de infraestructura.</p>
+          <p><b>Decisión.</b> No construir eso: Sanity lo resuelve y el Studio sigue disponible para settings, menús y colecciones.</p>
+        </div>
+        <div class="decision">
+          <h3>Canvas en iframe, sin datos propios</h3>
+          <p><b>Problema.</b> El CSS del sitio y el del Studio no pueden mezclarse, y una ruta del canvas con datos expondría borradores.</p>
+          <p><b>Decisión.</b> Un iframe del mismo origen que solo dibuja lo que le manda el editor autenticado. Además da breakpoints reales.</p>
+        </div>
+        <div class="decision">
+          <h3>Sitio estático con islas por sección</h3>
+          <p><b>Problema.</b> Hidratar toda la página costaba 138 KB de JS aunque casi nada se moviera.</p>
+          <p><b>Decisión.</b> Sin Presentation ya no hace falta hidratar todo: HTML puro y React solo en las secciones con <code>js</code>.</p>
+        </div>
+        <div class="decision">
+          <h3>Sanity fijo en 6.3.0</h3>
+          <p><b>Problema.</b> <code>patches/</code> ajusta formularios del Studio y solo encaja en una versión exacta.</p>
+          <p><b>Decisión.</b> Fijar la versión y hacer que install y verify fallen si se desvía. Actualizar es un trabajo planificado.</p>
+        </div>
+        <div class="decision">
+          <h3>Estilos solo con tokens</h3>
+          <p><b>Problema.</b> El CSS libre y el posicionamiento absoluto equivalen a construir Webflow entero, y rompen la consistencia de la marca.</p>
+          <p><b>Decisión.</b> El panel solo ofrece tokens. Los bloques nuevos se escriben en código y el editor compone y estila con ellos.</p>
+        </div>
+        <div class="decision">
+          <h3>Core aislado, plantilla primero</h3>
+          <p><b>Problema.</b> Un paquete privado desde el día uno agrega versionado antes de saber qué cambia por proyecto.</p>
+          <p><b>Decisión.</b> Copiar el starter y mantener <code>src/core</code> intacto. Extraerlo a paquete cuando haya 3 o más sitios en producción.</p>
+        </div>
+        <div class="decision">
+          <h3>Sin i18n, pero preparado</h3>
+          <p><b>Problema.</b> Ningún proyecto actual lo pide.</p>
+          <p><b>Decisión.</b> Todas las URLs pasan por <code>pageHref()</code> y <code>resolveLink()</code>. Agregar idiomas se hace en un solo lugar.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Historial ───────────────────────── -->
+    <section id="historial">
+      <div class="prose">
+        <p class="eyebrow">Contexto</p>
+        <h2>Historial</h2>
+        <p>Los hitos, agrupados. El detalle está en los commits del repo.</p>
+      </div>
+      <ol class="timeline prose">
+        <li>
+          <time datetime="2026-09-29">29 sep 2026</time>
+          <h3>Port a Astro y base del starter</h3>
+          <ul>
+            <li>Page builder de Next.js portado a Astro 7. Separación en <code>core</code>, <code>blocks</code> y <code>theme</code>, con el registro tipado de bloques.</li>
+            <li>Tipo <code>link</code>, Settings y Navigation, header y footer, SEO completo, <code>npm run verify</code> y <code>CLAUDE.md</code>.</li>
+            <li>Tailwind 4 sobre los tokens. Primeras animaciones con SplitText.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-09-30">30 sep 2026</time>
+          <h3>Bloques de motion y banco de pruebas</h3>
+          <ul>
+            <li>Horizontal Scroll, Stacked Cards, Marquee, Scroll Text, Big Type y Parallax Media, más <code>/lab</code> con sus tres sitios de estrés.</li>
+            <li>Ajustes de velocidad en el entorno de dev.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-10-08">8 oct 2026</time>
+          <h3>Remarkable Editor</h3>
+          <ul>
+            <li>Fase 0: herramienta del Studio con canvas en vivo y panel generado del schema.</li>
+            <li>Fase 1: texto en el lugar, capas con arrastre, operaciones de estructura, deshacer e imágenes.</li>
+            <li>Salen Presentation, Vision, <code>/preview</code> y visual-editing. El sitio pasa a ser 100% estático.</li>
+            <li>Fase 2: panel de estilo con tokens y breakpoints, bloque Box y componentes con instancias.</li>
+            <li>Fase 3: rich text en el lugar, overrides por instancia, selección múltiple, arrastre en el canvas y ▶ Play.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-10-08">8 oct 2026</time>
+          <h3>Peso y robustez</h3>
+          <ul>
+            <li>El sitio público no importa nada del editor.</li>
+            <li>Islas por sección: las páginas sin motion bajan de 138 KB a ≈1 KB de JS.</li>
+            <li>Install y verify fallan si Sanity se desvía de su parche.</li>
+            <li>Skill <code>remarkable-astro</code> y esta documentación.</li>
+          </ul>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ───────────────────────── Pendiente ───────────────────────── -->
+    <section id="pendiente">
+      <div class="prose">
+        <p class="eyebrow">Contexto</p>
+        <h2>Lo que sigue</h2>
+        <p>Ordenado por impacto. Ninguno bloquea el uso actual.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Qué</th><th>Por qué</th><th>Tamaño</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Galería de la librería</strong></td><td>Ver los componentes con una miniatura en vivo y arrastrarlos al canvas. Hoy son una lista de nombres.</td><td><span class="pill ok">Chico</span></td></tr>
+            <tr><td><strong>Componentes de cualquier tamaño</strong></td><td>Guardar una card o un botón como componente e insertarlo dentro de secciones, grids o boxes.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Insertar como copia o enlazado</strong></td><td>Elegirlo al insertar desde la librería.</td><td><span class="pill ok">Chico</span></td></tr>
+            <tr><td><strong>UI propia del Studio</strong></td><td>Reemplazar la barra y el marco de Sanity con la API oficial (<code>studio.components</code>) para que el editor sea la app entera.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>JS por bloque</strong></td><td>Que una sección con solo un marquee no cargue todos los bloques. Baja los 138 KB en páginas con poco motion.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Core como paquete privado</strong></td><td>Cuando haya 3 o más sitios en producción, para que los arreglos lleguen con <code>npm update</code>.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Idiomas</strong></td><td>Cuando un cliente lo pida. La base está en <code>pageHref</code> y <code>resolveLink</code>.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Gizmo 3D en el canvas</strong></td><td>Rotar el 3D Logo directamente en el canvas. Postergado.</td><td><span class="pill no">Pausado</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <footer class="end">Remarkable · repo <code>seba-seb/Remarkable-Astro</code> · reglas de código en <code>CLAUDE.md</code> · actualizado el 8 de octubre de 2026</footer>
+    </section>
+  </main>
+</div>
+
+<script>
+  // Index: highlight the section in view.
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.index a[href^="#"]'));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
+    var current = null;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var a = map[e.target.id];
+        if (!a || a === current) return;
+        if (current) current.removeAttribute("aria-current");
+        a.setAttribute("aria-current", "true");
+        current = a;
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    document.querySelectorAll("main section[id]").forEach(function (s) { io.observe(s); });
+  })();
+
+  // Copy buttons.
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = btn.parentElement.querySelector("pre");
+      var text = pre.innerText;
+      var done = function () { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar"; }, 1600); };
+      var fallback = function () { var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Seleccionado"; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    });
+  });
+
+  // Close the mobile index after picking a section.
+  document.querySelectorAll(".index-mobile a").forEach(function (a) {
+    a.addEventListener("click", function () { a.closest("details").removeAttribute("open"); });
+  });
+</script>
+</body>
+</html>
