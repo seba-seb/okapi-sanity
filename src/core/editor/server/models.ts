@@ -83,7 +83,8 @@ export function buildRequest(cfg: ModelConfig, instruction: string): { url: stri
           "x-api-key": cfg.apiKey,
           "anthropic-version": "2023-06-01",
         },
-        body: JSON.stringify({ model, max_tokens: 4096, temperature: 0.2, messages: [{ role: "user", content: instruction }] }),
+        // No `temperature`: current Claude models reject it ("deprecated for this model").
+        body: JSON.stringify({ model, max_tokens: 4096, messages: [{ role: "user", content: instruction }] }),
       },
     };
   const url = cfg.provider === "openai" ? "https://api.openai.com/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
@@ -92,7 +93,8 @@ export function buildRequest(cfg: ModelConfig, instruction: string): { url: stri
     init: {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${cfg.apiKey}` },
-      body: JSON.stringify({ model, temperature: 0.2, response_format: { type: "json_object" }, messages: [{ role: "user", content: instruction }] }),
+      // No `temperature` either: newer OpenAI models only accept the default.
+      body: JSON.stringify({ model, response_format: { type: "json_object" }, messages: [{ role: "user", content: instruction }] }),
     },
   };
 }

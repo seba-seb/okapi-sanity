@@ -166,7 +166,7 @@ export function EditorChat({
         ) : null}
         {messages.map((m, i) => (
           <div key={i} style={m.role === "user" ? userBubble : { ...botBubble, ...(m.error ? { borderColor: "#e5484d" } : null) }}>
-            <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
+            <div style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{m.text}</div>
             {m.model ? <div style={{ fontSize: 10, opacity: 0.5, marginTop: 4 }}>{m.model}</div> : null}
             {m.applied?.length ? (
               <ul style={list}>

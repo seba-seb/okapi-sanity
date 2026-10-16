@@ -125,6 +125,7 @@ const a = buildRequest({ provider: "anthropic", model: "", apiKey: "k1" }, "hi")
 assert.equal(a.url, "https://api.anthropic.com/v1/messages");
 assert.equal((a.init.headers as Record<string, string>)["x-api-key"], "k1");
 assert.equal(JSON.parse(a.init.body as string).model, "claude-sonnet-5-5"); // default model
+assert.equal(JSON.parse(a.init.body as string).temperature, undefined); // rejected by current Claude models
 const o = buildRequest({ provider: "openai", model: "m", apiKey: "k2" }, "hi");
 assert.equal((o.init.headers as Record<string, string>).authorization, "Bearer k2");
 assert.equal(JSON.parse(o.init.body as string).response_format.type, "json_object");
