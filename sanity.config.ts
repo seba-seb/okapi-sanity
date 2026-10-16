@@ -79,7 +79,7 @@ function studioLayout(props: LayoutProps) {
 
 export default defineConfig({
   name: "default",
-  title: "Remarkable",
+  title: "Okapi",
   // The Studio is served at /studio (astro.config studioBasePath) with HASH
   // routing, so the workspace lives at the root of the hash: #/editor,
   // #/structure. With "/studio" here the hash had to be #/studio/…, and
@@ -116,7 +116,7 @@ export default defineConfig({
       layout: studioLayout,
     },
   },
-  // Remarkable Editor first, so it's the Studio's landing tool.
+  // Okapi Editor first, so it's the Studio's landing tool.
   tools: (prev) => [{ name: "editor", title: "Editor", icon: EditIcon, component: EditorTool }, ...prev],
   plugins: [
     structureTool({ structure }),

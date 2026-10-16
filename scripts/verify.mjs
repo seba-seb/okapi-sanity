@@ -26,7 +26,7 @@ console.log("\n1. Unit checks");
 const sanityVersion = JSON.parse(readFileSync("node_modules/sanity/package.json", "utf8")).version;
 check(existsSync(`patches/sanity+${sanityVersion}.patch`), `installed sanity@${sanityVersion} has its patch (patches/README.md)`);
 execSync("node --experimental-strip-types --no-warnings src/core/lib/routes.check.ts", { stdio: "inherit" });
-// Every block field gets a control in the Remarkable Editor panel.
+// Every block field gets a control in the Okapi Editor panel.
 execSync("npx sanity exec scripts/check-editor-schema.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // Structural edits (insert/move/remove/duplicate) keep the document valid.
 execSync("npx sanity exec src/core/editor/ops.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
@@ -34,7 +34,7 @@ execSync("npx sanity exec src/core/editor/ops.check.ts", { stdio: ["ignore", "in
 execSync("npx sanity exec src/core/style/stylesheet.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // Component instance overrides apply to the right block and never touch the master.
 execSync("npx sanity exec src/core/render/overrides.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
-// AI chat: role permissions (remarkable.policy.ts) gate every change the model proposes.
+// AI chat: role permissions (okapi.policy.ts) gate every change the model proposes.
 execSync("npx sanity exec src/core/editor/chat.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 
 console.log("\n2. Build");
@@ -79,12 +79,12 @@ function jsGraph(html) {
   for (const m of html.matchAll(/\/_astro\/[^"]+?\.js/g)) visit(m[0], true);
   return [...seen];
 }
-// The page we measure: the home if Remarkable renders it, else the first page
-// it renders (in a project where Remarkable serves only some routes).
-const isRemarkable = (f) => /data-sanity-path=/.test(readFileSync(f, "utf8"));
+// The page we measure: the home if Okapi renders it, else the first page
+// it renders (in a project where Okapi serves only some routes).
+const isOkapi = (f) => /data-sanity-path=/.test(readFileSync(f, "utf8"));
 const index = join(outDir, "index.html");
-const pageFile = isRemarkable(index) ? index : sitePages.find(isRemarkable);
-check(!!pageFile, `Remarkable rendered a page (${pageFile ? pageFile.slice(outDir.length) : "none — env, dataset or routes?"})`);
+const pageFile = isOkapi(index) ? index : sitePages.find(isOkapi);
+check(!!pageFile, `Okapi rendered a page (${pageFile ? pageFile.slice(outDir.length) : "none — env, dataset or routes?"})`);
 if (pageFile) {
   const html = readFileSync(pageFile, "utf8");
   const graph = jsGraph(html);

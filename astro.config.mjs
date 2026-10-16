@@ -39,19 +39,19 @@ function resolveSite() {
  * to Vercel, Netlify or Cloudflare Pages with no edits. Pages stay static; the
  * adapter only exists to run the editor chat's server function
  * (/api/editor-chat), which holds the project's AI key. Any other host: plain
- * static output, chat disabled. REMARKABLE_ADAPTER=vercel|netlify|cloudflare|none overrides.
+ * static output, chat disabled. OKAPI_ADAPTER=vercel|netlify|cloudflare|none overrides.
  */
 async function resolveAdapter() {
   const pick = (k) => (env[k] ?? process.env[k] ?? "").trim();
   const host =
-    pick("REMARKABLE_ADAPTER") ||
+    pick("OKAPI_ADAPTER") ||
     (pick("VERCEL") ? "vercel" : pick("NETLIFY") ? "netlify" : pick("CF_PAGES") ? "cloudflare" : "none");
   if (host === "vercel") return (await import("@astrojs/vercel")).default();
   if (host === "netlify") return (await import("@astrojs/netlify")).default();
   if (host === "cloudflare") {
     // Not installed by default (it pulls wrangler): `npm i @astrojs/cloudflare wrangler`.
     const mod = await import("@astrojs/cloudflare").catch(() => {
-      throw new Error("Deploying to Cloudflare Pages: run `npm i @astrojs/cloudflare wrangler` once, or set REMARKABLE_ADAPTER=none.");
+      throw new Error("Deploying to Cloudflare Pages: run `npm i @astrojs/cloudflare wrangler` once, or set OKAPI_ADAPTER=none.");
     });
     return mod.default();
   }
@@ -61,7 +61,7 @@ const adapter = await resolveAdapter();
 
 /** Adds the editor chat's server route when it can run: in dev, or with a host adapter. */
 const editorChat = {
-  name: "remarkable-editor-chat",
+  name: "okapi-editor-chat",
   hooks: {
     "astro:config:setup": ({ command, injectRoute }) => {
       if (command === "dev" || adapter)

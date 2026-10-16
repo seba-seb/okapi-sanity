@@ -1,6 +1,6 @@
-# Remarkable — agent rules
+# Okapi — agent rules
 
-**Remarkable = Sanity as the database + the Remarkable Editor**, our own visual
+**Okapi = Sanity as the database + the Okapi Editor**, our own visual
 editor (a Studio tool at `/studio#/editor`), added to an Astro project. Edit
 text on the page, drag layers, add/duplicate/delete blocks, style with tokens,
 reusable components, drop images, undo. Sanity provides auth, roles, drafts,
@@ -8,13 +8,13 @@ history, images and CDN. Pages it renders are **static HTML**; only sections
 with motion hydrate.
 
 This file is for any coding agent (Claude Code reads it through `CLAUDE.md`).
-Installing Remarkable into a project: **`INSTALL.md`**. Team docs: `docs/index.html`.
+Installing Okapi into a project: **`INSTALL.md`**. Team docs: `docs/index.html`.
 
 ## Layout
 
 ```
 src/core/       The product. Same in every project — don't fork it per project.
-  editor/       Remarkable Editor: EditorTool (Studio tool), CanvasApp (iframe),
+  editor/       Okapi Editor: EditorTool (Studio tool), CanvasApp (iframe),
                 FieldControls (schema-driven panel), ops (structural edits),
                 paths (GROQ path helpers), protocol (editor ↔ canvas), text
   sanity/       client + loadQuery, dataAttr (editable()), queries, site loader
@@ -37,7 +37,7 @@ src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
                 /lab/[slug] = dev-only stress harness (not built in production).
 src/lab/        LabHarness: replays editor mutations + checks (see "Testing motion").
 patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
-skills/         remarkable-astro: the Claude Code skill that starts a new project
+skills/         okapi-astro: the Claude Code skill that starts a new project
 docs/           index.html — the team documentation (keep it in sync with this file)
 ```
 
@@ -78,14 +78,14 @@ docs/           index.html — the team documentation (keep it in sync with this
   re-making `patches/` — see its README. `npm install` fails if the patch
   doesn't apply, and verify fails if the installed version has no patch.
 
-## Remarkable Editor
+## Okapi Editor
 
 Studio tool at `/studio#/editor` (the Studio's landing tool):
 **pages + layers | canvas | properties**. `src/core/editor/`:
 - `EditorTool.tsx` — reads the page with `useEditState` (local edits applied
   at once) and writes with `useDocumentOperation(...).patch` / `.publish` (the
   Studio's own document store, no extra SDK). What each person may do comes
-  from `src/remarkable.policy.ts` (below); admins can "View as" any role.
+  from `src/okapi.policy.ts` (below); admins can "View as" any role.
 - `CanvasApp.tsx` + `src/pages/edit-canvas.astro` — the canvas iframe: the real
   PageBuilder rendering whatever the editor posts (`protocol.ts`, same-origin
   postMessage). It fetches nothing, so the route exposes no drafts. Own
@@ -117,7 +117,7 @@ keeps it still while you edit); a block you edit afterwards goes still again.
 
 ### Permissions and the AI chat
 
-- **`src/remarkable.policy.ts` (per project, the agency decides):** Sanity role →
+- **`src/okapi.policy.ts` (per project, the agency decides):** Sanity role →
   permissions (`text images style settings reorder structure components
   publish chat`) + optional `blocks` a role may add. It gates the panel
   fields (`FieldControls.fieldKind`), the actions, canvas edits, publish and
@@ -142,7 +142,7 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   (Vercel / Netlify built in; Cloudflare Pages needs `npm i @astrojs/cloudflare
   wrangler`) and only then injects `/api/editor-chat`; pages stay prerendered.
   Any other host = plain static output and the chat shows "not available".
-  `REMARKABLE_ADAPTER` overrides. In `npm run dev` the route always exists.
+  `OKAPI_ADAPTER` overrides. In `npm run dev` the route always exists.
 - **Images in the chat** (📎, paste or drop; up to 3 per message): the browser
   uploads the original to Sanity with the person's session (only if their grant
   has `images`) and sends a ≤1024px JPEG copy so the model can see it. The model
@@ -226,7 +226,7 @@ Automated checks cover the canvas side only; these need a real login, in
 4. Make component from a section → edit text on an instance → only that
    instance changes; Reset override; Edit component → all instances change.
 5. Publish → `npm run build` → the change is on the static page.
-6. Log in as a client-role user (or "View as") → only what `remarkable.policy.ts`
+6. Log in as a client-role user (or "View as") → only what `okapi.policy.ts`
    allows is visible; the chat refuses the rest.
 7. ✦ Chat: "make the selected heading shorter" → applied, Undo reverts it.
 
@@ -245,10 +245,10 @@ Automated checks cover the canvas side only; these need a real login, in
 Remove a block: delete its folder, its `meta.ts` entry and the two map entries,
 and any `accepts` that names it (the compiler points at them).
 
-## New project / adding Remarkable to an existing Astro project
+## New project / adding Okapi to an existing Astro project
 
 Follow `INSTALL.md` (any agent). Claude Code users can install the
-`remarkable-astro` skill (`skills/`), which runs the same guide.
+`okapi-astro` skill (`skills/`), which runs the same guide.
 
 ## Commands
 

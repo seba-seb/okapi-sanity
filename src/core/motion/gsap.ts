@@ -23,7 +23,7 @@ export { gsap, SplitText, ScrollTrigger, useGSAP };
  * /edit-canvas.
  */
 /** Set briefly by the editor canvas's "Play" button: decorative motion runs on that mount. */
-const replaying = () => !!(globalThis as { __remarkableReplay?: boolean }).__remarkableReplay;
+const replaying = () => !!(globalThis as { __okapiReplay?: boolean }).__okapiReplay;
 export const inPreview = () =>
   !replaying() &&
   typeof location !== "undefined" &&

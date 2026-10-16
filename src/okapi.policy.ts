@@ -1,7 +1,7 @@
 import type { Policy } from "@/core/editor/policy";
 
 /**
- * WHO CAN DO WHAT in the Remarkable Editor — decided by the agency, per project.
+ * WHO CAN DO WHAT in the Okapi Editor — decided by the agency, per project.
  *
  * Keys are Sanity role names (sanity.io/manage → Members); `default` covers any
  * other role. The AI chat acts with the grant of the person using it, so it can

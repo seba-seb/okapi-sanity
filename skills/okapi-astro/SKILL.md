@@ -1,28 +1,28 @@
 ---
-name: remarkable-astro
+name: okapi-astro
 description: >
-  Suma Remarkable (Sanity como base de datos + el Remarkable Editor, nuestro
+  Suma Okapi (Sanity como base de datos + el Okapi Editor, nuestro
   editor visual) a un proyecto Astro, nuevo o ya empezado, siguiendo el
-  INSTALL.md del repo. Usar cuando se pida "sumá Remarkable", "instalá el
-  editor", "proyecto nuevo con Remarkable", "hacé editable este sitio con
-  Remarkable", o al trabajar en un proyecto que ya tiene `src/core/editor/`
+  INSTALL.md del repo. Usar cuando se pida "sumá Okapi", "instalá el
+  editor", "proyecto nuevo con Okapi", "hacé editable este sitio con
+  Okapi", o al trabajar en un proyecto que ya tiene `src/core/editor/`
   (sus reglas están en AGENTS.md). NO usar para integrar Sanity sin el editor
   (eso es astro-sanity-setup).
 ---
 
-# Remarkable
+# Okapi
 
 La fuente de verdad es el `INSTALL.md` del repo. Esta skill solo lo trae y lo
 sigue, así Claude Code y cualquier otro agente hacen lo mismo.
 
-1. Traé Remarkable a una carpeta temporal:
+1. Traé Okapi a una carpeta temporal:
    ```bash
-   gh repo clone seba-seb/Remarkable-Astro /tmp/remarkable -- --depth 1
+   gh repo clone seba-seb/Remarkable-Astro /tmp/okapi -- --depth 1
    ```
    - El branch por defecto es `main`. Si el usuario indica otro branch o tag,
      agregá `--branch <ref>`.
-   - Si `/tmp/remarkable` ya existe, borralo antes: puede ser una versión vieja.
-2. Leé `/tmp/remarkable/INSTALL.md` completo y seguilo en orden:
+   - Si `/tmp/okapi` ya existe, borralo antes: puede ser una versión vieja.
+2. Leé `/tmp/okapi/INSTALL.md` completo y seguilo en orden:
    - **Camino A** si la carpeta actual no tiene `astro.config.*`.
    - **Camino B** si es un proyecto Astro existente.
    - En los dos casos, después van los **pasos comunes**.

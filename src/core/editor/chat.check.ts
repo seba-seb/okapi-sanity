@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { applyOps, buildInstruction, describePage, parseAnswer, type Catalog } from "./chat.ts";
 import { grantFor, mayAdd, type Policy } from "./policy.ts";
-import { POLICY } from "../../remarkable.policy.ts";
+import { POLICY } from "../../okapi.policy.ts";
 import { availableModels, buildRequest, readResponse } from "./server/models.ts";
 
 const policy: Policy = {

@@ -155,7 +155,7 @@ export function CanvasApp() {
           setComponents(msg.components);
         }
       } else if (msg.type === "replay") {
-        (globalThis as { __remarkableReplay?: boolean }).__remarkableReplay = true;
+        (globalThis as { __okapiReplay?: boolean }).__okapiReplay = true;
         setReplayKey((k) => k + 1);
       } else if (msg.type === "select") {
         setSelected(msg.path);
@@ -387,7 +387,7 @@ export function CanvasApp() {
   // Animations are created on mount (layout effects); by the time this effect
   // runs they exist, so later remounts (edits) go back to the still canvas.
   useEffect(() => {
-    if (replayKey) (globalThis as { __remarkableReplay?: boolean }).__remarkableReplay = false;
+    if (replayKey) (globalThis as { __okapiReplay?: boolean }).__okapiReplay = false;
   }, [replayKey]);
 
   // Re-render the page only when the document changes, not on overlay moves.

@@ -1,9 +1,9 @@
 /**
- * The AI chat of the Remarkable Editor, as pure functions:
+ * The AI chat of the Okapi Editor, as pure functions:
  *   page + grant → instruction for the model → JSON ops → validated, applied doc.
  *
  * The model never writes to Sanity. It proposes ops; `applyOps` checks each one
- * against the person's grant (src/remarkable.policy.ts), the block registry and
+ * against the person's grant (src/okapi.policy.ts), the block registry and
  * the schema (field types, allowed values), and the editor applies the result
  * as ONE undo step, saved as a draft like any manual edit.
  */
@@ -131,7 +131,7 @@ export function buildInstruction(input: {
         .join(", ")}. Breakpoint: base (all screens, default) | tablet | mobile.`
     : "STYLE: not allowed for this person.";
   return [
-    "You are the editing assistant inside the Remarkable Editor, a visual editor for a website built from blocks.",
+    "You are the editing assistant inside the Okapi Editor, a visual editor for a website built from blocks.",
     "You change the page ONLY by returning operations; the editor validates and applies them, and the person can undo them. Publishing is always done by a person, never by you.",
     "Reply in the same language the person writes in. Keep the reply short and concrete.",
     "",

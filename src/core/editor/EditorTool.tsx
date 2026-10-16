@@ -15,17 +15,17 @@ import { buildCatalog, FieldList, PagesContext, UploadContext } from "./FieldCon
 import { EditorChat } from "./EditorChat";
 import { applyOps, type AttachedImages } from "./chat";
 import { grantFor, may, mayAdd, mayReorder } from "./policy";
-import { POLICY } from "@/remarkable.policy";
+import { POLICY } from "@/okapi.policy";
 import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
 import { plainToPt } from "./text";
 
 type Row = { _id: string; title?: string; slug?: string };
 const DEVICES = { Desktop: "100%", Tablet: "768px", Mobile: "390px" } as const;
-const CLIPBOARD = "remarkable:editor-clipboard";
+const CLIPBOARD = "okapi:editor-clipboard";
 const COALESCE_MS = 1200;
 
 /**
- * Remarkable Editor (Studio tool, /studio#/editor).
+ * Okapi Editor (Studio tool, /studio#/editor).
  * Pages + layers | canvas (iframe of /edit-canvas, the real PageBuilder) |
  * properties (generated from the schema). Reads with useEditState (local edits
  * applied at once), writes through the Studio document store
@@ -133,7 +133,7 @@ function PageEditor({
   const ops = useDocumentOperation(id, docType);
   const schema = useSchema();
   const user = useCurrentUser();
-  // What this person may do (src/remarkable.policy.ts). Admins can preview any role.
+  // What this person may do (src/okapi.policy.ts). Admins can preview any role.
   const roles = useMemo(() => user?.roles?.map((r) => r.name) ?? [], [user]);
   const isAdmin = roles.includes("administrator");
   const [viewAs, setViewAs] = useState<string | null>(null);
@@ -543,7 +543,7 @@ function PageEditor({
               value={viewAs ?? ""}
               onChange={(e) => setViewAs(e.target.value || null)}
               style={{ ...select_, width: "auto", maxWidth: "100%", padding: "3px 6px", fontSize: 12 }}
-              title="Preview the editor (and the chat) as another role — src/remarkable.policy.ts"
+              title="Preview the editor (and the chat) as another role — src/okapi.policy.ts"
             >
               <option value="">View as: me</option>
               {Object.entries(POLICY).map(([role, r]) => (
@@ -672,7 +672,7 @@ function PageEditor({
 }
 
 // ── Resizable side columns (widths remembered per browser)
-const COLS_KEY = "remarkable:editor-columns";
+const COLS_KEY = "okapi:editor-columns";
 const COLS = { left: { min: 180, max: 480, initial: 240 }, right: { min: 280, max: 720, initial: 340 } } as const;
 const clampCol = (side: keyof typeof COLS, w: number) => Math.round(Math.min(COLS[side].max, Math.max(COLS[side].min, w)));
 function readCols(): { left: number; right: number } {

@@ -118,7 +118,7 @@ const DEFAULTS = {
   stackCards: () => ({ items: [defaultCard(), defaultCard(), defaultCard()] }),
   marquee: () => ({ items: ["Strategy", "Design", "Motion", "Code"], separator: "✦", direction: "left", duration: 24 }),
   textScrub: () => ({ size: "xl", text: PARAGRAPH_TEXT }),
-  bigType: () => ({ text: "Remarkable", effect: "rise" }),
+  bigType: () => ({ text: "Okapi", effect: "rise" }),
   parallaxMedia: () => ({ height: 80, strength: 15, reveal: true }),
   box: () => ({
     layout: "stack",

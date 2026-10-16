@@ -27,7 +27,7 @@ export type ToEditor =
   /** Shortcut pressed while focus is in the canvas. */
   | { type: "key"; key: string; mod: boolean; shift: boolean; alt: boolean };
 
-const TAG = "remarkable-editor";
+const TAG = "okapi-editor";
 type Envelope<T> = { tag: typeof TAG; msg: T };
 
 export function post<T extends ToCanvas | ToEditor>(target: Window | null | undefined, msg: T) {

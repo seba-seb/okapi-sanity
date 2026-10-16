@@ -69,7 +69,7 @@ const page = {
   _type: "page",
   title: "Home",
   slug: { _type: "slug", current: "home" },
-  metaTitle: "Remarkable — Creative Agency",
+  metaTitle: "Okapi — Creative Agency",
   metaDescription: "A full-service creative studio building brands that move.",
   sections: [
     // 1) Hero — dark, full height, centered
@@ -90,7 +90,7 @@ const page = {
             maxWidth: 16,
           }),
           paragraph(
-            "Remarkable is a full-service creative agency crafting identities, websites, and campaigns for ambitious teams.",
+            "Okapi is a full-service creative agency crafting identities, websites, and campaigns for ambitious teams.",
             { size: "lg", maxWidth: 42 },
           ),
           buttonGroup([
@@ -162,7 +162,7 @@ mkdirSync(dirname(outPath), { recursive: true });
 const settings = {
   _id: "settings",
   _type: "settings",
-  siteName: "Remarkable",
+  siteName: "Okapi",
   description: "A creative agency, built block by block.",
 };
 writeFileSync(outPath, [page, settings].map((d) => JSON.stringify(d)).join("\n") + "\n");

@@ -6,7 +6,7 @@
  * the current chunks. Guarded so a genuinely broken module can't loop.
  */
 const STALE = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i;
-const KEY = "remarkable:stale-chunk-reload";
+const KEY = "okapi:stale-chunk-reload";
 
 function reloadOnce() {
   try {

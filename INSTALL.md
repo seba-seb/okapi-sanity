@@ -1,11 +1,11 @@
-# Instalar Remarkable en un proyecto Astro
+# Instalar Okapi en un proyecto Astro
 
 Guía para **cualquier agente de código** (Claude Code, Codex, Cursor u otro):
 seguila paso a paso, en orden. Al terminar, el proyecto tiene:
 
 - **Sanity como base de datos**: login, roles, borradores, historial,
   imágenes y CDN.
-- **El Remarkable Editor** en `/studio#/editor`: edición visual sobre la
+- **El Okapi Editor** en `/studio#/editor`: edición visual sobre la
   página real, con bloques, estilos por tokens y componentes.
 - **Páginas armadas en el editor**, servidas como HTML estático. Solo
   hidratan las secciones con motion.
@@ -22,7 +22,7 @@ que ya existe. Los dos terminan en los pasos comunes.
    - No te loguees con sus credenciales.
 2. **No modifiques `src/core/`.** Es el producto y es igual en todos los
    proyectos. Si algo de core no encaja, avisá al usuario: el arreglo va al
-   repo de Remarkable.
+   repo de Okapi.
 3. **`sanity` va fijo en `6.3.0`**, con `overrides` y `patch-package`. No lo
    actualices.
 4. **No pises archivos del proyecto.** Si una ruta que tenés que copiar ya
@@ -49,7 +49,7 @@ Necesitás:
 
 ## Camino A — proyecto nuevo
 
-El repo de Remarkable ya es un proyecto Astro completo. Incluye bloques de
+El repo de Okapi ya es un proyecto Astro completo. Incluye bloques de
 ejemplo, tema y header/footer que después se reemplazan.
 
 ```bash
@@ -68,28 +68,28 @@ Seguí con los **pasos comunes**.
   que el usuario tiene que aprobar.
 - **Árbol de git limpio.** Así el usuario ve el diff completo de la
   instalación.
-- **Alias `@/*` → `./src/*` en `tsconfig.json`.** Todo Remarkable importa con
+- **Alias `@/*` → `./src/*` en `tsconfig.json`.** Todo Okapi importa con
   `@/`.
   - Si no existe, agregalo.
   - Si existe y apunta a otro lado, frená y preguntá.
-- **Tailwind.** Las páginas de Remarkable traen su propio CSS: Tailwind 4 sin
+- **Tailwind.** Las páginas de Okapi traen su propio CSS: Tailwind 4 sin
   preflight, solo en sus layouts.
   - Si el proyecto usa Tailwind 3, avisá. Conviven, pero hay que revisar que
     la build no mezcle configuraciones.
 
-### B2. Traer Remarkable
+### B2. Traer Okapi
 
 ```bash
-rm -rf /tmp/remarkable   # una copia vieja daría una versión vieja
-gh repo clone seba-seb/Remarkable-Astro /tmp/remarkable -- --depth 1   # --branch <ref> si el usuario pide otra versión
+rm -rf /tmp/okapi   # una copia vieja daría una versión vieja
+gh repo clone seba-seb/Remarkable-Astro /tmp/okapi -- --depth 1   # --branch <ref> si el usuario pide otra versión
 ```
 
-Copiá desde `/tmp/remarkable` **sin pisar nada que ya exista**. Revisá primero
+Copiá desde `/tmp/okapi` **sin pisar nada que ya exista**. Revisá primero
 que ninguna de estas rutas exista en el proyecto. Si alguna existe, resolvela
 según la tabla o preguntá.
 
 ```bash
-R=/tmp/remarkable
+R=/tmp/okapi
 mkdir -p src/layouts src/pages scripts sanity public
 cp -Rn $R/src/core $R/src/blocks $R/src/documents $R/src/theme $R/src/chrome src/
 cp -n  $R/src/schema.ts src/
@@ -108,7 +108,7 @@ cp -n  $R/public/placeholder.svg public/
 | `src/blocks/` | Registro de bloques y bloques base. Después se borran o se agregan bloques | Sí |
 | `src/documents/`, `src/schema.ts` | Documentos de Sanity: page, component, settings, navigation | Sí |
 | `src/theme/` | `tokens.css` (los nombres que usa el editor) + CSS de los bloques | Sí |
-| `src/layouts/Base.astro` | Layout de las páginas de Remarkable: SEO, header y footer, `<Islands />` | Sí (ver B4) |
+| `src/layouts/Base.astro` | Layout de las páginas de Okapi: SEO, header y footer, `<Islands />` | Sí (ver B4) |
 | `src/chrome/` | Header y footer que leen Navigation | Sí, salvo que reemplaces `SiteHeader`/`SiteFooter` en el layout (B4) |
 | `src/pages/edit-canvas.astro` | El canvas del editor | Sí |
 | `src/pages/[slug].astro` | Páginas del editor por slug | Sí |
@@ -123,7 +123,7 @@ cp -n  $R/public/placeholder.svg public/
 | `INSTALL.md`, `docs/` | Esta guía y la documentación | Opcional |
 
 No copies `src/lab/` ni `src/pages/lab/`. Son el banco de pruebas de motion
-del repo de Remarkable.
+del repo de Okapi.
 
 ### B3. Configuración
 
@@ -148,7 +148,7 @@ del repo de Remarkable.
 
 `vite` va explícito porque `astro.config` importa `loadEnv` de `vite`.
 
-**`astro.config.*`**: integrá lo que trae `/tmp/remarkable/astro.config.mjs`.
+**`astro.config.*`**: integrá lo que trae `/tmp/okapi/astro.config.mjs`.
 Copiá los bloques tal cual: cada línea tiene su razón documentada en ese archivo.
 - La lectura de `.env` con `loadEnv`.
 - La integración `sanity({ …, useCdn: false, studioBasePath: "/studio", studioRouterHistory: "hash" })`.
@@ -159,7 +159,7 @@ Copiá los bloques tal cual: cada línea tiene su razón documentada en ese arch
   queda en blanco en dev.
 - `site`: si el proyecto ya define uno, dejá el suyo. Si no, copiá
   `resolveSite()`.
-- `output`: dejá la del proyecto. Las páginas de Remarkable son estáticas
+- `output`: dejá la del proyecto. Las páginas de Okapi son estáticas
   igual.
 
 **`tsconfig.json`**: `"jsx": "react-jsx"`, `"jsxImportSource": "react"` y el
@@ -182,8 +182,8 @@ alias `@/*` (B1).
 **Barra final**
 - Si el proyecto usa `trailingSlash: "always"` o `build.format: "directory"`
   con links con barra, avisá al usuario.
-- Los canonicals y links de Remarkable salen sin barra final. Ajustarlo es
-  un cambio en core: va al repo de Remarkable, no al proyecto.
+- Los canonicals y links de Okapi salen sin barra final. Ajustarlo es
+  un cambio en core: va al repo de Okapi, no al proyecto.
 
 ### B4. Rutas y layout
 
@@ -193,7 +193,7 @@ alias `@/*` (B1).
   - Si un slug coincide con una ruta del proyecto, Astro sirve la del
     proyecto. No hay otro filtro.
   - Si la home queda la del proyecto, la página `home` de Sanity no se sirve
-    en ningún lado. Los links de Remarkable a "home" (logo, menú) van a `/`,
+    en ningún lado. Los links de Okapi a "home" (logo, menú) van a `/`,
     la home del proyecto.
 - **Rutas que chocan:**
   - Si el proyecto ya tiene una ruta con el mismo slug que una página de
@@ -204,7 +204,7 @@ alias `@/*` (B1).
     se permite, y avisalo.
 - **Layout:** las páginas del editor usan `Base.astro`.
   - Si el proyecto ya tiene `src/layouts/Base.astro`, copiá el nuestro como
-    `RemarkableBase.astro` y actualizá los imports en las páginas copiadas.
+    `OkapiBase.astro` y actualizá los imports en las páginas copiadas.
   - Para usar el header y footer del proyecto, reemplazá `SiteHeader` y
     `SiteFooter` en ese layout por los del proyecto.
   - Cualquier layout que renderice `<PageBuilder islands … />` tiene que
@@ -215,12 +215,12 @@ alias `@/*` (B1).
 ### B5. Reglas para agentes
 
 - **Si el proyecto no tiene `AGENTS.md`:** copiá el nuestro.
-- **Si ya tiene uno:** agregá al final una sección `## Remarkable` con el
+- **Si ya tiene uno:** agregá al final una sección `## Okapi` con el
   contenido del nuestro. No reemplaces el suyo.
   - Sacale el título `#` al nuestro y bajá cada encabezado un nivel
     (`##` → `###`).
   - Nuestro texto menciona `INSTALL.md` y `docs/index.html`. Copialos o
-    reemplazá esas menciones por el link al repo de Remarkable.
+    reemplazá esas menciones por el link al repo de Okapi.
 - **`CLAUDE.md`:**
   - Si existe y no contiene `@AGENTS.md`, agregale esa línea.
   - Si es un symlink a `AGENTS.md`, no lo toques.
@@ -248,7 +248,7 @@ Con el MCP de Sanity, o pidiéndole al usuario que lo haga en sanity.io/manage:
 3. **CORS:** origen `http://localhost:4321` **con credenciales**. Sin esto,
    `/studio` muestra "Connect this studio to your project". Cada puerto o
    dominio es un origen distinto.
-4. **`.env`:** armalo desde `/tmp/remarkable/.env.example`.
+4. **`.env`:** armalo desde `/tmp/okapi/.env.example`.
    - `PUBLIC_SANITY_PROJECT_ID`, `PUBLIC_SANITY_DATASET=production` y
      `PUBLIC_SANITY_API_VERSION`.
    - `PUBLIC_SITE_URL` solo si hay dominio. Vacía no sirve: borrala.
@@ -277,7 +277,7 @@ opcional: también se puede crear la primera página desde el editor.
 - [ ] La página se ve en el sitio: en `/<slug>`, o en `/` si la home sale del
       editor.
 - [ ] `npm run verify` en verde.
-  - En un proyecto existente, el chequeo que importa es "Remarkable rendered
+  - En un proyecto existente, el chequeo que importa es "Okapi rendered
     a page".
   - El de la pantalla de bienvenida pasa siempre si la home es del proyecto.
 
@@ -291,7 +291,7 @@ opcional: también se puede crear la primera página desde el editor.
 
 ### 6. Producción
 
-- **Build:** `npm run build`. Las páginas de Remarkable son estáticas.
+- **Build:** `npm run build`. Las páginas de Okapi son estáticas.
 - **Variables en el host:** las de `.env`, sin secretos salvo
   `SANITY_API_READ_TOKEN` si el dataset es privado.
 - **Chat del editor:** en el hosting, la clave del cliente por proveedor

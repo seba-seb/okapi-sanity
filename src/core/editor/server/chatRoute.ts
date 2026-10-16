@@ -4,7 +4,7 @@
  *
  * The browser sends the request with the person's Sanity session token. This
  * route: checks the token with Sanity (who, which roles) → grant from
- * src/remarkable.policy.ts → reads the page from Sanity (not from the browser)
+ * src/okapi.policy.ts → reads the page from Sanity (not from the browser)
  * → asks the project's model with the key from the host's environment → returns
  * the proposed ops. The editor validates them again and saves them as a draft
  * with the person's own session. The AI key never reaches the browser.
@@ -21,7 +21,7 @@ import { createClient } from "@sanity/client";
 import { buildInstruction, parseAnswer, type Catalog, type ChatTurn } from "@/core/editor/chat";
 import { grantFor, may } from "@/core/editor/policy";
 import { dataset, projectId } from "@/core/sanity/env";
-import { POLICY } from "@/remarkable.policy";
+import { POLICY } from "@/okapi.policy";
 import { askModel, availableModels, type VisionImage } from "./models";
 
 export const prerender = false;

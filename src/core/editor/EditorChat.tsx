@@ -20,7 +20,7 @@ async function visionCopy(file: File): Promise<string> {
   return c.toDataURL("image/jpeg", 0.8);
 }
 type Status = { available: boolean; models?: { id: string; label: string }[]; reason?: string };
-const MODEL_PREF = "remarkable:chat-model";
+const MODEL_PREF = "okapi:chat-model";
 const readPref = () => {
   try {
     return localStorage.getItem(MODEL_PREF);

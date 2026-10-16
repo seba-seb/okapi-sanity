@@ -1,5 +1,5 @@
 /**
- * Structural edits for the Remarkable Editor, as pure functions:
+ * Structural edits for the Okapi Editor, as pure functions:
  * (document, path…) → new document. Immutable, so the editor can keep undo
  * snapshots and the canvas re-renders from plain props. Paths are the same
  * GROQ-style strings blocks stamp as `data-sanity-path`.

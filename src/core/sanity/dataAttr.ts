@@ -27,7 +27,7 @@ export function blockTitle(type?: string): string {
  */
 /**
  * The attributes that make a rendered element a selectable target on the
- * Remarkable Editor canvas: its GROQ path (what the editor writes to), its
+ * Okapi Editor canvas: its GROQ path (what the editor writes to), its
  * block type, and the label the selection outline shows. The id/type
  * arguments are kept for call-site compatibility.
  */

@@ -1,6 +1,6 @@
 /**
- * What a person may do in the Remarkable Editor, by hand and through the chat.
- * The project decides per Sanity role in `src/remarkable.policy.ts`; the chat
+ * What a person may do in the Okapi Editor, by hand and through the chat.
+ * The project decides per Sanity role in `src/okapi.policy.ts`; the chat
  * gets exactly the grant of the person using it, never more.
  *
  * This shapes the editor UI and validates every chat change. The hard

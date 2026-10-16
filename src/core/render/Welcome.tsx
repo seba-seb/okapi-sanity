@@ -32,7 +32,7 @@ export function Welcome() {
       }}
     >
       <div style={{ maxWidth: 640, width: "100%" }}>
-        <p className="eyebrow eyebrow--sm c-brand">Remarkable</p>
+        <p className="eyebrow eyebrow--sm c-brand">Okapi</p>
         <h1
           className="heading heading--2xl heading--bold"
           style={{ marginTop: 12 }}

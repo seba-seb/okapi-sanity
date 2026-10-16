@@ -87,7 +87,7 @@ export function FieldList({
   value: Record<string, unknown>;
   basePath: string;
   onChange: Change;
-  /** Fields this person may edit (src/remarkable.policy.ts); null = everything inside an allowed field. */
+  /** Fields this person may edit (src/okapi.policy.ts); null = everything inside an allowed field. */
   grant: Grant | null;
 }) {
   const fields = (type.fields as Field[]).filter(

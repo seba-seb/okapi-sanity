@@ -4,7 +4,7 @@ import { ComponentIcon } from "@sanity/icons";
 /**
  * A reusable chunk of page (one or more sections), placed on pages through
  * `componentRef` instances. Editing it here changes every instance — like a
- * Webflow component. Same `sections` shape as a page, so the Remarkable Editor
+ * Webflow component. Same `sections` shape as a page, so the Okapi Editor
  * edits it with all its tools. Instances can't nest (sections only here).
  */
 export const component = defineType({
