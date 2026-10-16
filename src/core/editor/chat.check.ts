@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { applyOps, buildInstruction, describePage, parseAnswer, type Catalog } from "./chat.ts";
 import { grantFor, mayAdd, type Policy } from "./policy.ts";
 import { POLICY } from "../../remarkable.policy.ts";
+import { buildRequest, readResponse } from "./models.ts";
 
 const policy: Policy = {
   administrator: { label: "Agency", can: ["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"] },
@@ -119,4 +120,16 @@ assert.ok(/JSON/.test(ins)); // Agent Actions prompt requires the word in json m
 assert.deepEqual(parseAnswer({ reply: "ok", ops: [{ op: "remove" }] }), { reply: "ok", ops: [{ op: "remove" }] });
 assert.deepEqual(parseAnswer('Sure! {"reply":"hi","ops":[]} thanks'), { reply: "hi", ops: [] });
 assert.deepEqual(parseAnswer("no json here"), { reply: "no json here", ops: [] });
+// Own model (BYOK): the key goes only to the chosen provider, in its own header
+const a = buildRequest({ provider: "anthropic", model: "", apiKey: "k1" }, "hi");
+assert.equal(a.url, "https://api.anthropic.com/v1/messages");
+assert.equal((a.init.headers as Record<string, string>)["x-api-key"], "k1");
+assert.equal(JSON.parse(a.init.body as string).model, "claude-sonnet-5-5"); // default model
+const o = buildRequest({ provider: "openai", model: "m", apiKey: "k2" }, "hi");
+assert.equal((o.init.headers as Record<string, string>).authorization, "Bearer k2");
+assert.equal(JSON.parse(o.init.body as string).response_format.type, "json_object");
+assert.ok(buildRequest({ provider: "openrouter", model: "x/y", apiKey: "k3" }, "hi").url.startsWith("https://openrouter.ai/"));
+assert.equal(readResponse("anthropic", { content: [{ type: "text", text: '{"reply":"a"}' }] }), '{"reply":"a"}');
+assert.equal(readResponse("openai", { choices: [{ message: { content: '{"reply":"b"}' } }] }), '{"reply":"b"}');
+assert.deepEqual(parseAnswer(readResponse("anthropic", { content: [{ type: "text", text: '```json\n{"reply":"c","ops":[]}\n```' }] })), { reply: "c", ops: [] });
 console.log("chat.check: ok");

@@ -124,9 +124,12 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   the chat. Pure logic in `core/editor/policy.ts`. This shapes the editor; the
   hard boundary is still the Sanity role (what the API lets them write).
 - **✦ Chat** (tab in the right column, `core/editor/EditorChat.tsx` +
-  `chat.ts`): the model runs through **Sanity Agent Actions `prompt`** with the
-  signed-in person's session — no server, no API key in the project, usage on
-  the Sanity project (org must have AI enabled; `vX` API). It sees the page
+  `chat.ts`): **bring your own model** (`core/editor/models.ts`) — each person
+  picks Anthropic, OpenAI or OpenRouter, a model and their own API key in the
+  chat's "Model" settings. The key is stored only in their browser
+  (localStorage) and sent only to that provider, straight from the browser —
+  never to Sanity, the repo or a server of ours. Or "Sanity Agent Actions" with
+  their session (no key; org must have AI enabled; `vX` API). It sees the page
   and only the fields/blocks the person's grant allows, and returns JSON ops
   (`set`, `style`, `insert`, `remove`, `duplicate`, `move`). `applyOps`
   validates every op against grant + registry + schema (choices, tokens,
