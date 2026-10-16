@@ -71,10 +71,18 @@ export function EditorTool() {
     [pages, components],
   );
   const docType = pageId && components[pageId] ? "component" : "page";
+  const [cols, setCols] = useState(readCols);
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLS_KEY, JSON.stringify(cols));
+    } catch {
+      /* private mode: widths reset on reload */
+    }
+  }, [cols]);
   return (
     <PagesContext.Provider value={refOptions}>
       <UploadContext.Provider value={upload}>
-        <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 320px", height: "100%", minHeight: 0, fontSize: 13 }}>
+        <div style={{ position: "relative", display: "grid", gridTemplateColumns: `${cols.left}px 1fr ${cols.right}px`, height: "100%", minHeight: 0, fontSize: 13 }}>
           {pageId ? (
             <PageEditor
               key={pageId}
@@ -90,6 +98,8 @@ export function EditorTool() {
           ) : (
             <div style={{ padding: 24, opacity: 0.6 }}>Loading pages…</div>
           )}
+          <Resizer side="left" width={cols.left} onChange={(left) => setCols((c) => ({ ...c, left }))} />
+          <Resizer side="right" width={cols.right} onChange={(right) => setCols((c) => ({ ...c, right }))} />
         </div>
       </UploadContext.Provider>
     </PagesContext.Provider>
@@ -482,13 +492,13 @@ function PageEditor({
             <div style={{ position: "absolute", top: 40, left: 220, zIndex: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8, borderRadius: 8, border, background: "var(--card-bg-color, #fff)", color: "inherit", boxShadow: "0 8px 30px #0003", width: 300 }}>
               {doc && mayAdd(grant, "componentRef") && insertTarget(doc, selected, "componentRef")
                 ? Object.entries(components).map(([cid, c]) => (
-                    <button key={cid} type="button" onClick={() => addInstance(cid)} style={{ ...chip, textAlign: "left" }}>
+                    <button key={cid} type="button" onClick={() => addInstance(cid)} style={{ ...chip, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis" }}>
                       ◆ {c.title || cid}
                     </button>
                   ))
                 : null}
               {addable.filter((t) => t !== "componentRef").map((t) => (
-                <button key={t} type="button" onClick={() => doAdd(t)} style={{ ...chip, textAlign: "left" }}>
+                <button key={t} type="button" onClick={() => doAdd(t)} style={{ ...chip, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {blockMeta(t)?.title ?? t}
                 </button>
               ))}
@@ -518,7 +528,7 @@ function PageEditor({
       </main>
 
       <aside style={{ ...column, borderLeft: border, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
           <button type="button" onClick={() => setTab("properties")} style={{ ...chip, ...(tab === "properties" ? chipOn : null) }}>
             Properties
           </button>
@@ -532,7 +542,7 @@ function PageEditor({
             <select
               value={viewAs ?? ""}
               onChange={(e) => setViewAs(e.target.value || null)}
-              style={{ ...select_, width: "auto", padding: "3px 6px", fontSize: 12 }}
+              style={{ ...select_, width: "auto", maxWidth: "100%", padding: "3px 6px", fontSize: 12 }}
               title="Preview the editor (and the chat) as another role — src/remarkable.policy.ts"
             >
               <option value="">View as: me</option>
@@ -661,6 +671,54 @@ function PageEditor({
   );
 }
 
+// ── Resizable side columns (widths remembered per browser)
+const COLS_KEY = "remarkable:editor-columns";
+const COLS = { left: { min: 180, max: 480, initial: 240 }, right: { min: 280, max: 720, initial: 340 } } as const;
+const clampCol = (side: keyof typeof COLS, w: number) => Math.round(Math.min(COLS[side].max, Math.max(COLS[side].min, w)));
+function readCols(): { left: number; right: number } {
+  try {
+    const v = JSON.parse(localStorage.getItem(COLS_KEY) ?? "{}") as { left?: number; right?: number };
+    return { left: clampCol("left", v.left ?? COLS.left.initial), right: clampCol("right", v.right ?? COLS.right.initial) };
+  } catch {
+    return { left: COLS.left.initial, right: COLS.right.initial };
+  }
+}
+
+/** Drag a column edge to resize it; double-click resets. Pointer capture keeps the drag going over the canvas iframe. */
+function Resizer({ side, width, onChange }: { side: keyof typeof COLS; width: number; onChange: (w: number) => void }) {
+  const [active, setActive] = useState(false);
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={side === "left" ? "Resize pages and layers" : "Resize properties and chat"}
+      title="Drag to resize · double-click to reset"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setActive(true);
+      }}
+      onPointerMove={(e) => {
+        if (!active) return;
+        const box = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+        onChange(clampCol(side, side === "left" ? e.clientX - box.left : box.right - e.clientX));
+      }}
+      onPointerUp={() => setActive(false)}
+      onDoubleClick={() => onChange(COLS[side].initial)}
+      style={{
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        [side]: width - 4,
+        width: 8,
+        cursor: "col-resize",
+        zIndex: 5,
+        touchAction: "none",
+        background: active ? "color-mix(in srgb, #2f5bff 45%, transparent)" : "transparent",
+      }}
+    />
+  );
+}
+
 /** Layers tree with drag & drop (before / after / inside), validated against the registry. */
 function Layers({
   nodes,
@@ -754,6 +812,6 @@ function Layers({
 const border = "1px solid color-mix(in srgb, currentColor 14%, transparent)";
 const column = { padding: 12, overflowY: "auto", minHeight: 0 } as const;
 const heading = { fontWeight: 600, margin: "4px 4px 8px" } as const;
-const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: 6 } as const;
+const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: 6, whiteSpace: "nowrap", flexShrink: 0 } as const;
 const chipOn = { background: "#2f5bff", borderColor: "#2f5bff", color: "#fff" } as const;
 const select_ = { width: "100%", padding: "6px 8px", font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: 6 } as const;

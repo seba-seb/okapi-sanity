@@ -210,7 +210,7 @@ export function EditorChat({
             <p style={{ margin: 0, opacity: 0.8 }}>Your role: {grant.label}. The chat can do what you can — nothing more.</p>
             <div style={{ display: "grid", gap: 4 }}>
               {SUGGESTIONS.map((s) => (
-                <button key={s} type="button" onClick={() => send(s)} style={{ ...chip, textAlign: "left" }}>
+                <button key={s} type="button" onClick={() => send(s)} style={{ ...chip, textAlign: "left", whiteSpace: "normal" }}>
                   {s}
                 </button>
               ))}
@@ -336,7 +336,7 @@ export function EditorChat({
 
 const ENDPOINT = "/api/editor-chat";
 const border = "1px solid color-mix(in srgb, currentColor 14%, transparent)";
-const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: 6 } as const;
+const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: 6, whiteSpace: "nowrap", flexShrink: 0 } as const;
 const chipOn = { background: "#2f5bff", borderColor: "#2f5bff", color: "#fff" } as const;
 const userBubble = { justifySelf: "end", maxWidth: "88%", padding: "7px 10px", borderRadius: 10, background: "#2f5bff", color: "#fff", fontSize: 13 } as const;
 const botBubble = { maxWidth: "95%", padding: "7px 10px", borderRadius: 10, border, fontSize: 13 } as const;
