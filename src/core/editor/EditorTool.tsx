@@ -547,11 +547,11 @@ function PageEditor({
         {tab === "chat" && may(grant, "chat") ? (
           <EditorChat
             client={client}
-            doc={doc}
+            documentId={id}
             catalog={catalog}
             grant={grant}
+            viewAs={viewAs}
             selection={selection}
-            pages={pages.map((p) => ({ id: p._id, slug: p.slug, title: p.title }))}
             onApply={applyChat}
             onUndo={undo}
           />

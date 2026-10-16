@@ -123,20 +123,27 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   fields (`FieldControls.fieldKind`), the actions, canvas edits, publish and
   the chat. Pure logic in `core/editor/policy.ts`. This shapes the editor; the
   hard boundary is still the Sanity role (what the API lets them write).
-- **✦ Chat** (tab in the right column, `core/editor/EditorChat.tsx` +
-  `chat.ts`): **bring your own model** (`core/editor/models.ts`) — each person
-  picks Anthropic, OpenAI or OpenRouter, a model and their own API key in the
-  chat's "Model" settings. The key is stored only in their browser
-  (localStorage) and sent only to that provider, straight from the browser —
-  never to Sanity, the repo or a server of ours. Or "Sanity Agent Actions" with
-  their session (no key; org must have AI enabled; `vX` API). It sees the page
-  and only the fields/blocks the person's grant allows, and returns JSON ops
-  (`set`, `style`, `insert`, `remove`, `duplicate`, `move`). `applyOps`
-  validates every op against grant + registry + schema (choices, tokens,
-  links) and the editor applies them as ONE undo step, saved as a draft.
-  Never publishes. Not yet: images, references, text inside component
-  instances, rich-text formatting (chat writes plain paragraphs).
-  `chat.check.ts` runs in verify.
+- **✦ Chat** (tab in the right column): the browser part
+  (`core/editor/EditorChat.tsx`) sends the request with the person's Sanity
+  session token to the site's own server route **`/api/editor-chat`**
+  (`core/editor/server/chatRoute.ts`). The route checks the token with Sanity
+  (`/users/me` → roles), computes the grant from the policy, reads the page from
+  Sanity with that session, asks the model with the **project's key from the
+  host's env** (`AI_PROVIDER` anthropic|openai|openrouter|sanity, `AI_API_KEY`,
+  `AI_MODEL`; `server/models.ts`) and returns JSON ops (`set`, `style`,
+  `insert`, `remove`, `duplicate`, `move`). The editor re-validates them
+  (`chat.ts applyOps`: grant + registry + schema) and applies them as ONE undo
+  step, saved as a draft with the person's own session. Never publishes. The
+  key never reaches the browser. The Studio uses `auth.loginMethod: "token"` so
+  the session token can be sent. Rate limit per user (in memory) — the real
+  ceiling is the spend limit on the provider account.
+- **Hosting:** `astro.config` picks the adapter from where the build runs
+  (Vercel / Netlify built in; Cloudflare Pages needs `npm i @astrojs/cloudflare
+  wrangler`) and only then injects `/api/editor-chat`; pages stay prerendered.
+  Any other host = plain static output and the chat shows "not available".
+  `REMARKABLE_ADAPTER` overrides. In `npm run dev` the route always exists.
+- Not yet: images, references, text inside component instances, rich-text
+  formatting (the chat writes plain paragraphs). `chat.check.ts` runs in verify.
 
 ### Compose & style (phase 2)
 - **Style panel** (`design` field on every block, added in `blocks/schemas.ts`):

@@ -88,6 +88,10 @@ export default defineConfig({
   basePath: "/",
   projectId,
   dataset,
+  // Token login (stored in this browser) instead of cookies: the editor chat
+  // sends the session token to the site's own /api/editor-chat, which checks it
+  // with Sanity. Cookies for api.sanity.io never reach the site's domain.
+  auth: { loginMethod: "token" },
   schema: {
     types: schemaTypes,
     // Singletons can't be created from the "+" menu…

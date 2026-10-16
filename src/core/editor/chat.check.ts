@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { applyOps, buildInstruction, describePage, parseAnswer, type Catalog } from "./chat.ts";
 import { grantFor, mayAdd, type Policy } from "./policy.ts";
 import { POLICY } from "../../remarkable.policy.ts";
-import { buildRequest, readResponse } from "./models.ts";
+import { buildRequest, readResponse } from "./server/models.ts";
 
 const policy: Policy = {
   administrator: { label: "Agency", can: ["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"] },
@@ -120,7 +120,7 @@ assert.ok(/JSON/.test(ins)); // Agent Actions prompt requires the word in json m
 assert.deepEqual(parseAnswer({ reply: "ok", ops: [{ op: "remove" }] }), { reply: "ok", ops: [{ op: "remove" }] });
 assert.deepEqual(parseAnswer('Sure! {"reply":"hi","ops":[]} thanks'), { reply: "hi", ops: [] });
 assert.deepEqual(parseAnswer("no json here"), { reply: "no json here", ops: [] });
-// Own model (BYOK): the key goes only to the chosen provider, in its own header
+// Server-side model call: the key goes only to the chosen provider, in its own header
 const a = buildRequest({ provider: "anthropic", model: "", apiKey: "k1" }, "hi");
 assert.equal(a.url, "https://api.anthropic.com/v1/messages");
 assert.equal((a.init.headers as Record<string, string>)["x-api-key"], "k1");

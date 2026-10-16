@@ -1,36 +1,17 @@
 /**
- * Bring your own model: the chat calls the person's own AI provider straight
- * from their browser, with their own key. The key is stored only in that
- * browser (localStorage) and sent only to the provider — never to Sanity,
- * the repo or any server of ours. "sanity" uses Sanity Agent Actions with the
- * person's session instead (no key, usage on the Sanity project).
+ * The AI providers the editor chat's server route can call (server only: the
+ * key comes from the host's environment and never reaches the browser).
+ * "sanity" = Sanity Agent Actions with the person's session (no key; usage in
+ * the Sanity project's AI credits).
  */
 export const PROVIDERS = {
-  anthropic: { label: "Anthropic (Claude)", model: "claude-sonnet-5-5", keyHint: "sk-ant-…" },
-  openai: { label: "OpenAI", model: "gpt-4.1-mini", keyHint: "sk-…" },
-  openrouter: { label: "OpenRouter (any model)", model: "anthropic/claude-sonnet-5.5", keyHint: "sk-or-…" },
-  sanity: { label: "Sanity Agent Actions (no key)", model: "", keyHint: "" },
+  anthropic: { label: "Anthropic (Claude)", model: "claude-sonnet-5-5" },
+  openai: { label: "OpenAI", model: "gpt-4.1-mini" },
+  openrouter: { label: "OpenRouter (any model)", model: "anthropic/claude-sonnet-5.5" },
+  sanity: { label: "Sanity Agent Actions (no key)", model: "" },
 } as const;
 export type Provider = keyof typeof PROVIDERS;
 export type ModelConfig = { provider: Provider; model: string; apiKey: string };
-
-const STORAGE = "remarkable:ai-model";
-export function loadModelConfig(): ModelConfig | null {
-  try {
-    const v = JSON.parse(localStorage.getItem(STORAGE) ?? "null") as ModelConfig | null;
-    return v && v.provider in PROVIDERS ? v : null;
-  } catch {
-    return null;
-  }
-}
-export function saveModelConfig(cfg: ModelConfig | null) {
-  try {
-    if (cfg) localStorage.setItem(STORAGE, JSON.stringify(cfg));
-    else localStorage.removeItem(STORAGE);
-  } catch {
-    /* private mode: the config lives for this session only */
-  }
-}
 
 /** The HTTP request for a provider (pure, so a check can assert its shape). */
 export function buildRequest(cfg: ModelConfig, instruction: string): { url: string; init: RequestInit } {
@@ -44,8 +25,6 @@ export function buildRequest(cfg: ModelConfig, instruction: string): { url: stri
           "content-type": "application/json",
           "x-api-key": cfg.apiKey,
           "anthropic-version": "2023-06-01",
-          // The key is the person's own, entered in their browser: direct calls are intended.
-          "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({ model, max_tokens: 4096, temperature: 0.2, messages: [{ role: "user", content: instruction }] }),
       },
@@ -68,8 +47,8 @@ export function readResponse(provider: Provider, body: unknown): string {
   return b.choices?.[0]?.message?.content ?? "";
 }
 
-/** Ask the person's own model. Throws with the provider's error message. */
-export async function askOwnModel(cfg: ModelConfig, instruction: string): Promise<string> {
+/** Ask the project's model. Throws with the provider's error message. */
+export async function askModel(cfg: ModelConfig, instruction: string): Promise<string> {
   const { url, init } = buildRequest(cfg, instruction);
   const res = await fetch(url, init);
   const body = await res.json().catch(() => ({}));

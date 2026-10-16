@@ -1,4 +1,4 @@
-import { defineConfig } from "astro/config";
+import { defineConfig, passthroughImageService } from "astro/config";
 import react from "@astrojs/react";
 import sanity from "@sanity/astro";
 import { loadEnv } from "vite";
@@ -34,12 +34,50 @@ function resolveSite() {
   }
 }
 
+/**
+ * The host adapter, picked from where the build runs — so the same repo deploys
+ * to Vercel, Netlify or Cloudflare Pages with no edits. Pages stay static; the
+ * adapter only exists to run the editor chat's server function
+ * (/api/editor-chat), which holds the project's AI key. Any other host: plain
+ * static output, chat disabled. REMARKABLE_ADAPTER=vercel|netlify|cloudflare|none overrides.
+ */
+async function resolveAdapter() {
+  const pick = (k) => (env[k] ?? process.env[k] ?? "").trim();
+  const host =
+    pick("REMARKABLE_ADAPTER") ||
+    (pick("VERCEL") ? "vercel" : pick("NETLIFY") ? "netlify" : pick("CF_PAGES") ? "cloudflare" : "none");
+  if (host === "vercel") return (await import("@astrojs/vercel")).default();
+  if (host === "netlify") return (await import("@astrojs/netlify")).default();
+  if (host === "cloudflare") {
+    // Not installed by default (it pulls wrangler): `npm i @astrojs/cloudflare wrangler`.
+    const mod = await import("@astrojs/cloudflare").catch(() => {
+      throw new Error("Deploying to Cloudflare Pages: run `npm i @astrojs/cloudflare wrangler` once, or set REMARKABLE_ADAPTER=none.");
+    });
+    return mod.default();
+  }
+  return undefined;
+}
+const adapter = await resolveAdapter();
+
+/** Adds the editor chat's server route when it can run: in dev, or with a host adapter. */
+const editorChat = {
+  name: "remarkable-editor-chat",
+  hooks: {
+    "astro:config:setup": ({ command, injectRoute }) => {
+      if (command === "dev" || adapter)
+        injectRoute({ pattern: "/api/editor-chat", entrypoint: "./src/core/editor/server/chatRoute.ts", prerender: false });
+    },
+  },
+};
+
 export default defineConfig({
   site: resolveSite(),
-  // Fully static: the editor writes to Sanity from the Studio; the site has
-  // no server routes. Any static host works (dist/).
+  // Static pages on any host. With a host adapter (see resolveAdapter) the one
+  // server route is the editor chat; everything else is still prerendered.
   output: "static",
+  adapter,
   integrations: [
+    editorChat,
     sanity({
       projectId: PUBLIC_SANITY_PROJECT_ID || "missing",
       dataset: PUBLIC_SANITY_DATASET || "production",
@@ -53,6 +91,9 @@ export default defineConfig({
     react(),
   ],
   image: {
+    // Images come from Sanity's CDN (urlForImage), not astro:assets: no image
+    // service, so `sharp` stays out of the chat's server function.
+    service: passthroughImageService(),
     remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }],
   },
   vite: {
