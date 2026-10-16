@@ -45,6 +45,10 @@ export type Op =
   | { op: "move"; path: string; direction: "up" | "down" };
 
 export type ChatTurn = { role: "user" | "assistant"; text: string };
+/** An image attached in the chat: uploaded to Sanity by the browser, referenced by id in ops. */
+export type Attachment = { id: string; name: string };
+/** Attachment id → the image field value it becomes ({ _type: "image", asset: { _ref } }). */
+export type AttachedImages = Record<string, unknown>;
 export type PageRef = { id: string; slug?: string; title?: string };
 
 const clip = (s: string, n = 160) => (s.length > n ? `${s.slice(0, n)}…` : s);
@@ -98,8 +102,8 @@ export function describeCatalog(doc: Doc, catalog: Catalog, grant: Grant): strin
   return types
     .map((t) => {
       const fields = Object.entries(catalog[t].fields)
-        .filter(([, f]) => may(grant, f.kind) && f.kind !== "style" && !["image", "reference", "object"].includes(f.control))
-        .map(([name, f]) => `${name} (${f.control === "choice" ? `one of ${f.options!.join("|")}` : f.control === "pt" ? "rich text" : f.control})`);
+        .filter(([, f]) => may(grant, f.kind) && f.kind !== "style" && !["reference", "object"].includes(f.control))
+        .map(([name, f]) => `${name} (${f.control === "choice" ? `one of ${f.options!.join("|")}` : f.control === "pt" ? "rich text" : f.control === "image" ? "image: an attached image" : f.control})`);
       const slot = blockMeta(t)?.slot;
       const holds = slot ? ` · holds ${slot.accepts?.join("|") ?? "any block"} in "${slot.field}"` : "";
       return `${t} — ${catalog[t].title}${holds}: ${fields.join(", ") || "(nothing you may edit)"}`;
@@ -116,8 +120,9 @@ export function buildInstruction(input: {
   pages: PageRef[];
   history: ChatTurn[];
   request: string;
+  images?: Attachment[];
 }): string {
-  const { doc, catalog, grant, selection, pages, history, request } = input;
+  const { doc, catalog, grant, selection, pages, history, request, images = [] } = input;
   const allowed = [...grant.can].filter((p) => p !== "chat" && p !== "publish").map((p) => `${p} (${PERMISSIONS[p]})`);
   const addable = Object.keys(catalog).filter((t) => mayAdd(grant, t));
   const style = may(grant, "style")
@@ -146,6 +151,13 @@ export function buildInstruction(input: {
     pages.length ? `PAGES (for internal links): ${pages.map((p) => `${p.id} (/${p.slug ?? ""})`).join(", ")}` : "",
     "",
     history.length ? `CONVERSATION SO FAR:\n${history.map((t) => `${t.role}: ${t.text}`).join("\n")}\n` : "",
+    images.length
+      ? `ATTACHED IMAGES (you can see them): ${images.map((i) => `${i.id} ("${i.name}")`).join(", ")}. ${
+          may(grant, "images")
+            ? `To put one in an image field: {"op":"set","path":"<block path>","field":"<image field>","value":{"image":"<id>"}} (also inside "fields" of an insert).`
+            : "This person can't change images: use them only as reference."
+        }`
+      : "",
     `REQUEST: ${request}`,
     "",
     'Respond in JSON with exactly this shape: {"reply": "<message to the person>", "ops": [<operations>]}',
@@ -172,7 +184,7 @@ const label = (doc: Doc, path: string) => {
 };
 
 /** Turn a model value into the stored value for this field, or throw why not. */
-function coerce(f: CatalogField, value: unknown, current: unknown): unknown {
+function coerce(f: CatalogField, value: unknown, current: unknown, images: AttachedImages): unknown {
   switch (f.control) {
     case "pt":
       if (typeof value !== "string") throw new Error("expects text");
@@ -203,24 +215,29 @@ function coerce(f: CatalogField, value: unknown, current: unknown): unknown {
       if (typeof v?.page === "string") return { ...base, kind: "internal", page: { _type: "reference", _ref: v.page }, url: undefined };
       throw new Error('expects {"url": "https://…"} or {"page": "<page id>"}');
     }
+    case "image": {
+      const id = (value as { image?: unknown })?.image;
+      if (typeof id !== "string" || !images[id]) throw new Error('expects {"image": "<attached image id>"}');
+      return { ...(current && typeof current === "object" ? current : {}), ...(images[id] as object) };
+    }
     default:
       throw new Error("can't be changed from the chat yet — use the panel");
   }
 }
 
-function setField(doc: Doc, path: string, field: string, value: unknown, catalog: Catalog, grant: Grant): Doc {
+function setField(doc: Doc, path: string, field: string, value: unknown, catalog: Catalog, grant: Grant, images: AttachedImages = {}): Doc {
   if (path.includes(".__component.")) throw new Error("text inside a component: double-click it on the canvas");
   const item = resolveSelection(doc, path)?.item as Record<string, unknown> | undefined;
   if (!item) throw new Error("block not found");
   const f = catalog[item._type as string]?.fields[field];
   if (!f || f.kind === "style") throw new Error(`no field "${field}"`);
   if (!may(grant, f.kind)) throw new Error(`your role can't change ${f.kind}`);
-  return setAt(doc, `${path}.${field}`, coerce(f, value, item[field]));
+  return setAt(doc, `${path}.${field}`, coerce(f, value, item[field], images));
 }
 
 /** Validate and apply ops in order. Each op either applies fully or is rejected with a reason. */
-export function applyOps(doc: Doc, ops: unknown, ctx: { catalog: Catalog; grant: Grant; pages?: PageRef[] }): ApplyResult {
-  const { catalog, grant } = ctx;
+export function applyOps(doc: Doc, ops: unknown, ctx: { catalog: Catalog; grant: Grant; pages?: PageRef[]; images?: AttachedImages }): ApplyResult {
+  const { catalog, grant, images = {} } = ctx;
   const applied: string[] = [];
   const rejected: string[] = [];
   const touched: string[] = [];
@@ -232,7 +249,7 @@ export function applyOps(doc: Doc, ops: unknown, ctx: { catalog: Catalog; grant:
         case "set": {
           if (raw.field && ctx.pages && typeof (raw.value as { page?: unknown })?.page === "string" && !ctx.pages.some((p) => p.id === (raw.value as { page: string }).page))
             throw new Error("unknown page");
-          d = setField(d, raw.path, raw.field, raw.value, catalog, grant);
+          d = setField(d, raw.path, raw.field, raw.value, catalog, grant, images);
           applied.push(`${label(d, raw.path)} · ${catalog[resolveSelection(d, raw.path)!.item._type]?.fields[raw.field]?.title ?? raw.field}`);
           touched.push(raw.path);
           break;
@@ -272,7 +289,7 @@ export function applyOps(doc: Doc, ops: unknown, ctx: { catalog: Catalog; grant:
           d = res.doc;
           for (const [field, value] of Object.entries(raw.fields ?? {})) {
             try {
-              d = setField(d, res.path, field, value, catalog, grant);
+              d = setField(d, res.path, field, value, catalog, grant, images);
             } catch (e) {
               rejected.push(`new ${catalog[raw.type].title} · ${field}: ${(e as Error).message}`);
             }

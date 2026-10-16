@@ -13,7 +13,7 @@ import { randomKey } from "./paths";
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
 import { buildCatalog, FieldList, PagesContext, UploadContext } from "./FieldControls";
 import { EditorChat } from "./EditorChat";
-import { applyOps } from "./chat";
+import { applyOps, type AttachedImages } from "./chat";
 import { grantFor, may, mayAdd, mayReorder } from "./policy";
 import { POLICY } from "@/remarkable.policy";
 import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
@@ -399,10 +399,10 @@ function PageEditor({
   const addable = useMemo(() => (doc ? blockTypes.filter((t) => mayAdd(grant, t) && insertTarget(doc, selected, t)) : []), [doc, grant, selected]);
   const publishDisabled = may(grant, "publish") ? ops.publish.disabled : "Your role doesn't publish — a teammate will";
   const applyChat = useCallback(
-    (proposed: unknown[]) => {
+    (proposed: unknown[], images: AttachedImages) => {
       const d = docRef.current;
       if (!d) return { doc: {} as Doc, applied: [], rejected: ["The page isn't loaded yet"], touched: [] };
-      const res = applyOps(d, proposed, { catalog, grant, pages: pages.map((p) => ({ id: p._id, slug: p.slug, title: p.title })) });
+      const res = applyOps(d, proposed, { catalog, grant, images, pages: pages.map((p) => ({ id: p._id, slug: p.slug, title: p.title })) });
       if (res.applied.length) {
         setSections(res.doc);
         if (res.touched.length) selectPaths(res.touched.filter((p) => resolveSelection(res.doc, p)), true);
@@ -552,6 +552,7 @@ function PageEditor({
             grant={grant}
             viewAs={viewAs}
             selection={selection}
+            upload={upload}
             onApply={applyChat}
             onUndo={undo}
           />

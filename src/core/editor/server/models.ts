@@ -70,8 +70,11 @@ export function availableModels(get: (name: string) => string | undefined): { op
   return { options: options.filter((o, i, a) => a.findIndex((x) => x.id === o.id) === i), keys };
 }
 
+/** An image the model should see: base64 without the data: prefix. */
+export type VisionImage = { mediaType: string; data: string };
+
 /** The HTTP request for a provider (pure, so a check can assert its shape). */
-export function buildRequest(cfg: ModelConfig, instruction: string): { url: string; init: RequestInit } {
+export function buildRequest(cfg: ModelConfig, instruction: string, images: VisionImage[] = []): { url: string; init: RequestInit } {
   const model = cfg.model || PROVIDERS[cfg.provider].model;
   if (cfg.provider === "anthropic")
     return {
@@ -84,7 +87,18 @@ export function buildRequest(cfg: ModelConfig, instruction: string): { url: stri
           "anthropic-version": "2023-06-01",
         },
         // No `temperature`: current Claude models reject it ("deprecated for this model").
-        body: JSON.stringify({ model, max_tokens: 4096, messages: [{ role: "user", content: instruction }] }),
+        body: JSON.stringify({
+          model,
+          max_tokens: 4096,
+          messages: [
+            {
+              role: "user",
+              content: images.length
+                ? [...images.map((i) => ({ type: "image", source: { type: "base64", media_type: i.mediaType, data: i.data } })), { type: "text", text: instruction }]
+                : instruction,
+            },
+          ],
+        }),
       },
     };
   const url = cfg.provider === "openai" ? "https://api.openai.com/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
@@ -94,7 +108,18 @@ export function buildRequest(cfg: ModelConfig, instruction: string): { url: stri
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${cfg.apiKey}` },
       // No `temperature` either: newer OpenAI models only accept the default.
-      body: JSON.stringify({ model, response_format: { type: "json_object" }, messages: [{ role: "user", content: instruction }] }),
+      body: JSON.stringify({
+        model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "user",
+            content: images.length
+              ? [{ type: "text", text: instruction }, ...images.map((i) => ({ type: "image_url", image_url: { url: `data:${i.mediaType};base64,${i.data}` } }))]
+              : instruction,
+          },
+        ],
+      }),
     },
   };
 }
@@ -107,8 +132,8 @@ export function readResponse(provider: Provider, body: unknown): string {
 }
 
 /** Ask the project's model. Throws with the provider's error message. */
-export async function askModel(cfg: ModelConfig, instruction: string): Promise<string> {
-  const { url, init } = buildRequest(cfg, instruction);
+export async function askModel(cfg: ModelConfig, instruction: string, images: VisionImage[] = []): Promise<string> {
+  const { url, init } = buildRequest(cfg, instruction, images);
   const res = await fetch(url, init);
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {

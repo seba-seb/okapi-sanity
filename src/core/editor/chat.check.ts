@@ -116,6 +116,19 @@ assert.ok(ins.includes("BLOCKS YOU MAY ADD: none"));
 assert.ok(ins.includes(`SELECTED in the editor`) && ins.includes(H1));
 assert.ok(/JSON/.test(ins)); // Agent Actions prompt requires the word in json mode
 
+// Attached images: placed only with the images permission and a known attachment id
+const IMG = { _type: "image", asset: { _type: "reference", _ref: "image-abc-10x10-png" } };
+r = applyOps(doc, [{ op: "insert", type: "imageBlock", after: H1, fields: { image: { image: "img1" } } }], { catalog, grant: admin, images: { img1: IMG } });
+assert.deepEqual((r.doc.sections![0].content as Record<string, unknown>[])[1].image, IMG);
+r = applyOps(doc, [{ op: "insert", type: "imageBlock", after: H1, fields: { image: { image: "img9" } } }], { catalog, grant: admin, images: { img1: IMG } });
+assert.equal(r.rejected.length, 1); // unknown attachment: block inserted, image rejected
+const noImages = grantFor(["x"], { ...policy, x: { label: "x", can: ["text", "structure", "chat"] } });
+r = applyOps(doc, [{ op: "insert", type: "imageBlock", after: H1, fields: { image: { image: "img1" } } }], { catalog, grant: noImages, images: { img1: IMG } });
+assert.ok(r.rejected.some((x) => x.includes("images")));
+const withImg = buildInstruction({ doc, catalog, grant: admin, selection: [], pages: [], history: [], request: "x", images: [{ id: "img1", name: "hero.jpg" }] });
+assert.ok(withImg.includes('img1 ("hero.jpg")') && withImg.includes('{"image":"<id>"}'));
+assert.ok(buildInstruction({ doc, catalog, grant: contributor, selection: [], pages: [], history: [], request: "x", images: [{ id: "img1", name: "a" }] }).includes("only as reference"));
+
 // Answers
 assert.deepEqual(parseAnswer({ reply: "ok", ops: [{ op: "remove" }] }), { reply: "ok", ops: [{ op: "remove" }] });
 assert.deepEqual(parseAnswer('Sure! {"reply":"hi","ops":[]} thanks'), { reply: "hi", ops: [] });
@@ -144,4 +157,10 @@ assert.deepEqual(m.options.map((o) => o.id), ["anthropic:claude-haiku-5-5", "san
 m = availableModels(env({ AI_PROVIDER: "openai", AI_API_KEY: "k", AI_MODEL: "gpt-x" }));
 assert.equal(m.options[0].id, "openai:gpt-x");
 assert.equal(m.keys.openai, "k");
+// Vision: the model gets the pixels in each provider's own format
+const vis = [{ mediaType: "image/jpeg", data: "AAAA" }];
+const av = JSON.parse(buildRequest({ provider: "anthropic", model: "", apiKey: "k" }, "hi", vis).init.body as string);
+assert.deepEqual(av.messages[0].content[0], { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "AAAA" } });
+const ov = JSON.parse(buildRequest({ provider: "openai", model: "m", apiKey: "k" }, "hi", vis).init.body as string);
+assert.equal(ov.messages[0].content[1].image_url.url, "data:image/jpeg;base64,AAAA");
 console.log("chat.check: ok");

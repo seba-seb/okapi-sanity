@@ -1,10 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import type { SanityClient } from "sanity";
 
-import type { ApplyResult, Catalog, ChatTurn, PageRef } from "./chat";
+import type { ApplyResult, AttachedImages, Catalog, ChatTurn } from "./chat";
 import type { Grant } from "./policy";
 
-type Message = ChatTurn & { applied?: string[]; rejected?: string[]; error?: boolean; model?: string };
+type Message = ChatTurn & { applied?: string[]; rejected?: string[]; error?: boolean; model?: string; thumbs?: string[] };
+/** An image attached to the next message: uploading to Sanity, plus a small copy for the model to see. */
+type Pending = { id: string; name: string; preview: string; vision?: string; value?: unknown; error?: string };
+const MAX_ATTACH = 3;
+
+/** A downscaled JPEG data URL (longest side ≤ 1024px) — what the model sees; the original goes to Sanity. */
+async function visionCopy(file: File): Promise<string> {
+  const bmp = await createImageBitmap(file);
+  const scale = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * scale);
+  c.height = Math.round(bmp.height * scale);
+  c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.8);
+}
 type Status = { available: boolean; models?: { id: string; label: string }[]; reason?: string };
 const MODEL_PREF = "remarkable:chat-model";
 const readPref = () => {
@@ -36,6 +50,7 @@ export function EditorChat({
   grant,
   viewAs,
   selection,
+  upload,
   onApply,
   onUndo,
 }: {
@@ -45,12 +60,37 @@ export function EditorChat({
   grant: Grant;
   viewAs: string | null;
   selection: string[];
-  onApply: (ops: unknown[]) => ApplyResult;
+  /** Uploads an image file to Sanity with the person's session → the image field value. */
+  upload: (file: File) => Promise<unknown>;
+  onApply: (ops: unknown[], images: AttachedImages) => ApplyResult;
   onUndo: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<Pending[]>([]);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const canImages = grant.can.has("images");
+  const uploading = pending.some((p) => !p.value && !p.error);
+
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+  const nextId = useRef(1);
+  const attach = (files: Iterable<File>) => {
+    const room = MAX_ATTACH - pendingRef.current.length;
+    for (const file of [...files].filter((f) => f.type.startsWith("image/")).slice(0, Math.max(0, room))) {
+      const id = `img${nextId.current++}`;
+      const patch = (p: Partial<Pending>) => setPending((all) => all.map((x) => (x.id === id ? { ...x, ...p } : x)));
+      setPending((cur) => [...cur, { id, name: file.name, preview: URL.createObjectURL(file) }]);
+      // Both start now, so Send isn't waiting on them later. No upload if the role can't place images.
+      visionCopy(file).then((vision) => patch({ vision }), () => patch({}));
+      (canImages ? upload(file) : Promise.resolve(false)).then(
+        (value) => patch({ value }),
+        (e) => patch({ error: (e as Error).message }),
+      );
+    }
+  };
+
   // Is the chat set up on this deployment? (GET /api/editor-chat)
   const [status, setStatus] = useState<Status | null>(null);
   // The model picker: names come from the server (it holds the keys); the choice is remembered in this browser.
@@ -78,21 +118,34 @@ export function EditorChat({
   }, [messages, busy]);
 
   const send = async (text = input.trim()) => {
-    if (!text || busy || !status?.available) return;
+    if (!text || busy || uploading || !status?.available) return;
+    const sent = pending.filter((p) => !p.error);
+    setPending([]);
+    nextId.current = 1;
     setInput("");
     const history = messages.slice(-8).map(({ role, text }) => ({ role, text }));
-    setMessages((m) => [...m, { role: "user", text }]);
+    setMessages((m) => [...m, { role: "user", text, thumbs: sent.map((p) => p.preview) }]);
     setBusy(true);
     try {
       const token = client.config().token;
       const res = await fetch(ENDPOINT, {
         method: "POST",
         headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : null) },
-        body: JSON.stringify({ documentId, request: text, selection, history, catalog, viewAs, model: current?.id }),
+        body: JSON.stringify({
+          documentId,
+          request: text,
+          selection,
+          history,
+          catalog,
+          viewAs,
+          model: current?.id,
+          images: sent.map((p) => ({ id: p.id, name: p.name, dataUrl: p.vision })),
+        }),
       });
       const answer = (await res.json().catch(() => ({ error: `HTTP ${res.status}` }))) as { reply?: string; ops?: unknown[]; error?: string; model?: string };
       if (!res.ok || answer.error) throw new Error(answer.error ?? `HTTP ${res.status}`);
-      const done = answer.ops?.length ? onApply(answer.ops) : { applied: [], rejected: [] };
+      const images: AttachedImages = Object.fromEntries(sent.filter((p) => p.value).map((p) => [p.id, p.value]));
+      const done = answer.ops?.length ? onApply(answer.ops, images) : { applied: [], rejected: [] };
       setMessages((m) => [
         ...m,
         {
@@ -166,6 +219,13 @@ export function EditorChat({
         ) : null}
         {messages.map((m, i) => (
           <div key={i} style={m.role === "user" ? userBubble : { ...botBubble, ...(m.error ? { borderColor: "#e5484d" } : null) }}>
+            {m.thumbs?.length ? (
+              <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
+                {m.thumbs.map((t) => (
+                  <img key={t} src={t} alt="" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6 }} />
+                ))}
+              </div>
+            ) : null}
             <div style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{m.text}</div>
             {m.model ? <div style={{ fontSize: 10, opacity: 0.5, marginTop: 4 }}>{m.model}</div> : null}
             {m.applied?.length ? (
@@ -197,13 +257,41 @@ export function EditorChat({
           e.preventDefault();
           send();
         }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          attach(e.dataTransfer.files);
+        }}
         style={{ display: "grid", gap: 6, paddingTop: 8, borderTop: border }}
       >
+        {pending.length ? (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {pending.map((p) => (
+              <div key={p.id} style={{ position: "relative" }} title={p.error ?? (p.value ? `${p.name} — ${p.id}` : "Uploading…")}>
+                <img src={p.preview} alt={p.name} style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 6, opacity: p.value || p.value === false ? 1 : 0.5, outline: p.error ? "2px solid #e5484d" : undefined }} />
+                <button
+                  type="button"
+                  aria-label={`Remove ${p.name}`}
+                  onClick={() => setPending((all) => all.filter((x) => x.id !== p.id))}
+                  style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: 9, border: 0, background: "#000a", color: "#fff", fontSize: 11, cursor: "pointer", lineHeight: "18px", padding: 0 }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
         <textarea
           rows={3}
           value={input}
           placeholder={selection.length ? "Change the selected block…" : "What should change on this page?"}
           onChange={(e) => setInput(e.target.value)}
+          onPaste={(e) => {
+            if (e.clipboardData.files.length) {
+              e.preventDefault();
+              attach(e.clipboardData.files);
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -213,8 +301,31 @@ export function EditorChat({
           style={{ width: "100%", boxSizing: "border-box", padding: 8, font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: 6, resize: "vertical" }}
         />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ flex: 1, fontSize: 11, opacity: 0.55 }}>{selection.length ? `${selection.length} selected` : "Nothing selected"} · Enter to send</span>
-          <button type="submit" disabled={busy || !input.trim()} style={{ ...chip, ...chipOn, opacity: busy || !input.trim() ? 0.5 : 1 }}>
+          <input
+            ref={fileInput}
+            id="chat-attach"
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={(e) => {
+              if (e.target.files) attach(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInput.current?.click()}
+            disabled={pending.length >= MAX_ATTACH}
+            style={{ ...chip, padding: "4px 8px" }}
+            title={canImages ? "Attach an image (or paste / drop it here) — to use on the page or as a reference" : "Attach an image as a reference (your role can't place images)"}
+          >
+            📎
+          </button>
+          <span style={{ flex: 1, fontSize: 11, opacity: 0.55 }}>
+            {uploading ? "Uploading image…" : `${selection.length ? `${selection.length} selected` : "Nothing selected"} · Enter to send`}
+          </span>
+          <button type="submit" disabled={busy || uploading || !input.trim()} style={{ ...chip, ...chipOn, opacity: busy || uploading || !input.trim() ? 0.5 : 1 }}>
             Send
           </button>
         </div>

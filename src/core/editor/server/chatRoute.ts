@@ -22,7 +22,7 @@ import { buildInstruction, parseAnswer, type Catalog, type ChatTurn } from "@/co
 import { grantFor, may } from "@/core/editor/policy";
 import { dataset, projectId } from "@/core/sanity/env";
 import { POLICY } from "@/remarkable.policy";
-import { askModel, availableModels } from "./models";
+import { askModel, availableModels, type VisionImage } from "./models";
 
 export const prerender = false;
 
@@ -61,7 +61,26 @@ type Body = {
   catalog?: unknown;
   viewAs?: unknown;
   model?: unknown;
+  images?: unknown;
 };
+
+const IMAGE_DATA = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/;
+const MAX_IMAGES = 3;
+const MAX_IMAGE_CHARS = 1_500_000; // ~1.1 MB each; the browser sends a downscaled copy
+
+/** Attached images: an id + name for the ops, and a small copy the model can see. */
+function readImages(raw: unknown): { list: { id: string; name: string }[]; vision: VisionImage[] } {
+  const list: { id: string; name: string }[] = [];
+  const vision: VisionImage[] = [];
+  for (const it of (Array.isArray(raw) ? raw : []).slice(0, MAX_IMAGES)) {
+    const { id, name, dataUrl } = (it ?? {}) as { id?: unknown; name?: unknown; dataUrl?: unknown };
+    if (typeof id !== "string" || !/^img\d{1,2}$/.test(id)) continue;
+    list.push({ id, name: typeof name === "string" ? name.slice(0, 80) : id });
+    const m = typeof dataUrl === "string" && dataUrl.length <= MAX_IMAGE_CHARS ? dataUrl.match(IMAGE_DATA) : null;
+    if (m) vision.push({ mediaType: m[1], data: m[2] });
+  }
+  return { list, vision };
+}
 
 export const POST: APIRoute = async ({ request }) => {
   const { options, keys } = models();
@@ -107,12 +126,13 @@ export const POST: APIRoute = async ({ request }) => {
   if (!doc) return json({ error: "Page not found." }, 404);
 
   // 5. Ask the model.
-  const instruction = buildInstruction({ doc, catalog, grant, selection, pages, history, request: text });
+  const images = readImages(body.images);
+  const instruction = buildInstruction({ doc, catalog, grant, selection, pages, history, request: text, images: images.list });
   try {
     const raw =
       cfg.provider === "sanity"
         ? await sanity.withConfig({ apiVersion: "vX" }).agent.action.prompt({ instruction, format: "json", temperature: 0.2 })
-        : await askModel(cfg, instruction);
+        : await askModel(cfg, instruction, images.vision); // Agent Actions prompt is text-only: it gets the ids, not the pixels
     return json({ ...parseAnswer(raw), model: choice.id });
   } catch (e) {
     const err = e as { statusCode?: number; message?: string };

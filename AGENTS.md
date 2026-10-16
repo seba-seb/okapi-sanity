@@ -143,8 +143,15 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   wrangler`) and only then injects `/api/editor-chat`; pages stay prerendered.
   Any other host = plain static output and the chat shows "not available".
   `REMARKABLE_ADAPTER` overrides. In `npm run dev` the route always exists.
-- Not yet: images, references, text inside component instances, rich-text
-  formatting (the chat writes plain paragraphs). `chat.check.ts` runs in verify.
+- **Images in the chat** (📎, paste or drop; up to 3 per message): the browser
+  uploads the original to Sanity with the person's session (only if their grant
+  has `images`) and sends a ≤1024px JPEG copy so the model can see it. The model
+  places one with `{"op":"set",…,"value":{"image":"img1"}}` (also inside an
+  insert's `fields`); `applyOps` maps the id to the uploaded asset. Without the
+  `images` permission they're reference only. Sanity Agent Actions is text-only
+  (it gets the ids, not the pixels). Removed attachments stay as unused assets.
+- Not yet: references, text inside component instances, rich-text formatting
+  (the chat writes plain paragraphs). `chat.check.ts` runs in verify.
 
 ### Compose & style (phase 2)
 - **Style panel** (`design` field on every block, added in `blocks/schemas.ts`):
