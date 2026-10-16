@@ -11,7 +11,11 @@ import { splitInstancePath, type Override } from "@/core/render/overrides";
 import { randomKey } from "./paths";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
-import { FieldList, PagesContext, UploadContext, type View } from "./FieldControls";
+import { buildCatalog, FieldList, PagesContext, UploadContext } from "./FieldControls";
+import { EditorChat } from "./EditorChat";
+import { applyOps } from "./chat";
+import { grantFor, may, mayAdd, mayReorder } from "./policy";
+import { POLICY } from "@/remarkable.policy";
 import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
 import { plainToPt } from "./text";
 
@@ -119,9 +123,15 @@ function PageEditor({
   const ops = useDocumentOperation(id, docType);
   const schema = useSchema();
   const user = useCurrentUser();
-  const isTeam = !!user?.roles?.some((r) => r.name === "administrator");
-  const [view, setView] = useState<View>(isTeam ? "team" : "client");
-  const canStructure = view === "team";
+  // What this person may do (src/remarkable.policy.ts). Admins can preview any role.
+  const roles = useMemo(() => user?.roles?.map((r) => r.name) ?? [], [user]);
+  const isAdmin = roles.includes("administrator");
+  const [viewAs, setViewAs] = useState<string | null>(null);
+  const grant = useMemo(() => grantFor(viewAs ? [viewAs] : roles, POLICY), [roles, viewAs]);
+  const canStructure = may(grant, "structure");
+  const canReorder = mayReorder(grant);
+  const catalog = useMemo(() => buildCatalog(schema, blockTypes), [schema]);
+  const [tab, setTab] = useState<"properties" | "chat">("properties");
   const [device, setDevice] = useState<keyof typeof DEVICES>("Desktop");
   // Selection: several blocks; the last one is the primary (panel, + Add anchor).
   const [selection, setSelection] = useState<string[]>([]);
@@ -232,7 +242,7 @@ function PageEditor({
     [act, canStructure, selected, selection],
   );
   const doDuplicate = useCallback(() => selection.length && canStructure && act((d) => duplicateMany(d, selection)), [act, canStructure, selection]);
-  const doNudge = useCallback((dir: -1 | 1) => selection.length && act((d) => nudgeMany(d, selection, dir)), [act, selection]);
+  const doNudge = useCallback((dir: -1 | 1) => selection.length && canReorder && act((d) => nudgeMany(d, selection, dir)), [act, canReorder, selection]);
   const doCopy = useCallback(() => {
     const items = docRef.current ? topmost(selection).map((p) => resolveSelection(docRef.current!, p)?.item).filter(Boolean) : [];
     if (items.length) {
@@ -255,13 +265,14 @@ function PageEditor({
   const doAdd = useCallback(
     (type: string) => {
       setAdding(false);
+      if (!mayAdd(grant, type)) return;
       act((d) => {
         const t = insertTarget(d, selected, type);
         if (!t) throw new Error(`Can't add a ${type} here`);
         return insert(d, t.arrayPath, t.index, newBlock(type));
       });
     },
-    [act, selected],
+    [act, grant, selected],
   );
 
   // ── Components
@@ -346,12 +357,16 @@ function PageEditor({
           else select(msg.path);
         }
         else if (msg.type === "key") onKeyRef.current(msg);
-        else if (msg.type === "move") act((d) => moveNextTo(d, msg.from, msg.target, msg.position));
+        else if (msg.type === "move") {
+          if (canReorder) act((d) => moveNextTo(d, msg.from, msg.target, msg.position));
+        }
         else if (msg.type === "text") {
+          if (!may(grant, "text")) return setStatus("Your role can't edit texts");
           const rich = msg.kind === "pt";
           writeField(msg.path, msg.field, msg.pt ?? (rich ? plainToPt(msg.value) : msg.value), rich ? "rich" : "text", `text:${msg.path}.${msg.field}`);
         }
         else if (msg.type === "drop") {
+          if (!may(grant, "images")) return setStatus("Your role can't change images");
           setStatus(`Uploading ${msg.file.name}…`);
           try {
             writeField(msg.path, msg.field, await upload(msg.file), "image");
@@ -361,7 +376,7 @@ function PageEditor({
           }
         }
       }),
-    [act, setField, upload, writeField],
+    [act, canReorder, grant, setField, upload, writeField],
   );
 
   // ── Editor → canvas: every local edit re-renders the canvas immediately.
@@ -381,8 +396,21 @@ function PageEditor({
     () => (doc ? layers(doc).map((n) => (n.type === "componentRef" ? { ...n, title: `◆ ${components[n.ref ?? ""]?.title ?? "Missing component"}` } : n)) : []),
     [doc, components],
   );
-  const addable = useMemo(() => (doc ? blockTypes.filter((t) => insertTarget(doc, selected, t)) : []), [doc, selected]);
-  const publishDisabled = ops.publish.disabled;
+  const addable = useMemo(() => (doc ? blockTypes.filter((t) => mayAdd(grant, t) && insertTarget(doc, selected, t)) : []), [doc, grant, selected]);
+  const publishDisabled = may(grant, "publish") ? ops.publish.disabled : "Your role doesn't publish — a teammate will";
+  const applyChat = useCallback(
+    (proposed: unknown[]) => {
+      const d = docRef.current;
+      if (!d) return { doc: {} as Doc, applied: [], rejected: ["The page isn't loaded yet"], touched: [] };
+      const res = applyOps(d, proposed, { catalog, grant, pages: pages.map((p) => ({ id: p._id, slug: p.slug, title: p.title })) });
+      if (res.applied.length) {
+        setSections(res.doc);
+        if (res.touched.length) selectPaths(res.touched.filter((p) => resolveSelection(res.doc, p)), true);
+      }
+      return res;
+    },
+    [catalog, grant, pages, selectPaths, setSections],
+  );
 
   return (
     <>
@@ -419,8 +447,12 @@ function PageEditor({
               selected={selected}
               selection={selection}
               onSelect={(p, add) => (add ? toggle(p) : select(p, true))}
-              canDrag
-              onMove={(from, toArray, index) => act((d) => move(d, from, toArray, index))}
+              canDrag={canReorder}
+              onMove={(from, toArray, index) => {
+                // Reorder-only roles stay within the same list.
+                if (!canStructure && from.slice(0, from.lastIndexOf("[")) !== toArray) return setStatus("Your role can only reorder within the same group");
+                act((d) => move(d, from, toArray, index));
+              }}
               canDrop={(type, arrayPath) => !!docRef.current && canPlace(docRef.current, type, arrayPath)}
             />
           ) : null}
@@ -441,14 +473,14 @@ function PageEditor({
           <button type="button" onClick={redo} disabled={!future.current.length} style={{ ...chip, opacity: future.current.length ? 1 : 0.4 }} title="Redo (⌘⇧Z)">
             ↷
           </button>
-          {canStructure ? (
+          {canStructure && addable.length ? (
             <button type="button" onClick={() => setAdding((a) => !a)} style={chip} title="Add a block after the selection (or inside it)">
               + Add
             </button>
           ) : null}
           {adding ? (
             <div style={{ position: "absolute", top: 40, left: 220, zIndex: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8, borderRadius: 8, border, background: "var(--card-bg-color, #fff)", color: "inherit", boxShadow: "0 8px 30px #0003", width: 300 }}>
-              {doc && insertTarget(doc, selected, "componentRef")
+              {doc && mayAdd(grant, "componentRef") && insertTarget(doc, selected, "componentRef")
                 ? Object.entries(components).map(([cid, c]) => (
                     <button key={cid} type="button" onClick={() => addInstance(cid)} style={{ ...chip, textAlign: "left" }}>
                       ◆ {c.title || cid}
@@ -485,21 +517,57 @@ function PageEditor({
         </div>
       </main>
 
-      <aside style={{ ...column, borderLeft: border }}>
+      <aside style={{ ...column, borderLeft: border, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-          <div style={{ ...heading, margin: 0, flex: 1 }}>{target ? (type?.title ?? target.item._type) : "Properties"}</div>
-          {isTeam ? (
-            <button type="button" onClick={() => setView(view === "team" ? "client" : "team")} style={chip} title="Preview what a client sees">
-              {view === "team" ? "Team view" : "Client view"}
+          <button type="button" onClick={() => setTab("properties")} style={{ ...chip, ...(tab === "properties" ? chipOn : null) }}>
+            Properties
+          </button>
+          {may(grant, "chat") ? (
+            <button type="button" onClick={() => setTab("chat")} style={{ ...chip, ...(tab === "chat" ? chipOn : null) }}>
+              ✦ Chat
             </button>
           ) : null}
+          <span style={{ flex: 1 }} />
+          {isAdmin ? (
+            <select
+              value={viewAs ?? ""}
+              onChange={(e) => setViewAs(e.target.value || null)}
+              style={{ ...select_, width: "auto", padding: "3px 6px", fontSize: 12 }}
+              title="Preview the editor (and the chat) as another role — src/remarkable.policy.ts"
+            >
+              <option value="">View as: me</option>
+              {Object.entries(POLICY).map(([role, r]) => (
+                <option key={role} value={role}>
+                  View as: {r.label}
+                </option>
+              ))}
+            </select>
+          ) : null}
         </div>
+        {tab === "chat" && may(grant, "chat") ? (
+          <EditorChat
+            client={client}
+            doc={doc}
+            catalog={catalog}
+            grant={grant}
+            selection={selection}
+            pages={pages.map((p) => ({ id: p._id, slug: p.slug, title: p.title }))}
+            onApply={applyChat}
+            onUndo={undo}
+          />
+        ) : (
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        {target ? <div style={{ ...heading, margin: "0 0 10px" }}>{type?.title ?? target.item._type}</div> : null}
         {selection.length > 1 ? (
           <>
             <p style={{ margin: "0 0 10px", opacity: 0.8 }}>{selection.length} blocks selected</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-              <button type="button" onClick={() => doNudge(-1)} style={chip}>▲</button>
-              <button type="button" onClick={() => doNudge(1)} style={chip}>▼</button>
+              {canReorder ? (
+                <>
+                  <button type="button" onClick={() => doNudge(-1)} style={chip}>▲</button>
+                  <button type="button" onClick={() => doNudge(1)} style={chip}>▼</button>
+                </>
+              ) : null}
               <button type="button" onClick={doCopy} style={chip}>Copy</button>
               {canStructure ? (
                 <>
@@ -517,23 +585,29 @@ function PageEditor({
               <button type="button" onClick={() => select(parentBlock(selected!), true)} style={chip} disabled={!parentBlock(selected!)}>
                 ↑ Parent
               </button>
-              <button type="button" onClick={() => doNudge(-1)} style={chip} title="Move up (⌥↑)">
-                ▲
-              </button>
-              <button type="button" onClick={() => doNudge(1)} style={chip} title="Move down (⌥↓)">
-                ▼
-              </button>
-              {canStructure && target.item._type === "section" && docType === "page" ? (
+              {canReorder ? (
+                <>
+                  <button type="button" onClick={() => doNudge(-1)} style={chip} title="Move up (⌥↑)">
+                    ▲
+                  </button>
+                  <button type="button" onClick={() => doNudge(1)} style={chip} title="Move down (⌥↓)">
+                    ▼
+                  </button>
+                </>
+              ) : null}
+              {may(grant, "components") && target.item._type === "section" && docType === "page" ? (
                 <button type="button" onClick={makeComponent} style={chip} title="Save this section to the library and use it as a component">
                   Make component
                 </button>
               ) : null}
               {target.item._type === "componentRef" && (target.item.component as { _ref?: string } | undefined)?._ref ? (
                 <>
-                  <button type="button" onClick={() => onPage((target.item.component as { _ref: string })._ref)} style={chip}>
-                    Edit component
-                  </button>
-                  {canStructure ? (
+                  {may(grant, "components") ? (
+                    <button type="button" onClick={() => onPage((target.item.component as { _ref: string })._ref)} style={chip}>
+                      Edit component
+                    </button>
+                  ) : null}
+                  {may(grant, "components") ? (
                     <button type="button" onClick={detach} style={chip} title="Replace this instance with an editable copy">
                       Detach
                     </button>
@@ -571,13 +645,15 @@ function PageEditor({
               </div>
             ) : null}
             {type ? (
-              <FieldList type={type} value={target.item as Record<string, unknown>} basePath={selected!} onChange={(p, v) => setField(p, v)} view={view} />
+              <FieldList type={type} value={target.item as Record<string, unknown>} basePath={selected!} onChange={(p, v) => setField(p, v)} grant={grant} />
             ) : (
               <p style={{ opacity: 0.6 }}>Unknown block type “{target.item._type}”.</p>
             )}
           </>
         ) : (
           <p style={{ opacity: 0.6, margin: 0 }}>Click anything on the canvas — or a layer — to edit it.</p>
+        )}
+        </div>
         )}
       </aside>
     </>

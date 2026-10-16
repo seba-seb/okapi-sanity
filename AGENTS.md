@@ -84,8 +84,8 @@ Studio tool at `/studio#/editor` (the Studio's landing tool):
 **pages + layers | canvas | properties**. `src/core/editor/`:
 - `EditorTool.tsx` — reads the page with `useEditState` (local edits applied
   at once) and writes with `useDocumentOperation(...).patch` / `.publish` (the
-  Studio's own document store, no extra SDK). Team = `administrator` role;
-  others get the client view. Team can toggle it.
+  Studio's own document store, no extra SDK). What each person may do comes
+  from `src/remarkable.policy.ts` (below); admins can "View as" any role.
 - `CanvasApp.tsx` + `src/pages/edit-canvas.astro` — the canvas iframe: the real
   PageBuilder rendering whatever the editor posts (`protocol.ts`, same-origin
   postMessage). It fetches nothing, so the route exposes no drafts. Own
@@ -114,6 +114,26 @@ line shows where it lands (before/after the block under the pointer,
 horizontal inside rows/grids). Validated like any move (`moveNextTo`).
 **▶ Play** remounts the canvas once with decorative motion on (the canvas
 keeps it still while you edit); a block you edit afterwards goes still again.
+
+### Permissions and the AI chat
+
+- **`src/remarkable.policy.ts` (per project, the agency decides):** Sanity role →
+  permissions (`text images style settings reorder structure components
+  publish chat`) + optional `blocks` a role may add. It gates the panel
+  fields (`FieldControls.fieldKind`), the actions, canvas edits, publish and
+  the chat. Pure logic in `core/editor/policy.ts`. This shapes the editor; the
+  hard boundary is still the Sanity role (what the API lets them write).
+- **✦ Chat** (tab in the right column, `core/editor/EditorChat.tsx` +
+  `chat.ts`): the model runs through **Sanity Agent Actions `prompt`** with the
+  signed-in person's session — no server, no API key in the project, usage on
+  the Sanity project (org must have AI enabled; `vX` API). It sees the page
+  and only the fields/blocks the person's grant allows, and returns JSON ops
+  (`set`, `style`, `insert`, `remove`, `duplicate`, `move`). `applyOps`
+  validates every op against grant + registry + schema (choices, tokens,
+  links) and the editor applies them as ONE undo step, saved as a draft.
+  Never publishes. Not yet: images, references, text inside component
+  instances, rich-text formatting (chat writes plain paragraphs).
+  `chat.check.ts` runs in verify.
 
 ### Compose & style (phase 2)
 - **Style panel** (`design` field on every block, added in `blocks/schemas.ts`):
@@ -188,7 +208,9 @@ Automated checks cover the canvas side only; these need a real login, in
 4. Make component from a section → edit text on an instance → only that
    instance changes; Reset override; Edit component → all instances change.
 5. Publish → `npm run build` → the change is on the static page.
-6. Log in as a client-role user → style fields and structural actions hidden.
+6. Log in as a client-role user (or "View as") → only what `remarkable.policy.ts`
+   allows is visible; the chat refuses the rest.
+7. ✦ Chat: "make the selected heading shorter" → applied, Undo reverts it.
 
 ## Add a block
 

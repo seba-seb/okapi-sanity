@@ -2,6 +2,8 @@ import { createContext, useContext, useState } from "react";
 import type { ObjectSchemaType, SchemaType } from "sanity";
 
 import { plainToPt, ptToPlainIfSimple } from "./text";
+import type { FieldKind, Grant } from "./policy";
+import type { Catalog } from "./chat";
 
 /**
  * Properties panel controls generated from the compiled Studio schema — no
@@ -16,7 +18,6 @@ export const PagesContext = createContext<Record<string, { id: string; title: st
 /** Uploads an image file and returns the image field value (`{_type:"image", asset}`). */
 export const UploadContext = createContext<((file: File) => Promise<unknown>) | null>(null);
 type Change = (path: string, value: unknown) => void;
-export type View = "team" | "client";
 
 const isPT = (t: SchemaType) =>
   t.jsonType === "array" && (t as { of?: SchemaType[] }).of?.some((m) => m.name === "block");
@@ -48,7 +49,14 @@ export function controlKind(t: SchemaType): ControlKind {
   return "unsupported";
 }
 
-/** Content = what a client may change. Everything else is design. */
+/** Which permission a block field falls under: images, the style panel, text content, or settings. */
+export function fieldKind(name: string, t: SchemaType): FieldKind {
+  if (is(t, "image")) return "images";
+  if (name === "design") return "style";
+  return isContent(t) ? "text" : "settings";
+}
+
+/** Content = text a client may change (rich text, strings, links, references, images). */
 export function isContent(t: SchemaType): boolean {
   if (isPT(t) || isStringArray(t) || is(t, "image") || is(t, "link") || is(t, "url") || is(t, "reference")) return true;
   if (t.jsonType === "string") return !listOf(t);
@@ -73,28 +81,29 @@ export function FieldList({
   value,
   basePath,
   onChange,
-  view,
+  grant,
 }: {
   type: ObjectSchemaType;
   value: Record<string, unknown>;
   basePath: string;
   onChange: Change;
-  view: View;
+  /** Fields this person may edit (src/remarkable.policy.ts); null = everything inside an allowed field. */
+  grant: Grant | null;
 }) {
   const fields = (type.fields as Field[]).filter(
-    (f) => !isBlockArray(f.type) && !hiddenFor(f.type, value, value?.[f.name]) && (view === "team" || isContent(f.type)),
+    (f) => !isBlockArray(f.type) && !hiddenFor(f.type, value, value?.[f.name]) && (!grant || grant.can.has(fieldKind(f.name, f.type))),
   );
-  if (!fields.length) return <p style={muted}>Nothing to edit here{view === "client" ? " in client view" : ""}.</p>;
+  if (!fields.length) return <p style={muted}>Nothing you can edit here.</p>;
   return (
     <div style={{ display: "grid", gap: 14 }}>
       {fields.map((f) => (
-        <FieldControl key={f.name} field={f} value={value?.[f.name]} parent={value} path={`${basePath}.${f.name}`} onChange={onChange} view={view} />
+        <FieldControl key={f.name} field={f} value={value?.[f.name]} parent={value} path={`${basePath}.${f.name}`} onChange={onChange} grant={grant} />
       ))}
     </div>
   );
 }
 
-function FieldControl({ field, value, parent, path, onChange, view }: { field: Field; value: unknown; parent: unknown; path: string; onChange: Change; view: View }) {
+function FieldControl({ field, value, parent, path, onChange, grant }: { field: Field; value: unknown; parent: unknown; path: string; onChange: Change; grant: Grant | null }) {
   const t = field.type;
   const title = t.title ?? field.name;
   const label = <div style={labelStyle}>{title}</div>;
@@ -177,7 +186,7 @@ function FieldControl({ field, value, parent, path, onChange, view }: { field: F
     );
   if (is(t, "image")) return <ImageControl label={label} value={value} path={path} onChange={onChange} />;
   if (t.jsonType === "object" && (t as ObjectSchemaType).fields) {
-    const body = <FieldList type={t as ObjectSchemaType} value={(value as Record<string, unknown>) ?? {}} basePath={path} onChange={onChange} view={view} />;
+    const body = <FieldList type={t as ObjectSchemaType} value={(value as Record<string, unknown>) ?? {}} basePath={path} onChange={onChange} grant={grant && fieldKind(field.name, t) === "settings" ? grant : null} />;
     const opts = (t.options ?? {}) as { collapsible?: boolean; collapsed?: boolean };
     return opts.collapsible ? (
       <details open={!opts.collapsed} style={group}>
@@ -273,4 +282,26 @@ function ImageControl({ label, value, path, onChange }: { label: React.ReactNode
       <span style={hint}>Or drop an image file on it in the canvas.</span>
     </div>
   );
+}
+
+/** Every block type's fields with their permission kind and control, for the AI chat (core/editor/chat.ts). */
+export function buildCatalog(schema: { get: (name: string) => SchemaType | undefined }, types: readonly string[]): Catalog {
+  const out: Catalog = {};
+  for (const name of types) {
+    const t = schema.get(name) as ObjectSchemaType | undefined;
+    if (!t?.fields) continue;
+    const fields: Catalog[string]["fields"] = {};
+    for (const f of t.fields as Field[]) {
+      const kind = controlKind(f.type);
+      if (kind === "structure" || kind === "unsupported") continue;
+      fields[f.name] = {
+        kind: fieldKind(f.name, f.type),
+        control: is(f.type, "link") ? "link" : kind,
+        title: f.type.title ?? f.name,
+        options: kind === "choice" ? listOf(f.type)!.map((o) => o.value) : undefined,
+      };
+    }
+    out[name] = { title: t.title ?? name, fields };
+  }
+  return out;
 }

@@ -34,6 +34,8 @@ execSync("npx sanity exec src/core/editor/ops.check.ts", { stdio: ["ignore", "in
 execSync("npx sanity exec src/core/style/stylesheet.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // Component instance overrides apply to the right block and never touch the master.
 execSync("npx sanity exec src/core/render/overrides.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+// AI chat: role permissions (remarkable.policy.ts) gate every change the model proposes.
+execSync("npx sanity exec src/core/editor/chat.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 
 console.log("\n2. Build");
 execSync("npx astro build", { stdio: ["ignore", "ignore", "inherit"] });

@@ -32,6 +32,11 @@ function updateIn<T>(root: T, path: string, fn: (node: Node) => Node): T {
   return rec(root as Node, 0) as T;
 }
 
+/** Copy-on-write set of one value at a GROQ-style path (objects on the way are created). */
+export function setAt(doc: Doc, path: string, value: unknown): Doc {
+  return updateIn(doc, path, () => value as Node);
+}
+
 const itemPath = (arrayPath: string, key: string) => `${arrayPath}[_key=="${key}"]`;
 
 /** The array path's owner: "page" for `sections`, else the block that holds it. */
