@@ -42,7 +42,11 @@ export function EditorChat({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [messages, busy]);
+  // Braces matter: newer browsers return a Promise from scrollIntoView, and an
+  // effect that returns a non-function crashes React on unmount.
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [messages, busy]);
 
   const send = async (text = input.trim()) => {
     if (!text || busy || !doc) return;
