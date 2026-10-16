@@ -9,8 +9,10 @@
  * the proposed ops. The editor validates them again and saves them as a draft
  * with the person's own session. The AI key never reaches the browser.
  *
- * Host env vars: AI_PROVIDER (anthropic | openai | openrouter | sanity),
- * AI_API_KEY (not needed for "sanity"), AI_MODEL (optional).
+ * Host env vars: ANTHROPIC_API_KEY / OPENAI_API_KEY / OPENROUTER_API_KEY (one
+ * per provider), AI_MODELS (optional allow-list "provider:model, …" shown in the
+ * chat's model picker), or the shorthand AI_PROVIDER + AI_API_KEY (+ AI_MODEL).
+ * See server/models.ts availableModels.
  */
 import type { APIRoute } from "astro";
 import { getSecret } from "astro:env/server";
@@ -20,19 +22,13 @@ import { buildInstruction, parseAnswer, type Catalog, type ChatTurn } from "@/co
 import { grantFor, may } from "@/core/editor/policy";
 import { dataset, projectId } from "@/core/sanity/env";
 import { POLICY } from "@/remarkable.policy";
-import { askModel, PROVIDERS, type Provider } from "./models";
+import { askModel, availableModels } from "./models";
 
 export const prerender = false;
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
-function modelConfig() {
-  const provider = (getSecret("AI_PROVIDER") || "anthropic") as Provider;
-  const apiKey = getSecret("AI_API_KEY") ?? "";
-  const model = getSecret("AI_MODEL") ?? "";
-  const known = provider in PROVIDERS;
-  return { provider, apiKey, model, ready: known && (provider === "sanity" || !!apiKey), known };
-}
+const models = () => availableModels((name) => getSecret(name));
 
 // ponytail: per-instance memory, so it resets on cold starts and isn't shared
 // across instances. The real ceiling is the spend limit on the provider account;
@@ -47,14 +43,13 @@ function limited(userId: string): boolean {
   return hits.length > PER_MINUTE;
 }
 
-/** Status for the chat panel: is a model configured on this deployment? */
+/** Status for the chat panel: the models this deployment offers (no keys, just names). */
 export const GET: APIRoute = () => {
-  const cfg = modelConfig();
+  const { options } = models();
   return json({
-    available: cfg.ready,
-    provider: cfg.known ? PROVIDERS[cfg.provider].label : cfg.provider,
-    model: cfg.model || (cfg.known ? PROVIDERS[cfg.provider].model : ""),
-    reason: cfg.ready ? undefined : !cfg.known ? `Unknown AI_PROVIDER "${cfg.provider}"` : "AI_API_KEY is not set on this deployment",
+    available: options.length > 0,
+    models: options.map(({ id, label }) => ({ id, label })),
+    reason: options.length ? undefined : "No AI key is set on this deployment",
   });
 };
 
@@ -65,11 +60,12 @@ type Body = {
   history?: unknown;
   catalog?: unknown;
   viewAs?: unknown;
+  model?: unknown;
 };
 
 export const POST: APIRoute = async ({ request }) => {
-  const cfg = modelConfig();
-  if (!cfg.ready) return json({ error: "The chat isn't configured on this deployment (AI_PROVIDER / AI_API_KEY)." }, 503);
+  const { options, keys } = models();
+  if (!options.length) return json({ error: "The chat isn't configured on this deployment (no AI key)." }, 503);
 
   // 1. Who is asking: the Sanity session token, checked with Sanity.
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
@@ -85,6 +81,9 @@ export const POST: APIRoute = async ({ request }) => {
   const viewAs = typeof body.viewAs === "string" && roles.includes("administrator") && POLICY[body.viewAs] ? body.viewAs : null;
   const grant = grantFor(viewAs ? [viewAs] : roles, POLICY);
   if (!may(grant, "chat")) return json({ error: "Your role can't use the chat." }, 403);
+  // Only models the deployment allows (AI_MODELS caps cost); unknown → the default.
+  const choice = options.find((o) => o.id === body.model) ?? options[0];
+  const cfg = { provider: choice.provider, model: choice.model, apiKey: keys[choice.provider] ?? "" };
 
   // 3. The input, bounded.
   const documentId = typeof body.documentId === "string" ? body.documentId : "";
@@ -114,7 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
       cfg.provider === "sanity"
         ? await sanity.withConfig({ apiVersion: "vX" }).agent.action.prompt({ instruction, format: "json", temperature: 0.2 })
         : await askModel(cfg, instruction);
-    return json(parseAnswer(raw));
+    return json({ ...parseAnswer(raw), model: choice.id });
   } catch (e) {
     const err = e as { statusCode?: number; message?: string };
     // Don't echo provider auth details to the browser: that's the agency's key.

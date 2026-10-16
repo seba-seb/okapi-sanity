@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { applyOps, buildInstruction, describePage, parseAnswer, type Catalog } from "./chat.ts";
 import { grantFor, mayAdd, type Policy } from "./policy.ts";
 import { POLICY } from "../../remarkable.policy.ts";
-import { buildRequest, readResponse } from "./server/models.ts";
+import { availableModels, buildRequest, readResponse } from "./server/models.ts";
 
 const policy: Policy = {
   administrator: { label: "Agency", can: ["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"] },
@@ -132,4 +132,15 @@ assert.ok(buildRequest({ provider: "openrouter", model: "x/y", apiKey: "k3" }, "
 assert.equal(readResponse("anthropic", { content: [{ type: "text", text: '{"reply":"a"}' }] }), '{"reply":"a"}');
 assert.equal(readResponse("openai", { choices: [{ message: { content: '{"reply":"b"}' } }] }), '{"reply":"b"}');
 assert.deepEqual(parseAnswer(readResponse("anthropic", { content: [{ type: "text", text: '```json\n{"reply":"c","ops":[]}\n```' }] })), { reply: "c", ops: [] });
+// Model picker: only providers with a key; AI_MODELS is an allow-list; shorthand still works
+const env = (vars: Record<string, string>) => (k: string) => vars[k];
+assert.equal(availableModels(env({})).options.length, 0);
+let m = availableModels(env({ ANTHROPIC_API_KEY: "a", OPENAI_API_KEY: "o" }));
+assert.equal(m.options[0].id, "anthropic:claude-sonnet-5-5"); // default first
+assert.ok(m.options.some((o) => o.provider === "openai") && !m.options.some((o) => o.provider === "openrouter"));
+m = availableModels(env({ ANTHROPIC_API_KEY: "a", AI_MODELS: "anthropic:claude-haiku-5-5, openai:gpt-4.1, sanity" }));
+assert.deepEqual(m.options.map((o) => o.id), ["anthropic:claude-haiku-5-5", "sanity:"]); // openai has no key
+m = availableModels(env({ AI_PROVIDER: "openai", AI_API_KEY: "k", AI_MODEL: "gpt-x" }));
+assert.equal(m.options[0].id, "openai:gpt-x");
+assert.equal(m.keys.openai, "k");
 console.log("chat.check: ok");

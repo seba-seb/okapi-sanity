@@ -4,7 +4,16 @@ import type { SanityClient } from "sanity";
 import type { ApplyResult, Catalog, ChatTurn, PageRef } from "./chat";
 import type { Grant } from "./policy";
 
-type Message = ChatTurn & { applied?: string[]; rejected?: string[]; error?: boolean };
+type Message = ChatTurn & { applied?: string[]; rejected?: string[]; error?: boolean; model?: string };
+type Status = { available: boolean; models?: { id: string; label: string }[]; reason?: string };
+const MODEL_PREF = "remarkable:chat-model";
+const readPref = () => {
+  try {
+    return localStorage.getItem(MODEL_PREF);
+  } catch {
+    return null;
+  }
+};
 
 const SUGGESTIONS = [
   "Make the selected heading shorter and punchier",
@@ -43,7 +52,19 @@ export function EditorChat({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   // Is the chat set up on this deployment? (GET /api/editor-chat)
-  const [status, setStatus] = useState<{ available: boolean; provider?: string; model?: string; reason?: string } | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
+  // The model picker: names come from the server (it holds the keys); the choice is remembered in this browser.
+  const [modelId, setModelId] = useState<string | null>(readPref);
+  const models = status?.models ?? [];
+  const current = models.find((m) => m.id === modelId) ?? models[0];
+  const pickModel = (id: string) => {
+    setModelId(id);
+    try {
+      localStorage.setItem(MODEL_PREF, id);
+    } catch {
+      /* private mode: remembered for this session only */
+    }
+  };
   useEffect(() => {
     fetch(ENDPOINT)
       .then((r) => (r.ok ? r.json() : { available: false, reason: r.status === 404 ? "NO_ROUTE" : `HTTP ${r.status}` }))
@@ -67,14 +88,20 @@ export function EditorChat({
       const res = await fetch(ENDPOINT, {
         method: "POST",
         headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : null) },
-        body: JSON.stringify({ documentId, request: text, selection, history, catalog, viewAs }),
+        body: JSON.stringify({ documentId, request: text, selection, history, catalog, viewAs, model: current?.id }),
       });
-      const answer = (await res.json().catch(() => ({ error: `HTTP ${res.status}` }))) as { reply?: string; ops?: unknown[]; error?: string };
+      const answer = (await res.json().catch(() => ({ error: `HTTP ${res.status}` }))) as { reply?: string; ops?: unknown[]; error?: string; model?: string };
       if (!res.ok || answer.error) throw new Error(answer.error ?? `HTTP ${res.status}`);
       const done = answer.ops?.length ? onApply(answer.ops) : { applied: [], rejected: [] };
       setMessages((m) => [
         ...m,
-        { role: "assistant", text: answer.reply || (done.applied.length ? "Done." : "I didn't change anything."), applied: done.applied, rejected: done.rejected },
+        {
+          role: "assistant",
+          text: answer.reply || (done.applied.length ? "Done." : "I didn't change anything."),
+          applied: done.applied,
+          rejected: done.rejected,
+          model: models.find((m) => m.id === answer.model)?.label,
+        },
       ]);
     } catch (e) {
       setMessages((m) => [...m, { role: "assistant", text: (e as Error).message, error: true }]);
@@ -96,19 +123,30 @@ export function EditorChat({
           </p>
         ) : (
           <p style={{ margin: 0 }}>
-            {status.reason}. The agency sets <code>AI_PROVIDER</code> and <code>AI_API_KEY</code> in the hosting's environment variables and
-            redeploys.
+            {status.reason}. The agency sets a key (<code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code> or{" "}
+            <code>OPENROUTER_API_KEY</code>) in the hosting's environment variables and redeploys.
           </p>
         )}
       </div>
     );
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, opacity: 0.7, marginBottom: 8 }}>
-        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {status.provider}
-          {status.model ? ` · ${status.model}` : ""}
-        </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, opacity: 0.85, marginBottom: 8 }}>
+        <span>Model</span>
+        <select
+          id="chat-model"
+          value={current?.id ?? ""}
+          onChange={(e) => pickModel(e.target.value)}
+          disabled={busy || models.length < 2}
+          style={{ flex: 1, minWidth: 0, padding: "3px 6px", font: "inherit", fontSize: 12, color: "inherit", background: "transparent", border, borderRadius: 6 }}
+          title="Models this site offers (set by the agency in the hosting)"
+        >
+          {models.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "grid", alignContent: "start", gap: 10, paddingBottom: 8 }}>
         {messages.length === 0 ? (
@@ -129,6 +167,7 @@ export function EditorChat({
         {messages.map((m, i) => (
           <div key={i} style={m.role === "user" ? userBubble : { ...botBubble, ...(m.error ? { borderColor: "#e5484d" } : null) }}>
             <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
+            {m.model ? <div style={{ fontSize: 10, opacity: 0.5, marginTop: 4 }}>{m.model}</div> : null}
             {m.applied?.length ? (
               <ul style={list}>
                 {m.applied.map((a, j) => (

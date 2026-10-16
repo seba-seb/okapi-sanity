@@ -129,8 +129,9 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   (`core/editor/server/chatRoute.ts`). The route checks the token with Sanity
   (`/users/me` → roles), computes the grant from the policy, reads the page from
   Sanity with that session, asks the model with the **project's key from the
-  host's env** (`AI_PROVIDER` anthropic|openai|openrouter|sanity, `AI_API_KEY`,
-  `AI_MODEL`; `server/models.ts`) and returns JSON ops (`set`, `style`,
+  host's env** (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `OPENROUTER_API_KEY`;
+  `AI_MODELS` = allow-list "provider:model, …" for the chat's model picker,
+  first = default; shorthand `AI_PROVIDER` + `AI_API_KEY`; `server/models.ts`) and returns JSON ops (`set`, `style`,
   `insert`, `remove`, `duplicate`, `move`). The editor re-validates them
   (`chat.ts applyOps`: grant + registry + schema) and applies them as ONE undo
   step, saved as a draft with the person's own session. Never publishes. The

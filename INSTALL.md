@@ -294,8 +294,9 @@ opcional: también se puede crear la primera página desde el editor.
 - **Build:** `npm run build`. Las páginas de Remarkable son estáticas.
 - **Variables en el host:** las de `.env`, sin secretos salvo
   `SANITY_API_READ_TOKEN` si el dataset es privado.
-- **Chat del editor:** en el hosting, `AI_PROVIDER` (anthropic | openai |
-  openrouter | sanity) y `AI_API_KEY` con la clave del cliente. Pedile al
+- **Chat del editor:** en el hosting, la clave del cliente por proveedor
+  (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY` y/o `OPENROUTER_API_KEY`) y, opcional,
+  `AI_MODELS` con los modelos que el chat puede elegir (ver `.env.example`). Pedile al
   usuario que le ponga un tope de gasto en el proveedor. Funciona en Vercel y
   Netlify sin tocar nada; en Cloudflare Pages, `npm i @astrojs/cloudflare
   wrangler`; en otro hosting el sitio anda igual pero el chat queda
