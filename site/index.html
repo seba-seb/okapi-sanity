@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Okapi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Okapi suma a cualquier proyecto Astro un editor visual sobre Sanity, con un chat de IA que solo toca lo que vos le dejás.">
+<meta property="og:title" content="Okapi — editá tu sitio Astro arriba del sitio">
+<meta property="og:description" content="Editor visual para Astro + Sanity, con IA que respeta permisos. Open source.">
+<link rel="icon" href="okapi.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500..900,100,1&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column that walks down the okapi — head, stripes, body, tongue — with
+   striped bands between chapters. Single visual world: the Ituri rainforest at night. */
+:root {
+  --canopy: #0D261C;      /* page: rainforest at night */
+  --canopy-2: #133325;    /* raised surfaces */
+  --leaf: #275341;        /* hairlines */
+  --cream: #F1E4CF;       /* okapi face + stripes; main text */
+  --fog: #AFBDAA;         /* secondary text */
+  --chestnut: #8A3B22;    /* okapi coat */
+  --ink: #2B1510;         /* okapi blaze */
+  --tongue: #7480FF;      /* the long blue tongue: the one accent */
+  --tongue-ink: #0B1033;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --col: 68rem;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+body {
+  margin: 0;
+  background: var(--canopy);
+  color: var(--cream);
+  font: 400 17px/1.6 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--tongue); outline-offset: 3px; border-radius: 6px; }
+code, pre { font-family: var(--font-mono); }
+.wrap { max-width: var(--col); margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; text-wrap: balance; margin: 0; }
+h1 { font-weight: 850; font-size: clamp(2.8rem, 1.6rem + 5.4vw, 5.6rem); line-height: 0.95; letter-spacing: -0.025em; }
+h2 { font-weight: 800; font-size: clamp(2rem, 1.4rem + 2.6vw, 3.3rem); line-height: 1; letter-spacing: -0.02em; }
+h3 { font-weight: 700; font-size: 1.35rem; line-height: 1.15; }
+p { margin: 0; }
+.lead { font-size: clamp(1.1rem, 1rem + 0.4vw, 1.3rem); color: var(--fog); max-width: 36rem; }
+.label { font: 500 12px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fog); }
+.tongue { color: var(--tongue); }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--canopy) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid color-mix(in srgb, var(--leaf) 60%, transparent); }
+header.top .wrap { display: flex; align-items: center; gap: 20px; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 850 26px/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.02em; }
+.brand svg { width: 38px; height: 38px; }
+nav.links { display: flex; gap: 18px; margin-left: auto; font-size: 15px; }
+nav.links a { text-decoration: none; color: var(--fog); }
+nav.links a:hover { color: var(--cream); }
+.gh { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--cream); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; white-space: nowrap; }
+.gh:hover { background: #fff; }
+@media (max-width: 760px) { nav.links { display: none; } .gh { margin-left: auto; } }
+
+/* Hero */
+.hero { padding-block: clamp(48px, 8vw, 96px) 40px; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 40px; align-items: center; }
+.hero .copy { display: grid; gap: 22px; min-width: 0; }
+.hero-mark { position: relative; justify-self: center; width: min(100%, 340px); aspect-ratio: 1; }
+.hero-mark .halo { position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(circle at 50% 45%, #1C4733 0%, transparent 70%); }
+.hero-mark svg { position: relative; width: 100%; height: 100%; }
+.tongue-path { transform-box: view-box; transform-origin: 99px 168px; animation: lick 5s ease-in-out 1.2s infinite; }
+@keyframes lick { 0%, 78%, 100% { transform: rotate(0) scale(1); } 84% { transform: rotate(-14deg) scale(1.18); } 90% { transform: rotate(6deg) scale(1.05); } }
+.ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 20px; border-radius: 999px; font-weight: 600; text-decoration: none; border: 1.5px solid var(--cream); }
+.btn.primary { background: var(--tongue); border-color: var(--tongue); color: var(--tongue-ink); }
+.btn.primary:hover { background: #8D97FF; border-color: #8D97FF; }
+.btn.ghost:hover { background: color-mix(in srgb, var(--cream) 10%, transparent); }
+.prompt { display: flex; align-items: stretch; border: 1px solid var(--leaf); border-radius: 14px; background: var(--canopy-2); overflow: hidden; max-width: 40rem; }
+.prompt code { flex: 1; min-width: 0; padding: 14px 16px; font-size: 14px; line-height: 1.5; color: var(--cream); }
+.prompt code::before { content: "› "; color: var(--tongue); }
+.prompt button { flex: none; border: 0; border-left: 1px solid var(--leaf); background: transparent; color: var(--fog); font: 500 13px var(--font-body); padding: 0 16px; cursor: pointer; }
+.prompt button:hover { color: var(--cream); }
+.agents { font-size: 14px; color: var(--fog); }
+@media (max-width: 860px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } .hero-mark { order: -1; width: 200px; justify-self: start; } }
+
+/* Okapi stripes divider */
+.stripes { height: 54px; background:
+  repeating-linear-gradient(180deg, var(--cream) 0 7px, transparent 7px 18px);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  opacity: 0.9; margin-block: 8px; }
+
+/* Anatomy */
+section { padding-block: clamp(56px, 8vw, 104px); }
+.section-head { display: grid; gap: 14px; margin-bottom: 40px; max-width: 46rem; }
+.anatomy { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--leaf); }
+.part { padding: 24px 22px 26px 0; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.part + .part { padding-left: 22px; border-left: 1px solid var(--leaf); }
+.part .label { color: var(--tongue); }
+.part p { color: var(--fog); font-size: 15.5px; }
+.part h3 b { font-weight: inherit; color: var(--cream); }
+@media (max-width: 900px) { .anatomy { grid-template-columns: repeat(2, minmax(0, 1fr)); } .part:nth-child(3) { padding-left: 0; border-left: 0; } .part:nth-child(n+3) { border-top: 1px solid var(--leaf); } }
+@media (max-width: 520px) { .anatomy { grid-template-columns: minmax(0, 1fr); } .part, .part + .part { padding-left: 0; border-left: 0; } .part + .part { border-top: 1px solid var(--leaf); } }
+
+/* Editor illustration */
+.editor { border: 1px solid var(--leaf); border-radius: 18px; overflow: hidden; background: #0A1F17; box-shadow: 0 30px 80px -30px #000c; }
+.editor-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--leaf); font: 12px var(--font-mono); color: var(--fog); }
+.editor-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--leaf); display: inline-block; }
+.editor-bar .chip { margin-left: auto; padding: 3px 10px; border-radius: 999px; background: var(--tongue); color: var(--tongue-ink); font-weight: 500; }
+.editor-body { display: grid; grid-template-columns: 170px minmax(0, 1fr) 250px; min-height: 360px; }
+.layers { border-right: 1px solid var(--leaf); padding: 14px 12px; font: 12.5px/1.9 var(--font-mono); color: var(--fog); }
+.layers .on { color: var(--tongue-ink); background: var(--tongue); border-radius: 6px; padding: 0 6px; margin-left: -6px; }
+.canvas { padding: 22px; background: var(--cream); color: var(--ink); display: grid; align-content: start; gap: 12px; min-width: 0; }
+.canvas .eyebrow { font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--chestnut); }
+.canvas .h { font: 850 28px/1.02 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; outline: 2px solid var(--tongue); outline-offset: 4px; border-radius: 3px; }
+.canvas .h s { opacity: .45; text-decoration-thickness: 2px; }
+.canvas .p { font-size: 13.5px; color: #5a3c33; max-width: 28rem; }
+.canvas .imgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+.canvas .imgs span { aspect-ratio: 4 / 3; border-radius: 8px; background: repeating-linear-gradient(180deg, #E4D3B8 0 6px, #EADDC8 6px 12px); }
+.chat { border-left: 1px solid var(--leaf); padding: 14px; display: grid; align-content: start; gap: 10px; font-size: 13px; }
+.chat .me { justify-self: end; background: var(--tongue); color: var(--tongue-ink); padding: 8px 11px; border-radius: 12px 12px 4px 12px; max-width: 90%; }
+.chat .ai { border: 1px solid var(--leaf); padding: 8px 11px; border-radius: 12px 12px 12px 4px; color: var(--cream); }
+.chat .ok { color: #8FE3B0; font: 12px var(--font-mono); margin-top: 4px; }
+.chat .no { color: #FF9B8A; font: 12px var(--font-mono); }
+@media (max-width: 860px) { .editor-body { grid-template-columns: minmax(0, 1fr); } .layers { display: none; } .chat { border-left: 0; border-top: 1px solid var(--leaf); } }
+
+/* Feature list */
+.features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 48px; margin-top: 48px; }
+.feature { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 14px; padding: 18px 0; border-top: 1px solid var(--leaf); }
+.feature .bar { width: 22px; height: 22px; background: repeating-linear-gradient(180deg, var(--cream) 0 4px, transparent 4px 8px); opacity: .85; margin-top: 3px; }
+.feature b { display: block; font-weight: 600; margin-bottom: 2px; }
+.feature span { color: var(--fog); font-size: 15.5px; }
+@media (max-width: 760px) { .features { grid-template-columns: minmax(0, 1fr); } }
+
+/* Policy */
+.split { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
+.split .copy { display: grid; gap: 18px; }
+.code { border: 1px solid var(--leaf); border-radius: 16px; background: #091B14; overflow-x: auto; }
+.code .file { padding: 10px 16px; border-bottom: 1px solid var(--leaf); font: 12px var(--font-mono); color: var(--fog); }
+.code pre { margin: 0; padding: 18px 16px; font-size: 13.5px; line-height: 1.7; color: #D9E2D5; }
+.code .k { color: var(--tongue); } .code .s { color: #E8C79A; } .code .c { color: #6F8A79; }
+.facts { display: grid; gap: 12px; margin-top: 6px; }
+.facts div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: baseline; }
+.facts strong { font: 800 1.5rem/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--tongue); min-width: 2.6ch; }
+.facts span { color: var(--fog); }
+@media (max-width: 860px) { .split { grid-template-columns: minmax(0, 1fr); } }
+
+/* Numbers */
+.numbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--leaf); }
+.numbers div { padding: 26px 20px 24px; display: grid; gap: 8px; min-width: 0; }
+.numbers div + div { border-left: 1px solid var(--leaf); }
+.numbers strong { font: 850 clamp(2.2rem, 1.6rem + 2vw, 3.2rem)/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.numbers span { color: var(--fog); font-size: 15px; }
+@media (max-width: 760px) { .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); } .numbers div:nth-child(3) { border-left: 0; } .numbers div:nth-child(n+3) { border-top: 1px solid var(--leaf); } }
+
+/* Steps */
+.steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
+.steps li { counter-increment: s; padding: 22px; border: 1px solid var(--leaf); border-radius: 16px; display: grid; gap: 10px; align-content: start; background: var(--canopy-2); min-width: 0; }
+.steps li::before { content: counter(s); font: 850 2.4rem/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--tongue); }
+.steps p { color: var(--fog); font-size: 15.5px; }
+.steps code { font-size: 13px; color: var(--cream); background: #0A1F17; padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+@media (max-width: 860px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+
+/* FAQ */
+.faq { display: grid; gap: 0; max-width: 52rem; }
+.faq details { border-top: 1px solid var(--leaf); padding: 18px 0; }
+.faq details:last-child { border-bottom: 1px solid var(--leaf); }
+.faq summary { cursor: pointer; font: 700 1.2rem/1.3 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; list-style: none; display: flex; gap: 12px; justify-content: space-between; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--tongue); font-family: var(--font-mono); }
+.faq details[open] summary::after { content: "–"; }
+.faq p { color: var(--fog); margin-top: 10px; max-width: 44rem; }
+
+/* Footer */
+footer { border-top: 1px solid var(--leaf); padding-block: 40px 56px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 24px 40px; align-items: flex-start; justify-content: space-between; }
+footer .fact { max-width: 30rem; color: var(--fog); font-size: 15px; }
+footer .fact b { color: var(--cream); font-weight: 600; }
+footer nav { display: flex; gap: 18px; font-size: 15px; color: var(--fog); }
+footer nav a { text-decoration: none; }
+footer nav a:hover { color: var(--cream); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Okapi, inicio">
+      <svg viewBox="0 0 200 200" aria-hidden="true"><use href="#okapi"/></svg>
+      okapi
+    </a>
+    <nav class="links" aria-label="Secciones">
+      <a href="#anatomia">Qué es</a>
+      <a href="#editor">El editor</a>
+      <a href="#permisos">Permisos</a>
+      <a href="#instalar">Instalar</a>
+      <a href="docs/index.html">Docs</a>
+    </nav>
+    <a class="gh" href="https://github.com/seba-seb/okapi">★ GitHub</a>
+  </div>
+</header>
+
+<!-- The mark, defined once and reused -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="okapi">
+      <path d="M78 150 C82 172 80 188 74 200 L126 200 C120 188 118 172 122 150 Z" fill="#2B1510"/>
+      <g fill="none" stroke="#F1E4CF" stroke-width="6" stroke-linecap="round"><path d="M81 181 C93 177 107 177 119 181"/><path d="M78 194 C92 190 108 190 122 194"/></g>
+      <ellipse cx="50" cy="74" rx="36" ry="17" transform="rotate(-28 50 74)" fill="#8A3B22"/>
+      <ellipse cx="53" cy="75" rx="23" ry="8" transform="rotate(-28 53 75)" fill="#F1E4CF"/>
+      <ellipse cx="150" cy="74" rx="36" ry="17" transform="rotate(28 150 74)" fill="#8A3B22"/>
+      <ellipse cx="147" cy="75" rx="23" ry="8" transform="rotate(28 147 75)" fill="#F1E4CF"/>
+      <rect x="80" y="20" width="12" height="32" rx="6" transform="rotate(-12 86 36)" fill="#8A3B22"/>
+      <circle cx="83" cy="23" r="6" fill="#2B1510"/>
+      <rect x="108" y="20" width="12" height="32" rx="6" transform="rotate(12 114 36)" fill="#8A3B22"/>
+      <circle cx="117" cy="23" r="6" fill="#2B1510"/>
+      <path d="M100 40 C131 40 147 58 147 85 C147 107 139 125 131 143 C125 159 117 173 100 173 C83 173 75 159 69 143 C61 125 53 107 53 85 C53 58 69 40 100 40 Z" fill="#8A3B22"/>
+      <path d="M57 97 C63 121 75 141 83 159 C87 168 93 173 100 173 C107 173 113 168 117 159 C125 141 137 121 143 97 C131 107 118 111 100 111 C82 111 69 107 57 97 Z" fill="#F1E4CF"/>
+      <path d="M90 47 C94 43 106 43 110 47 C113 80 113 120 111 151 C110 163 106 169 100 169 C94 169 90 163 89 151 C87 120 87 80 90 47 Z" fill="#2B1510"/>
+      <ellipse cx="95" cy="158" rx="2.4" ry="3.6" transform="rotate(14 95 158)" fill="#F1E4CF"/>
+      <ellipse cx="105" cy="158" rx="2.4" ry="3.6" transform="rotate(-14 105 158)" fill="#F1E4CF"/>
+      <path class="tongue-path" d="M99 165 C104 170 111 172 118 171 C125 170 129 174 127 179 C125 184 118 183 115 179 C112 175 104 172 98 170 Z" fill="#7480FF"/>
+      <ellipse cx="73" cy="92" rx="6.5" ry="8" fill="#2B1510"/>
+      <circle cx="75" cy="89" r="2" fill="#FBF6EC"/>
+      <ellipse cx="127" cy="92" rx="6.5" ry="8" fill="#2B1510"/>
+      <circle cx="129" cy="89" r="2" fill="#FBF6EC"/>
+    </g>
+  </defs>
+</svg>
+
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="copy">
+        <p class="label">Editor visual para Astro + Sanity · open source</p>
+        <h1 id="hero-title">Editá tu sitio Astro arriba del sitio.</h1>
+        <p class="lead">Okapi suma a cualquier proyecto Astro un editor visual sobre Sanity. Tu cliente escribe sobre la página real, arrastra bloques y le pide cambios a una IA que solo toca lo que vos le dejás.</p>
+        <div class="ctas">
+          <a class="btn primary" href="https://github.com/seba-seb/okapi">Ver en GitHub</a>
+          <a class="btn ghost" href="docs/index.html">Leer la documentación</a>
+        </div>
+        <div class="prompt" role="group" aria-label="Instalar con tu agente">
+          <code id="install-prompt">Cloná seba-seb/okapi en /tmp/okapi y seguí su INSTALL.md para sumar Okapi a este proyecto.</code>
+          <button type="button" data-copy="install-prompt">Copiar</button>
+        </div>
+        <p class="agents">Pegáselo a Claude Code, Codex, Cursor o el agente que uses. Sirve para un proyecto nuevo o uno que ya tenés.</p>
+      </div>
+      <div class="hero-mark">
+        <div class="halo"></div>
+        <svg viewBox="0 0 200 200" role="img" aria-label="La cara de un okapi, con la lengua azul afuera"><use href="#okapi"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="stripes" aria-hidden="true"></div></div>
+
+  <section id="anatomia" aria-labelledby="anatomia-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">Anatomía de un okapi</p>
+        <h2 id="anatomia-title">Parece armado con partes de otros animales. Okapi también.</h2>
+        <p class="lead">El okapi tiene cabeza de jirafa, rayas de cebra y cuerpo de caballo. Nosotros juntamos tres herramientas que ya funcionan y les agregamos una lengua larga.</p>
+      </div>
+      <div class="anatomy">
+        <div class="part">
+          <p class="label">Cabeza de jirafa</p>
+          <h3><b>Astro</b>, el sitio</h3>
+          <p>Tu proyecto sigue siendo tuyo. Las páginas salen como HTML estático y solo las secciones con animación cargan JavaScript.</p>
+        </div>
+        <div class="part">
+          <p class="label">Rayas de cebra</p>
+          <h3><b>El editor</b>, las capas</h3>
+          <p>Bloques, capas y estilos con los tokens de tu diseño. Se edita sobre la página real, con sus animaciones y breakpoints.</p>
+        </div>
+        <div class="part">
+          <p class="label">Cuerpo de caballo</p>
+          <h3><b>Sanity</b>, la base</h3>
+          <p>Login, roles, borradores, historial e imágenes en CDN. Lo mantiene Sanity, no vos.</p>
+        </div>
+        <div class="part">
+          <p class="label">Lengua de 35 cm</p>
+          <h3><b>La IA</b>, que llega lejos</h3>
+          <p>Un chat que hace cambios en la página. Llega a todos lados, pero solo donde el rol de la persona lo permite.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="editor" aria-labelledby="editor-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">El editor</p>
+        <h2 id="editor-title">Como Webflow, pero adentro de tu proyecto.</h2>
+        <p class="lead">Una pestaña del Studio de Sanity: capas a la izquierda, tu sitio real en el medio, propiedades y chat a la derecha.</p>
+      </div>
+      <div class="editor" role="img" aria-label="Ilustración del editor: capas, la página con un título seleccionado y el chat que lo acortó">
+        <div class="editor-bar"><i></i><i></i><i></i><span>/studio#/editor · Home</span><span class="chip">✦ Chat</span></div>
+        <div class="editor-body">
+          <div class="layers">
+            Section · Hero<br>
+            &nbsp;&nbsp;Eyebrow<br>
+            &nbsp;&nbsp;<span class="on">Heading</span><br>
+            &nbsp;&nbsp;Paragraph<br>
+            &nbsp;&nbsp;Grid<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Image ×3<br>
+            Section · Servicios<br>
+            ◆ Footer CTA
+          </div>
+          <div class="canvas">
+            <span class="eyebrow">Estudio de diseño</span>
+            <div class="h">Hacemos marcas que se mueven.</div>
+            <p class="p">Identidad, sitios y campañas para equipos que quieren verse distintos.</p>
+            <div class="imgs"><span></span><span></span><span></span></div>
+          </div>
+          <div class="chat">
+            <div class="me">Acortá este título y hacelo más directo</div>
+            <div class="ai">Listo: “Hacemos marcas que se mueven.”<div class="ok">✓ Heading · Text</div></div>
+            <div class="me">Cambiá el fondo de la sección a oscuro</div>
+            <div class="ai">Tu rol no puede cambiar estilos.<div class="no">✕ style · role: Client</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="features">
+        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Texto sobre la página</b><span>Doble clic y escribís. Negrita, itálica y links con una barrita flotante.</span></div></div>
+        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Capas y arrastre</b><span>Reordenás en el árbol o directo en el canvas. Cada movimiento se valida contra lo que cada bloque acepta.</span></div></div>
+        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Estilos con tus tokens</b><span>Espaciado, color, radio y ancho por breakpoint. Sin CSS libre: la marca no se rompe.</span></div></div>
+        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Componentes</b><span>Guardás una sección, la reusás en todo el sitio y cambiás textos o imágenes por instancia.</span></div></div>
+        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Chat con el modelo que elijas</b><span>Claude, GPT o cualquiera vía OpenRouter. Le pasás una imagen y la pone donde le digas.</span></div></div>
+        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Borradores y ⌘Z</b><span>Todo queda como borrador hasta que alguien publica. Lo que hace la IA se deshace en un paso.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="stripes" aria-hidden="true"></div></div>
+
+  <section id="permisos" aria-labelledby="permisos-title">
+    <div class="wrap split">
+      <div class="copy">
+        <p class="label">Permisos</p>
+        <h2 id="permisos-title">La lengua llega lejos. Vos decidís hasta dónde.</h2>
+        <p class="lead">Un archivo en tu proyecto define qué puede hacer cada rol de Sanity. El editor y el chat lo respetan: la IA nunca puede más que la persona que la usa.</p>
+        <div class="facts">
+          <div><strong>9</strong><span>permisos: textos, imágenes, estilos, ajustes, reordenar, estructura, componentes, publicar y chat.</span></div>
+          <div><strong>0</strong><span>claves de IA en el navegador. Viven en el hosting de cada proyecto.</span></div>
+          <div><strong>1</strong><span>paso para deshacer todo lo que hizo el chat.</span></div>
+        </div>
+      </div>
+      <div class="code" role="region" aria-label="Ejemplo de okapi.policy.ts">
+        <div class="file">src/okapi.policy.ts</div>
+<pre><span class="k">export const</span> POLICY = {
+  administrator: {
+    label: <span class="s">"Agencia"</span>,
+    can: [<span class="s">"text"</span>, <span class="s">"images"</span>, <span class="s">"style"</span>, <span class="s">"settings"</span>,
+          <span class="s">"structure"</span>, <span class="s">"components"</span>, <span class="s">"publish"</span>, <span class="s">"chat"</span>],
+  },
+  editor: {
+    label: <span class="s">"Cliente"</span>,
+    can: [<span class="s">"text"</span>, <span class="s">"images"</span>, <span class="s">"reorder"</span>, <span class="s">"publish"</span>, <span class="s">"chat"</span>],
+  },
+  contributor: {
+    label: <span class="s">"Cliente, solo borradores"</span>,
+    can: [<span class="s">"text"</span>, <span class="s">"chat"</span>],
+  },
+  <span class="c">// cualquier otro rol: solo mirar</span>
+  default: { label: <span class="s">"Lectura"</span>, can: [] },
+};</pre>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Okapi en números" style="padding-block: 0 clamp(56px, 8vw, 104px)">
+    <div class="wrap">
+      <div class="numbers">
+        <div><strong>≈1 KB</strong><span>de JavaScript en una página sin animaciones</span></div>
+        <div><strong>0 KB</strong><span>del editor llegan al sitio público</span></div>
+        <div><strong>3</strong><span>hostings sin configurar nada: Vercel, Netlify y Cloudflare</span></div>
+        <div><strong>1</strong><span>repo: le das la carpeta y funciona</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="instalar" aria-labelledby="instalar-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">Instalar</p>
+        <h2 id="instalar-title">Se lo pedís a tu agente.</h2>
+        <p class="lead">La instalación está escrita para que la siga cualquier agente de código, paso a paso, sin pisar tus archivos.</p>
+      </div>
+      <ol class="steps">
+        <li><h3>Pedíselo</h3><p>Pegá el prompt de arriba. El agente detecta si el proyecto es nuevo o existente y te pregunta lo que falta.</p></li>
+        <li><h3>Conectá Sanity</h3><p>Creás el proyecto, iniciás sesión una vez y el editor queda en <code>/studio#/editor</code>.</p></li>
+        <li><h3>Dale una lengua</h3><p>Cargás la clave de IA en el hosting (<code>ANTHROPIC_API_KEY</code> u otra) y el chat aparece para quien tenga permiso.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="faq-title" style="padding-top: 0">
+    <div class="wrap">
+      <div class="section-head"><h2 id="faq-title">Preguntas</h2></div>
+      <div class="faq">
+        <details>
+          <summary>¿Funciona con un proyecto Astro que ya tengo?</summary>
+          <p>Sí. Tus páginas, tu layout y tu configuración quedan como están. Okapi suma sus carpetas y sirve las páginas del editor en las rutas que elijas. Lo probamos sobre el template de blog oficial de Astro sin tocar una línea del blog.</p>
+        </details>
+        <details>
+          <summary>¿Quién paga la IA?</summary>
+          <p>Cada proyecto usa su propia clave, guardada en las variables de entorno del hosting. Nunca llega al navegador. La agencia puede limitar qué modelos aparecen en el chat.</p>
+        </details>
+        <details>
+          <summary>¿Es un Webflow?</summary>
+          <p>Se le parece en la forma de editar, pero no hay CSS libre: todo se estila con los tokens de tu diseño. Los bloques nuevos se escriben en código y el editor los compone. Así el cliente no puede romper la marca.</p>
+        </details>
+        <details>
+          <summary>¿Necesito saber Sanity?</summary>
+          <p>No para usarlo. Sanity guarda el contenido y maneja los usuarios; el día a día pasa en el editor. Para extenderlo, las reglas están en <code>AGENTS.md</code> y tu agente las lee solo.</p>
+        </details>
+        <details>
+          <summary>¿Por qué un okapi?</summary>
+          <p>Porque parece armado con partes de otros animales, como este proyecto. Y porque tiene una lengua de 35 centímetros con la que se limpia las orejas, que nos pareció la mejor metáfora posible para una IA con permisos.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Okapi, volver arriba">
+      <svg viewBox="0 0 200 200" aria-hidden="true"><use href="#okapi"/></svg>
+      okapi
+    </a>
+    <p class="fact"><b>Dato okapi:</b> la ciencia occidental lo describió recién en 1901. Vive en la selva de Ituri, en el Congo, y es tan tímido que casi nadie lo vio en estado salvaje.</p>
+    <nav aria-label="Enlaces">
+      <a href="https://github.com/seba-seb/okapi">GitHub</a>
+      <a href="docs/index.html">Docs</a>
+      <a href="https://github.com/seba-seb/okapi/blob/main/INSTALL.md">INSTALL.md</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var el = document.getElementById(btn.getAttribute("data-copy"));
+      var done = function () { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar"; }, 1600); };
+      var fallback = function () { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Seleccionado"; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.innerText).then(done, fallback);
+      else fallback();
+    });
+  });
+</script>
+</body>
+</html>

@@ -219,7 +219,7 @@ alias `@/*` (B1).
   contenido del nuestro. No reemplaces el suyo.
   - Sacale el título `#` al nuestro y bajá cada encabezado un nivel
     (`##` → `###`).
-  - Nuestro texto menciona `INSTALL.md` y `docs/index.html`. Copialos o
+  - Nuestro texto menciona `INSTALL.md` y `site/docs/index.html`. Copialos o
     reemplazá esas menciones por el link al repo de Okapi.
 - **`CLAUDE.md`:**
   - Si existe y no contiene `@AGENTS.md`, agregale esa línea.

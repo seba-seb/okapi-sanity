@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Okapi Docs</title>
+<link rel="icon" href="../okapi.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -16,7 +17,7 @@
   --line: #dcdcea;
   --fg: #12121c;
   --muted: #5d5d72;
-  --accent: #4f46e5;
+  --accent: #4752E8;
   --accent-soft: #ecebff;
   --accent-ink: #3730a3;
   --ok: #0f7b4a;
@@ -34,13 +35,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0c0c13; --panel: #14141e; --panel-2: #1c1c29; --line: #2a2a3b; --fg: #ececf6; --muted: #9c9cb4;
-    --accent: #8b83ff; --accent-soft: #1d1b3d; --accent-ink: #c4c0ff; --ok: #4ccf8f; --ok-soft: #0f2a1e;
+    --accent: #8A93FF; --accent-soft: #1d1b3d; --accent-ink: #c4c0ff; --ok: #4ccf8f; --ok-soft: #0f2a1e;
     --warn: #f0b54d; --warn-soft: #2b2110; --code-bg: #12121b; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0c0c13; --panel: #14141e; --panel-2: #1c1c29; --line: #2a2a3b; --fg: #ececf6; --muted: #9c9cb4;
-  --accent: #8b83ff; --accent-soft: #1d1b3d; --accent-ink: #c4c0ff; --ok: #4ccf8f; --ok-soft: #0f2a1e;
+  --accent: #8A93FF; --accent-soft: #1d1b3d; --accent-ink: #c4c0ff; --ok: #4ccf8f; --ok-soft: #0f2a1e;
   --warn: #f0b54d; --warn-soft: #2b2110; --code-bg: #12121b; color-scheme: dark;
 }
 
@@ -66,7 +67,7 @@ kbd { display: inline-block; min-width: 1.7em; text-align: center; padding: 0.05
 /* Index */
 .index { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; max-height: 100vh; overflow-y: auto; padding-block: 36px 40px; }
 .brand { display: flex; align-items: center; gap: 10px; font: 700 18px/1 var(--font-display); letter-spacing: -0.01em; color: var(--fg); text-decoration: none; margin-bottom: 28px; }
-.brand-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; color: var(--bg); font-size: 15px; }
+.brand-mark { width: 30px; height: 30px; }
 .index h2 { font: 600 11px/1 var(--font-body); text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 22px 0 8px; }
 .index ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
 .index a { display: block; padding: 5px 10px; border-radius: 7px; color: var(--muted); text-decoration: none; font-size: 14px; line-height: 1.35; }
@@ -242,7 +243,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
 
 <div class="shell" data-mode="vibe">
   <nav class="index" aria-label="Índice">
-    <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">O</span>Okapi</a>
+    <a class="brand" href="../"><img class="brand-mark" src="../okapi.svg" alt="" width="30" height="30">Okapi</a>
     <div class="mode" role="group" aria-label="Vista de la documentación">
       <button type="button" data-set-mode="vibe" aria-pressed="true">Vibe coding</button>
       <button type="button" data-set-mode="tech" aria-pressed="false">Técnico</button>

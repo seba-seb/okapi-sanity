@@ -8,7 +8,7 @@ history, images and CDN. Pages it renders are **static HTML**; only sections
 with motion hydrate.
 
 This file is for any coding agent (Claude Code reads it through `CLAUDE.md`).
-Installing Okapi into a project: **`INSTALL.md`**. Team docs: `docs/index.html`.
+Installing Okapi into a project: **`INSTALL.md`**. Team docs: `site/docs/index.html`.
 
 ## Layout
 
@@ -38,7 +38,8 @@ src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
 src/lab/        LabHarness: replays editor mutations + checks (see "Testing motion").
 patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
 skills/         okapi-astro: the Claude Code skill that starts a new project
-docs/           index.html — the team documentation (keep it in sync with this file)
+site/           the public site: index.html (landing) + docs/ (keep docs in sync with this file)
+brand/          the Okapi mark (SVG) and brand notes
 ```
 
 ## Rules

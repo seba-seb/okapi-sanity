@@ -11,7 +11,7 @@ with motion hydrate.
   Claude Code shortcut: the [`okapi-astro` skill](skills/okapi-astro/SKILL.md)
   (`cp -R skills/okapi-astro ~/.claude/skills/`).
 - **Rules** for working in the code: [`AGENTS.md`](AGENTS.md) (`CLAUDE.md` imports it).
-- **Docs** for the team: [`docs/index.html`](docs/index.html) — a "vibe coding" view
+- **Docs** for the team: [`site/docs/index.html`](site/docs/index.html) — a "vibe coding" view
   and a technical one.
 
 ## This repo
