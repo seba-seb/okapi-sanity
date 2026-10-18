@@ -6,7 +6,7 @@ already started. Pages built in the editor ship as static HTML; only sections
 with motion hydrate.
 
 - **Install** into a project, with any coding agent: [`INSTALL.md`](INSTALL.md).
-  Tell your agent: *"Cloná seba-seb/okapi-astro en /tmp/okapi y seguí su
+  Tell your agent: *"Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su
   INSTALL.md para sumar Okapi a este proyecto."*
   Claude Code shortcut: the [`okapi-astro` skill](skills/okapi-astro/SKILL.md)
   (`cp -R skills/okapi-astro ~/.claude/skills/`).

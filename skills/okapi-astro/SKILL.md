@@ -17,7 +17,7 @@ sigue, así Claude Code y cualquier otro agente hacen lo mismo.
 
 1. Traé Okapi a una carpeta temporal:
    ```bash
-   gh repo clone seba-seb/okapi-astro /tmp/okapi -- --depth 1
+   gh repo clone seba-seb/okapi-sanity /tmp/okapi -- --depth 1
    ```
    - El branch por defecto es `main`. Si el usuario indica otro branch o tag,
      agregá `--branch <ref>`.
