@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Okapi — Tu Astro, editable</title>
-<meta name="description" content="Okapi suma a cualquier proyecto Astro un editor visual sobre Sanity. Lo instala tu agente; vos editás sobre la página real.">
-<meta property="og:title" content="Okapi — Tu Astro, editable">
-<meta property="og:description" content="Sanity de base, un editor visual encima. Lo instala tu agente. Open source.">
+<title>Okapi — Edición visual para Astro + Sanity</title>
+<meta name="description" content="Un editor visual sobre Sanity para sitios en Astro: tus clientes editan sobre la página real, con permisos por rol. Open source, lo instala tu agente.">
+<meta property="og:title" content="Okapi — Edición visual para Astro + Sanity">
+<meta property="og:description" content="Edición visual sobre la página, permisos por rol y HTML estático. Open source, para Astro + Sanity.">
 <meta name="theme-color" content="#16100D">
 <link rel="icon" href="okapi.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,7 +82,7 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 .wordmark .slice span { position: absolute; left: 0; white-space: nowrap; }
 .iso-wrap { position: absolute; z-index: 1; right: calc(-40 * var(--u)); top: calc(224 * var(--u)); width: calc(780 * var(--u)); }
 .iso-wrap svg { display: block; width: 100%; height: auto; }
-.card { position: absolute; z-index: 4; left: 18px; top: calc(167 * var(--u)); width: calc(600 * var(--u)); display: flex; flex-direction: column; gap: calc(22 * var(--u)); padding: calc(32 * var(--u)); background: var(--crema); color: var(--tierra); }
+.card { position: absolute; z-index: 4; left: 18px; top: calc(128 * var(--u)); width: calc(600 * var(--u)); display: flex; flex-direction: column; gap: calc(22 * var(--u)); padding: calc(32 * var(--u)); background: var(--crema); color: var(--tierra); }
 .card .meta { display: flex; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--tierra); font: 400 12px/16px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 .card .meta span:last-child { color: var(--naranja); }
 .card h1 { margin: 0; font: 500 calc(60 * var(--u))/.97 var(--sans); letter-spacing: -.05em; }
@@ -114,6 +114,82 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
   .nav .links a:first-child { display: none; }
   .card .doclink { margin-top: -4px; }
   .card .meta span:last-child { display: none; }
+}
+
+/* ───────── Roles: same panel, two views ───────── */
+.roles { padding: var(--sec) 0; }
+.roles-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 812px); gap: 48px; align-items: stretch; }
+.words { display: flex; flex-direction: column; justify-content: space-between; gap: 48px; }
+.views { display: grid; grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr); }
+.view { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.vtop { display: flex; justify-content: space-between; align-items: center; font: 400 12px/16px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.vtop .tag { padding: 3px 7px; border: 1px solid var(--naranja-claro); color: var(--naranja-claro); font-size: 11px; line-height: 14px; letter-spacing: .08em; }
+.view.client .vtop .tag { border-color: color-mix(in srgb, var(--crema) 40%, transparent); color: var(--crema); }
+.ppanel { flex: 1; display: flex; flex-direction: column; min-height: 520px; background: #1B1411; border: 1px solid var(--line-2); font-size: 12px; line-height: 16px; }
+.ppanel .ptabs { display: flex; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); font: 400 11px/14px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.ppanel .ptabs span { flex: 1; padding: 12px 14px; color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.ppanel .ptabs span.on { color: var(--crema); box-shadow: inset 0 -1.5px var(--naranja); }
+.pgroup { display: flex; flex-direction: column; gap: 12px; padding: 16px 14px; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); }
+.pgroup .k, .prow .k { font: 400 10px/12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.pfield { padding: 9px 10px; border: 1px solid var(--naranja); background: color-mix(in srgb, var(--crema) 5%, transparent); font-size: 13px; line-height: 18px; color: var(--crema); }
+.pimg { display: flex; align-items: center; gap: 10px; font: 400 11px/14px var(--mono); color: color-mix(in srgb, var(--crema) 70%, transparent); }
+.pimg i { width: 44px; height: 30px; background: repeating-linear-gradient(135deg, #D6CDBD 0 2px, #E4DCCD 2px 7px); }
+.prow { display: flex; justify-content: space-between; align-items: center; color: color-mix(in srgb, var(--crema) 65%, transparent); }
+.prow .acc { font: 400 10px/12px var(--mono); color: var(--naranja-claro); }
+.ppanel .seg { display: flex; border: 1px solid var(--line); font: 400 11px/14px var(--mono); }
+.ppanel .seg span { padding: 3px 8px; color: color-mix(in srgb, var(--crema) 60%, transparent); }
+.ppanel .seg span.on { background: var(--crema); color: var(--tierra); }
+.ppanel .sw { display: flex; gap: 6px; }
+.ppanel .sw i { width: 16px; height: 16px; }
+.ppanel .sw i:first-child { outline: 1.5px solid var(--naranja); outline-offset: 2px; }
+.ppanel .slider { width: 140px; height: 12px; position: relative; display: flex; align-items: center; }
+.ppanel .slider::before { content: ""; width: 100%; height: 2px; background: var(--line-2); }
+.ppanel .slider::after { content: ""; position: absolute; left: 0; width: 62%; height: 2px; background: var(--naranja); }
+.ppanel .slider i { position: absolute; left: 58%; width: 12px; height: 12px; background: var(--crema); z-index: 1; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { padding: 6px 9px; border: 1px solid var(--line-2); color: var(--crema); }
+.pgap { display: grid; place-items: center; height: 64px; margin: 10px 14px 0; border: 1px dashed color-mix(in srgb, var(--crema) 22%, transparent); background: repeating-linear-gradient(135deg, transparent 0 9px, color-mix(in srgb, var(--crema) 4%, transparent) 9px 10px); font: 400 11px/14px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 40%, transparent); }
+.pgap.tall { height: 152px; margin-top: 12px; }
+.pfoot { margin-top: auto; padding: 14px; display: flex; justify-content: flex-end; }
+.pfoot .pub { padding: 7px 14px; background: var(--naranja); font: 500 13px/16px var(--sans); color: var(--crema); }
+.bridge { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 30px; }
+.bridge i { width: 1px; flex: 1; background: repeating-linear-gradient(180deg, color-mix(in srgb, var(--crema) 30%, transparent) 0 4px, transparent 4px 9px); }
+.bridge span { font: 400 11px/14px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--naranja-claro); text-align: center; }
+.punch { display: flex; flex-direction: column; gap: 0; max-width: 440px; }
+.punch .big { margin: 0 0 24px; font: 400 clamp(28px, 2.5vw, 36px)/1.12 var(--sans); letter-spacing: -.04em; color: var(--crema); }
+.punch .big em { font-style: normal; color: var(--naranja-claro); }
+.punch p:not(.big) { margin: 0 0 14px; font-size: 17px; line-height: 1.55; color: color-mix(in srgb, var(--crema) 70%, transparent); }
+.punch code { font: 400 12px/18px var(--mono); color: color-mix(in srgb, var(--crema) 50%, transparent); }
+@media (max-width: 1100px) {
+  .roles-grid { grid-template-columns: minmax(0, 1fr); }
+  .words { flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+}
+@media (max-width: 720px) {
+  .views { grid-template-columns: minmax(0, 1fr); }
+  .bridge { flex-direction: row; padding: 20px 0; }
+  .bridge i { height: 1px; width: auto; background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--crema) 30%, transparent) 0 4px, transparent 4px 9px); }
+  .bridge span br { display: none; }
+  .ppanel { min-height: 0; }
+  .words { flex-direction: column; align-items: flex-start; gap: 32px; }
+}
+
+/* ───────── Por qué no Sanity solo ───────── */
+.vs { position: relative; margin-top: clamp(96px, 10vw, 160px); background: var(--tierra); border: 1px solid var(--line-2); }
+.vs-title { margin: 0; padding: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; border-bottom: 1px solid var(--line-2); font: 400 22px/1.3 var(--sans); letter-spacing: -.02em; }
+.vs-title .dim { color: var(--dim); }
+.vs-row { display: grid; grid-template-columns: minmax(140px, .8fr) 1fr 1fr; border-bottom: 1px solid var(--line); }
+.vs-row:last-child { border-bottom: 0; }
+.vs-row > span { padding: 14px 24px; font-size: 15px; line-height: 1.45; min-width: 0; }
+.vs-row > span:first-child { font: 400 12px/22px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 50%, transparent); }
+.vs-row > span:nth-child(2) { color: color-mix(in srgb, var(--crema) 55%, transparent); }
+.vs-row > span:nth-child(3) { color: var(--crema); background: color-mix(in srgb, var(--naranja) 14%, transparent); box-shadow: inset 2px 0 var(--naranja); }
+.vs-head > span { padding-block: 12px; font: 400 11px/14px var(--mono) !important; letter-spacing: .1em; text-transform: uppercase; }
+.vs-head > span:nth-child(3) { color: var(--naranja-claro) !important; }
+@media (max-width: 640px) {
+  .vs-row { grid-template-columns: 1fr 1fr; }
+  .vs-row > span:first-child { grid-column: 1 / -1; padding-bottom: 0; }
+  .vs-head > span:first-child { display: none; }
+  .vs-row > span { padding: 12px 16px; }
 }
 
 /* ───────── Instalación ───────── */
@@ -249,6 +325,12 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 .win.focus [data-zone] { opacity: .38; }
 .win.focus [data-zone].on { opacity: 1; box-shadow: 0 0 0 1.5px var(--naranja-claro); }
 .win.focus .stage[data-zone].on { box-shadow: inset 0 0 0 1.5px var(--naranja-claro); }
+/* "Vista cliente": the same editor without what the client can't touch */
+.ghost .as-client, .win.as-client .ghost .as-admin { display: none; }
+.win.as-client .ghost .as-client { display: inline; }
+.win.as-client .ghost { color: var(--naranja-claro); border-color: var(--naranja-claro); }
+.win.as-client .props.style, .win.as-client .add, .win.as-client .devices { display: none; }
+.win.as-client .layer.sel em { visibility: hidden; }
 @media (max-width: 1100px) { .side.left { display: none; } }
 @media (max-width: 820px) {
   .side.right, .devices, .bar .ghost, .bar .undo, .tabs .url { display: none; }
@@ -322,51 +404,52 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
   </div>
 
   <div class="card">
-    <div class="meta"><span data-scramble>Astro + Sanity</span><span data-scramble>v0.1 — open repo</span></div>
-    <h1 data-split>Tu Astro, editable.</h1>
-    <p data-split>Sanity de base, un editor visual encima.<br>Lo instala tu agente.</p>
+    <div class="meta"><span data-scramble>Astro · Sanity</span><span data-scramble>v0.1 — open source</span></div>
+    <h1 data-split>Edición visual<br>para Sanity.</h1>
+    <p data-split>Tus clientes editan textos, imágenes y secciones directamente sobre tu sitio en Astro, con permisos por rol. Sin formularios y sin tocar el diseño.</p>
     <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copiar</button></div>
-    <a class="doclink" href="docs/">Cómo se usa: leé la documentación <span>→</span></a>
+    <a class="doclink" href="docs/">Leer la documentación <span>→</span></a>
   </div>
   <div class="band"></div>
 </header>
 
 <main>
-<!-- ───────── Instalación ───────── -->
-<section class="install" aria-labelledby="t-install">
-  <div class="wrap">
-    <div class="head">
-      <h2 class="title" id="t-install" data-split><span class="sl">/</span> Cloná, pedíselo a tu agente,<br><span class="dim">editá sobre la página real.</span> <span class="sl">/</span></h2>
-      <div class="ctas" data-reveal><a class="btn ghost" href="docs/">Leer la documentación</a><a class="btn" href="https://github.com/seba-seb/okapi-sanity">Ver en GitHub</a></div>
+<!-- ───────── Roles ───────── -->
+<section class="roles" aria-labelledby="t-roles">
+  <div class="wrap roles-grid">
+    <div class="words">
+      <h2 class="title" id="t-roles" data-split><span class="sl">/</span> Permisos por rol,<br><span class="dim">definidos por vos.</span> <span class="sl">/</span></h2>
+      <div class="punch" data-reveal>
+        <p class="big">Cada rol ve solo<br><em>lo que puede editar.</em></p>
+        <p>Tu equipo controla estilos, componentes y estructura. El cliente edita contenido y publica, o deja borradores para revisión. El chat con IA respeta los mismos límites.</p>
+        <code>roles de Sanity → okapi.policy.ts</code>
+      </div>
     </div>
-    <div class="steps" data-stagger>
-      <article class="step">
-        <div class="top label"><span data-scramble>Clonar</span><span data-scramble>// 001</span></div>
-        <svg class="ico" data-mesh="cube" viewBox="0 0 160 120" aria-hidden="true"></svg>
-        <div class="body">
-          <h3>Cloná el repo</h3>
-          <p>Ya es un Astro completo, con bloques de ejemplo.</p>
-          <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity" aria-label="Copiar comando">⧉</button></div>
+    <div class="views" data-stagger>
+      <div class="view">
+        <div class="vtop"><span>Vista admin</span><span class="tag">administrator</span></div>
+        <div class="ppanel">
+          <div class="ptabs"><span class="on">Propiedades</span><span>✦ Chat</span></div>
+          <div class="pgroup"><span class="k">Contenido</span><div class="pfield">Espacios que se editan solos.</div><div class="pimg"><i></i><span>casa-del-rio.jpg</span></div></div>
+          <div class="pgroup"><div class="prow"><span class="k">Estilo</span><span class="acc">Todas las pantallas ▾</span></div>
+            <div class="prow"><span>Tamaño</span><span class="seg"><span>M</span><span>L</span><span class="on">XL</span></span></div>
+            <div class="prow"><span>Color</span><span class="sw"><i style="background:#16100D"></i><i style="background:#F2EEE3"></i><i style="background:#C2562C"></i><i style="background:#F29B6B"></i></span></div>
+            <div class="prow"><span>Margen abajo</span><span class="slider"><i></i></span></div></div>
+          <div class="pgroup"><span class="k">Estructura</span><div class="chips"><span>◆ Hacer componente</span><span>+ Bloque</span><span>Permisos</span></div></div>
+          <div class="pfoot"><span class="pub">Publicar</span></div>
         </div>
-      </article>
-      <article class="step">
-        <div class="top label"><span data-scramble>Instalar</span><span data-scramble>// 002</span></div>
-        <svg class="ico" data-mesh="pyramid" viewBox="0 0 160 120" aria-hidden="true"></svg>
-        <div class="body">
-          <h3>Pedíselo a tu agente</h3>
-          <p>Claude Code, Codex o Cursor. Sigue INSTALL.md solo.</p>
-          <div class="cmd"><code>&gt; Seguí INSTALL.md y sumá Okapi</code><button data-copy="Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su INSTALL.md para sumar Okapi a este proyecto." aria-label="Copiar pedido">⧉</button></div>
+      </div>
+      <div class="bridge" aria-hidden="true"><i></i><span>mismo <br>documento <br>→</span><i></i></div>
+      <div class="view client">
+        <div class="vtop"><span>Vista cliente</span><span class="tag">editor</span></div>
+        <div class="ppanel">
+          <div class="ptabs"><span class="on">Propiedades</span><span>✦ Chat</span></div>
+          <div class="pgroup"><span class="k">Contenido</span><div class="pfield">Espacios que se editan solos.</div><div class="pimg"><i></i><span>casa-del-rio.jpg</span></div></div>
+          <div class="pgap tall"><span>— Estilo · no aparece</span></div>
+          <div class="pgap"><span>— Componentes · no aparece</span></div>
+          <div class="pfoot"><span class="pub">Publicar</span></div>
         </div>
-      </article>
-      <article class="step">
-        <div class="top label"><span data-scramble>Editar</span><span data-scramble>// 003</span></div>
-        <svg class="ico" data-mesh="globe" viewBox="0 0 160 120" aria-hidden="true"></svg>
-        <div class="body">
-          <h3>Editá en la página</h3>
-          <p>Clic, escribís, publicás. Sanity guarda todo.</p>
-          <div class="cmd"><code>$ npm run dev → /studio#/editor</code><button data-copy="npm run dev" aria-label="Copiar comando">⧉</button></div>
-        </div>
-      </article>
+      </div>
     </div>
   </div>
 </section>
@@ -375,12 +458,62 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <section class="trae" aria-labelledby="t-trae">
   <div class="tex"><canvas data-okapi-tex="puntos" data-bg="#16100D" data-fg="#C2562C" aria-hidden="true"></canvas></div>
   <div class="wrap">
-    <h2 class="title" id="t-trae" data-split><span class="sl">/</span> Base de datos, editor visual,<br><span class="dim">HTML estático y un chat con IA.</span> <span class="sl">/</span></h2>
+    <h2 class="title" id="t-trae" data-split><span class="sl">/</span> Edición visual sin lock-in,<br><span class="dim">sobre un stack que controlás.</span> <span class="sl">/</span></h2>
     <div class="cards" data-stagger>
-      <article class="tcard"><span class="n">01</span><h3>Sanity</h3><p>Base de datos, login, roles, borradores e historial.</p></article>
-      <article class="tcard"><span class="n">02</span><h3>Editor visual</h3><p>Bloques, estilos, componentes y deshacer. Sobre la página real.</p></article>
-      <article class="tcard hot"><span class="big" data-scramble>~1 KB</span><p>de JS por página. El resto es HTML estático.</p></article>
-      <article class="tcard"><span class="n">04</span><h3>Chat con IA</h3><p>Con tu propia key. Respeta lo que cada rol puede tocar.</p></article>
+      <article class="tcard"><span class="n">01</span><h3>Edición inline</h3><p>Texto, rich text, imágenes y links se editan sobre la página, con deshacer y guardado en borrador.</p></article>
+      <article class="tcard"><span class="n">02</span><h3>Bloques y componentes</h3><p>Insertá, reordená y reutilizá secciones. Un cambio en el componente llega a todas sus instancias.</p></article>
+      <article class="tcard hot"><span class="big" data-scramble>~1 KB</span><p>de JS en páginas sin animación. El editor no entra en el bundle público.</p></article>
+      <article class="tcard"><span class="n">04</span><h3>Chat con IA</h3><p>Cambios por instrucción, validados contra el schema y los permisos. Con tu propia API key.</p></article>
+    </div>
+    <div class="vs" data-reveal>
+      <h3 class="vs-title"><span>Sanity solo vs. Sanity + Okapi</span><span class="dim">El mismo contenido, otra forma de editarlo.</span></h3>
+      <div class="vs-table" role="table" aria-label="Sanity solo contra Sanity con Okapi">
+        <div class="vs-row vs-head" role="row"><span role="columnheader"></span><span role="columnheader">Sanity solo</span><span role="columnheader">Sanity + Okapi</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Edición</span><span role="cell">Formularios en el Studio</span><span role="cell">Sobre la página renderizada</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Preview</span><span role="cell">Separado de lo que se edita</span><span role="cell">Es la página misma</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Permisos</span><span role="cell">Por documento</span><span role="cell">Por campo y por acción</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Armado de páginas</span><span role="cell">Requiere desarrollo</span><span role="cell">Con los bloques que define tu equipo</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Cambios menores</span><span role="cell">Pasan por el equipo</span><span role="cell">Los resuelve el cliente</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── Instalación ───────── -->
+<section class="install" aria-labelledby="t-install">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="title" id="t-install" data-split><span class="sl">/</span> Tres pasos,<br><span class="dim">guiados por tu agente.</span> <span class="sl">/</span></h2>
+      <div class="ctas" data-reveal><a class="btn ghost" href="docs/">Leer la documentación</a><a class="btn" href="https://github.com/seba-seb/okapi-sanity">Ver en GitHub</a></div>
+    </div>
+    <div class="steps" data-stagger>
+      <article class="step">
+        <div class="top label"><span data-scramble>Clonar</span><span data-scramble>// 001</span></div>
+        <svg class="ico" data-mesh="cube" viewBox="0 0 160 120" aria-hidden="true"></svg>
+        <div class="body">
+          <h3>Cloná el repo</h3>
+          <p>Un proyecto Astro completo, con bloques de ejemplo listos para reemplazar.</p>
+          <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity" aria-label="Copiar comando">⧉</button></div>
+        </div>
+      </article>
+      <article class="step">
+        <div class="top label"><span data-scramble>Instalar</span><span data-scramble>// 002</span></div>
+        <svg class="ico" data-mesh="pyramid" viewBox="0 0 160 120" aria-hidden="true"></svg>
+        <div class="body">
+          <h3>Instalalo con tu agente</h3>
+          <p>Claude Code, Codex o Cursor siguen INSTALL.md: conectan Sanity, configuran el Studio y hacen editables tus secciones.</p>
+          <div class="cmd"><code>&gt; Seguí INSTALL.md y sumá Okapi</code><button data-copy="Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su INSTALL.md para sumar Okapi a este proyecto." aria-label="Copiar pedido">⧉</button></div>
+        </div>
+      </article>
+      <article class="step">
+        <div class="top label"><span data-scramble>Entregar</span><span data-scramble>// 003</span></div>
+        <svg class="ico" data-mesh="globe" viewBox="0 0 160 120" aria-hidden="true"></svg>
+        <div class="body">
+          <h3>Sumá al cliente</h3>
+          <p>Lo invitás como editor en Sanity. Edita en /studio y cada publicación dispara el deploy.</p>
+          <div class="cmd"><code>→ tusitio.com/studio</code><button data-copy="/studio" aria-label="Copiar ruta">⧉</button></div>
+        </div>
+      </article>
     </div>
   </div>
 </section>
@@ -389,7 +522,7 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <section class="how" aria-labelledby="t-how">
   <div class="wrap">
     <div class="head">
-      <h2 class="title" id="t-how" data-split><span class="sl">/</span> Lo instala tu agente,<br><span class="dim">vos lo editás así.</span> <span class="sl">/</span></h2>
+      <h2 class="title" id="t-how" data-split><span class="sl">/</span> El editor,<br><span class="dim">tal como lo usa tu cliente.</span> <span class="sl">/</span></h2>
       <nav class="refs" data-stagger aria-label="Referencias">
         <a href="docs/"><span>Documentación</span><span>docs →</span></a>
         <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md"><span>Guía</span><span>INSTALL.md</span></a>
@@ -405,13 +538,14 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
         <button role="tab" data-tab="style" aria-selected="false">03 Estilos</button>
         <button role="tab" data-tab="chat" aria-selected="false">04 Chat ✦</button>
         <button role="tab" data-tab="publish" aria-selected="false">05 Publicar</button>
+        <button role="tab" data-tab="client" aria-selected="false">06 Vista cliente</button>
         <span class="url">localhost:4321/studio#/editor</span>
       </div>
       <div class="win" aria-hidden="true">
         <div class="bar">
           <div class="l"><i class="sq"></i><span>Okapi Editor</span><span class="mut">/</span><span class="crumb">Home</span><span class="chip">Borrador</span></div>
           <div class="devices"><i></i><i></i><i></i></div>
-          <div class="r"><span class="ghost">Ver como: Admin ▾</span><span class="undo mut">↶ ↷</span><span class="saved">Guardado</span><span class="pub" data-zone="publish">Publicar</span></div>
+          <div class="r"><span class="ghost"><span class="as-admin">Ver como: Admin ▾</span><span class="as-client">Ver como: Cliente ▾</span></span><span class="undo mut">↶ ↷</span><span class="saved">Guardado</span><span class="pub" data-zone="publish">Publicar</span></div>
         </div>
         <div class="panes">
           <div class="side left" data-zone="layers">
@@ -472,7 +606,7 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <footer class="foot">
   <div class="wrap cols">
     <div>
-      <p class="say" data-split>Es un repo. Copialo. <span>Lo demás lo hace tu agente.</span></p>
+      <p class="say" data-split>Open source, listo para tu próximo proyecto. <span>Cloná el repo y seguí INSTALL.md.</span></p>
       <div class="cmd" data-reveal><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copiar</button></div>
     </div>
     <nav class="flinks" data-stagger aria-label="Enlaces">
@@ -607,6 +741,7 @@ if (document.documentElement.classList.contains("motion")) {
     idx = i;
     tabs.forEach((t, j) => t.setAttribute("aria-selected", String(j === i)));
     const zone = tabs[i].dataset.tab, el = win.querySelector(`[data-zone="${zone}"]`);
+    win.classList.toggle("as-client", zone === "client");
     win.querySelectorAll("[data-zone]").forEach((z) => z.classList.toggle("on", z === el));
     // a zone hidden at this width (side panels on mobile) → no dimming, just the tab
     win.classList.toggle("focus", !!el && el.offsetParent !== null);   // zone hidden at this width → no dimming
@@ -615,7 +750,7 @@ if (document.documentElement.classList.contains("motion")) {
     clearTimeout(timer);
     viewer.classList.toggle("run", inView && !manual);
     // auto-cycle only through zones visible at this width (side panels hide on small screens)
-    const next = () => { for (let k = 1; k <= tabs.length; k++) { const j = (idx + k) % tabs.length, z = win.querySelector(`[data-zone="${tabs[j].dataset.tab}"]`); if (z && z.offsetParent !== null) return j; } return idx; };
+    const next = () => { for (let k = 1; k <= tabs.length; k++) { const j = (idx + k) % tabs.length, z = win.querySelector(`[data-zone="${tabs[j].dataset.tab}"]`); if (tabs[j].dataset.tab === "client" || (z && z.offsetParent !== null)) return j; } return idx; };
     if (inView && !manual) timer = setTimeout(() => { select(next()); loop(); }, CYCLE);
   };
   tabs.forEach((t, i) => t.addEventListener("click", () => { manual = true; select(i); loop(); }));

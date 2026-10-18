@@ -94,10 +94,12 @@ void main(){
   float yb = uv.y;                                              // 0 at the bottom, 1 at the top
   vec2 p = vec2(uv.x * uRes.x / uRes.y, yb);
   // warped domain -> the field drips and melts instead of forming rows/columns
-  vec2 q = p + 0.45 * vec2(fbm(p * 1.4 + vec2(uTime * 0.04, 0.0)), fbm(p * 1.4 + vec2(4.2, -uTime * 0.05)));
-  float shape = fbm(q * vec2(2.6, 3.6) + 7.0) - 0.5;
+  // the field drifts sideways and boils upward, so the footer is always alive
+  vec2 q = p + 0.45 * vec2(fbm(p * 1.4 + vec2(uTime * 0.18, 0.0)), fbm(p * 1.4 + vec2(4.2, -uTime * 0.22)));
+  float shape = fbm(q * vec2(2.6, 3.6) + vec2(7.0 - uTime * 0.12, 7.0 - uTime * 0.3)) - 0.5;
   float rise = 1.0 - yb;
-  float k = pow(rise, 2.4) * 1.3 + 1.9 * shape * (0.25 + rise) + (hash(g) - 0.5) * 0.22 * rise;
+  float wave = 0.16 * sin(p.x * 5.0 - uTime * 1.4 + yb * 7.0) * rise;   // a slow swell running through the dots
+  float k = pow(rise, 2.4) * 1.3 + 1.9 * shape * (0.25 + rise) + wave + (hash(g) - 0.5) * 0.22 * rise;
   k *= smoothstep(0.88, 0.5, yb);                               // the top always ends in black
   k = clamp(k, 0.0, 1.35);
   float r = cell * 0.46 * sqrt(min(k, 1.0));

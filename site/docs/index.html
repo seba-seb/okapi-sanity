@@ -670,7 +670,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
 
       <div class="prose">
         <h3>Por qué un iframe</h3>
-        <p>El canvas vive en su propia ruta (<code>/edit-canvas</code>), igual que en Webflow:</p>
+        <p>El canvas vive en su propia ruta (<code>/edit-canvas</code>), separado del Studio:</p>
         <ul>
           <li><strong>CSS aislado:</strong> el CSS del sitio no se mezcla con el del Studio.</li>
           <li><strong>Breakpoints reales:</strong> desktop, tablet y mobile cambian el ancho del iframe.</li>
@@ -823,7 +823,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>Componentes</h2>
-        <p>Funcionan como los de Webflow. Un componente es un documento <code>component</code> con secciones. Una página lo usa con un bloque <code>componentRef</code> (una instancia). Si editás el componente, cambian todas sus instancias.</p>
+        <p>Un componente es un documento <code>component</code> con secciones. Una página lo usa con un bloque <code>componentRef</code> (una instancia). Si editás el componente, cambian todas sus instancias.</p>
         <h3>En el editor</h3>
         <ul>
           <li><strong>Make component:</strong> guarda la sección seleccionada en la librería y la reemplaza por una instancia.</li>
@@ -1183,7 +1183,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
         </div>
         <div class="decision">
           <h3>Estilos solo con tokens</h3>
-          <p><b>Problema.</b> El CSS libre y el posicionamiento absoluto equivalen a construir Webflow entero, y rompen la consistencia de la marca.</p>
+          <p><b>Problema.</b> El CSS libre y el posicionamiento absoluto equivalen a construir un page builder entero, y rompen la consistencia de la marca.</p>
           <p><b>Decisión.</b> El panel solo ofrece tokens. Los bloques nuevos se escriben en código y el editor compone y estila con ellos.</p>
         </div>
         <div class="decision">
