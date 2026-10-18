@@ -4,6 +4,8 @@ import { loadQuery } from "@/core/sanity/client";
 import { SITEMAP_QUERY } from "@/core/sanity/queries";
 import { pageHref } from "@/core/lib/routes";
 
+export const prerender = true;
+
 // Built with the site (static). Same pageHref() as every link on the site, so
 // the sitemap can't disagree with the navigation.
 export const GET: APIRoute = async ({ site }) => {

@@ -209,11 +209,15 @@ export function CanvasApp() {
     const startEdit = (el: HTMLElement, path: string, field: string, kind: "pt" | "string", multiline: boolean, current: unknown) => {
       const snap = snapshot(el);
       const rich = kind === "pt";
-      const original = rich ? JSON.stringify(current ?? []) : el.innerText;
+      // textContent, not innerText: innerText applies CSS text-transform (an
+      // uppercase eyebrow would be saved in capitals). Multiline keeps innerText
+      // for the line breaks contenteditable inserts.
+      const read = () => (multiline ? el.innerText : (el.textContent ?? ""));
+      const original = rich ? JSON.stringify(current ?? []) : read();
       let timer: number | undefined;
       let suspendBlur = false;
       const pt = () => htmlToPt(el, current);
-      const value = () => (rich ? JSON.stringify(pt()) : el.innerText.replace(/\n+$/, ""));
+      const value = () => (rich ? JSON.stringify(pt()) : read().replace(/\n+$/, ""));
       const send = (final: boolean) => {
         if (!rich) return post(window.parent, { type: "text", path, field, kind, value: value(), final });
         const blocks = pt();

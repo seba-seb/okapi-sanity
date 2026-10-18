@@ -9,7 +9,7 @@
  */
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const baseUrl = process.argv[2];
@@ -36,6 +36,8 @@ execSync("npx sanity exec src/core/style/stylesheet.check.ts", { stdio: ["ignore
 execSync("npx sanity exec src/core/render/overrides.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // AI chat: role permissions (okapi.policy.ts) gate every change the model proposes.
 execSync("npx sanity exec src/core/editor/chat.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+// Rich text → canvas HTML escapes text and keys (no attribute break-out).
+execSync("npx sanity exec src/core/editor/richtext.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 
 console.log("\n2. Build");
 execSync("npx astro build", { stdio: ["ignore", "ignore", "inherit"] });
@@ -57,7 +59,8 @@ const htmlFiles = [];
     else if (name.endsWith(".html")) htmlFiles.push(p);
   }
 })(outDir);
-const publicHtml = htmlFiles.filter((f) => !f.includes(`${outDir}/studio/`));
+// Compare with "/" on every OS (join() gives "\\" on Windows).
+const publicHtml = htmlFiles.filter((f) => !f.split(sep).join("/").includes(`${outDir}/studio/`));
 
 console.log(`\n3. Static output (${outDir}, ${publicHtml.length} public pages)`);
 const sitePages = publicHtml.filter((f) => !f.includes("edit-canvas"));

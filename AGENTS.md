@@ -40,6 +40,12 @@ brand/          the Okapi mark (SVG) and brand notes
 
 ## Rules
 
+- **Publishing is going live** (a webhook rebuilds the site). Never publish,
+  unpublish, delete or import content without the user's explicit yes for
+  that action — not from a script, not through an MCP. Test on drafts.
+- **Ask before creating anything in the user's accounts** (Sanity projects,
+  datasets, CORS origins, users, tokens, webhooks). Tokens and deploy-hook
+  URLs are secrets: never ask for, print or write them.
 - **Core is shared.** A fix in `src/core` belongs to the starter first, then
   gets copied to projects. (When 3+ projects are live, extract core into a
   private package so fixes arrive with `npm update`.)
@@ -119,8 +125,10 @@ horizontal inside rows/grids). Validated like any move (`moveNextTo`).
   permissions (`text images style settings reorder structure components
   publish chat`) + optional `blocks` a role may add. It gates the panel
   fields (`FieldControls.fieldKind`), the actions, canvas edits, publish and
-  the chat. Pure logic in `core/editor/policy.ts`. This shapes the editor; the
-  hard boundary is still the Sanity role (what the API lets them write).
+  the chat. Pure logic in `core/editor/policy.ts`. **It is not a security
+  boundary:** it shapes the editor UI, and the server only checks `chat`.
+  Anyone can still write whatever their Sanity role allows from
+  `#/structure` or the API — use Sanity roles for real limits.
 - **✦ Chat** (tab in the right column): the browser part
   (`core/editor/EditorChat.tsx`) sends the request with the person's Sanity
   session token to the site's own server route **`/api/editor-chat`**
@@ -134,8 +142,12 @@ horizontal inside rows/grids). Validated like any move (`moveNextTo`).
   (`chat.ts applyOps`: grant + registry + schema) and applies them as ONE undo
   step, saved as a draft with the person's own session. Never publishes. The
   key never reaches the browser. The Studio uses `auth.loginMethod: "token"` so
-  the session token can be sent. Rate limit per user (in memory) — the real
-  ceiling is the spend limit on the provider account.
+  the session token can be sent. Cost guards: body/catalog size caps,
+  `max_tokens` on every provider, no top-tier model unless `AI_MODELS` lists
+  it, `contributor` has no chat by default, rate limit per user (in memory).
+  The real ceiling is **one key per project with its own monthly spend limit**
+  on the provider (Anthropic workspace / OpenAI project budget / OpenRouter key
+  limit). Privacy: the page content and attached images go to that provider.
 - **Hosting:** `astro.config` picks the adapter from where the build runs
   (Vercel / Netlify built in; Cloudflare Pages needs `npm i @astrojs/cloudflare
   wrangler`) and only then injects `/api/editor-chat`; pages stay prerendered.
@@ -185,7 +197,7 @@ Automated checks cover the canvas side only; these need a real login, in
 3. Drop an image on an Image block → uploads and shows.
 4. Make component from a section → edit text on an instance → only that
    instance changes; Reset override; Edit component → all instances change.
-5. Publish → `npm run build` → the change is on the static page.
+5. Publish (with the user's OK: it goes live) → `npm run build` → the change is on the static page.
 6. Log in as a client-role user (or "View as") → only what `okapi.policy.ts`
    allows is visible; the chat refuses the rest.
 7. ✦ Chat: "make the selected heading shorter" → applied, Undo reverts it.

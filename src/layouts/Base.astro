@@ -72,7 +72,7 @@ const jsonLd = isHome
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
     {noindex && <meta name="robots" content="noindex" />}
-    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, "\\u003c")} />}
     <link rel="sitemap" href="/sitemap.xml" />
     <slot name="head" />
   </head>

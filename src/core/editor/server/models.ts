@@ -13,9 +13,13 @@ export const PROVIDERS = {
 export type Provider = keyof typeof PROVIDERS;
 export type ModelConfig = { provider: Provider; model: string; apiKey: string };
 
-/** Offered in the chat's model picker when AI_MODELS isn't set (for every provider that has a key). */
+/**
+ * Offered in the chat's model picker when AI_MODELS isn't set (for every provider
+ * that has a key). No top-tier models here: those cost several times more, so
+ * the agency opts into them with AI_MODELS.
+ */
 export const DEFAULT_MODELS: Record<Exclude<Provider, "sanity">, string[]> = {
-  anthropic: ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"],
+  anthropic: ["claude-sonnet-5-5", "claude-haiku-5-5"],
   openai: ["gpt-4.1-mini", "gpt-4.1"],
   openrouter: ["anthropic/claude-sonnet-5.5", "openai/gpt-4.1-mini", "google/gemini-2.5-pro"],
 };
@@ -110,6 +114,8 @@ export function buildRequest(cfg: ModelConfig, instruction: string, images: Visi
       // No `temperature` either: newer OpenAI models only accept the default.
       body: JSON.stringify({
         model,
+        // Caps the answer's cost (OpenAI's newer name; OpenRouter uses max_tokens).
+        ...(cfg.provider === "openai" ? { max_completion_tokens: 4096 } : { max_tokens: 4096 }),
         response_format: { type: "json_object" },
         messages: [
           {

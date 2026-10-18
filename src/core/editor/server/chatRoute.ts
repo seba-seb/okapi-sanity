@@ -64,6 +64,12 @@ type Body = {
   images?: unknown;
 };
 
+// Request size caps: a body is the message, the selection, the field catalog
+// and up to 3 downscaled images. Anything bigger is a bug or abuse — and it
+// would all end up in the prompt the project pays for.
+const MAX_BODY_CHARS = 6_000_000;
+const MAX_CATALOG_CHARS = 200_000;
+
 const IMAGE_DATA = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/;
 const MAX_IMAGES = 3;
 const MAX_IMAGE_CHARS = 1_500_000; // ~1.1 MB each; the browser sends a downscaled copy
@@ -96,7 +102,15 @@ export const POST: APIRoute = async ({ request }) => {
   const roles = me.roles?.map((r) => r.name) ?? (me.role ? [me.role] : []);
 
   // 2. What they may do. Admins may preview another role ("View as").
-  const body = (await request.json().catch(() => ({}))) as Body;
+  const rawBody = await request.text();
+  if (rawBody.length > MAX_BODY_CHARS) return json({ error: "The request is too large." }, 413);
+  const body = ((): Body => {
+    try {
+      return JSON.parse(rawBody) ?? {};
+    } catch {
+      return {};
+    }
+  })();
   const viewAs = typeof body.viewAs === "string" && roles.includes("administrator") && POLICY[body.viewAs] ? body.viewAs : null;
   const grant = grantFor(viewAs ? [viewAs] : roles, POLICY);
   if (!may(grant, "chat")) return json({ error: "Your role can't use the chat." }, 403);
@@ -108,7 +122,7 @@ export const POST: APIRoute = async ({ request }) => {
   const documentId = typeof body.documentId === "string" ? body.documentId : "";
   const text = typeof body.request === "string" ? body.request.trim().slice(0, 4000) : "";
   if (!documentId || !text) return json({ error: "Missing page or message." }, 400);
-  const selection = Array.isArray(body.selection) ? body.selection.filter((s): s is string => typeof s === "string").slice(0, 20) : [];
+  const selection = Array.isArray(body.selection) ? body.selection.filter((s): s is string => typeof s === "string").slice(0, 20).map((s) => s.slice(0, 300)) : [];
   const history = (Array.isArray(body.history) ? body.history : [])
     .filter((t): t is ChatTurn => !!t && (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
     .slice(-8)
@@ -116,13 +130,16 @@ export const POST: APIRoute = async ({ request }) => {
   // The field catalog comes from the Studio's compiled schema (the server has no Studio).
   // It only describes field types; the person's role on Sanity still bounds what they can write.
   const catalog = (body.catalog && typeof body.catalog === "object" ? body.catalog : {}) as Catalog;
+  if (JSON.stringify(catalog).length > MAX_CATALOG_CHARS) return json({ error: "The request is too large." }, 413);
 
   // 4. The page, read from Sanity with the person's own session (their read access applies).
   const sanity = createClient({ projectId, dataset, apiVersion: "2025-02-19", token, useCdn: false, perspective: "drafts" });
-  const [doc, pages] = await Promise.all([
+  const read = await Promise.all([
     sanity.fetch(`*[_id == $id][0]`, { id: documentId.replace(/^drafts\./, "") }),
     sanity.fetch<{ id: string; slug?: string; title?: string }[]>(`*[_type == "page" && defined(slug.current)]{ "id": _id, "slug": slug.current, title }`),
-  ]);
+  ]).catch(() => null);
+  if (!read) return json({ error: "Couldn't read the page from Sanity. Try again." }, 502);
+  const [doc, pages] = read;
   if (!doc) return json({ error: "Page not found." }, 404);
 
   // 5. Ask the model.

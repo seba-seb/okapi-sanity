@@ -1,7 +1,6 @@
 // Generates a demo "home" page (sanity/seed.ndjson) that exercises the building
 // blocks and all three section themes. Import with:
 //   npx sanity dataset import sanity/seed.ndjson production
-// or apply straight to the "home" doc: node scripts/rebuild-home.mjs
 // Re-run to regenerate: node scripts/generate-seed.mjs
 //
 // Kept in sync with the schema: copy blocks (eyebrow/heading/paragraph/button
