@@ -4,6 +4,7 @@ import type { ObjectSchemaType, SchemaType } from "sanity";
 import { plainToPt, ptToPlainIfSimple } from "./text";
 import type { FieldKind, Grant } from "./policy";
 import type { Catalog } from "./chat";
+import { STUDIO_ACCENT, STUDIO_RADIUS_CONTROL, STUDIO_RADIUS_PANEL } from "@/theme/studio";
 
 /**
  * Properties panel controls generated from the compiled Studio schema — no
@@ -204,7 +205,7 @@ function FieldControl({ field, value, parent, path, onChange, grant }: { field: 
 }
 
 const muted = { opacity: 0.6, fontSize: 12, margin: 0 } as const;
-const group = { border: "1px solid color-mix(in srgb, currentColor 15%, transparent)", borderRadius: 8, padding: 10, margin: 0 } as const;
+const group = { border: "1px solid color-mix(in srgb, currentColor 15%, transparent)", borderRadius: STUDIO_RADIUS_PANEL, padding: 10, margin: 0 } as const;
 const hint = { opacity: 0.55, fontSize: 11 } as const;
 const labelStyle = { fontSize: 12, fontWeight: 600, marginBottom: 6, opacity: 0.85 } as const;
 const input = {
@@ -216,10 +217,10 @@ const input = {
   color: "inherit",
   background: "transparent",
   border: "1px solid color-mix(in srgb, currentColor 22%, transparent)",
-  borderRadius: 6,
+  borderRadius: STUDIO_RADIUS_CONTROL,
 } as const;
 const chip = { ...input, width: "auto", padding: "4px 9px", cursor: "pointer", fontSize: 12 } as const;
-const chipOn = { background: "#2f5bff", borderColor: "#2f5bff", color: "#fff" } as const;
+const chipOn = { background: STUDIO_ACCENT, borderColor: STUDIO_ACCENT, color: "#fff" } as const;
 
 function ReferencePicker({ label, value, path, onChange, to }: { label: React.ReactNode; value: unknown; path: string; onChange: Change; to: string }) {
   const pages = useContext(PagesContext)[to] ?? [];

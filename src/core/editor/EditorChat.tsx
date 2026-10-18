@@ -3,6 +3,7 @@ import type { SanityClient } from "sanity";
 
 import type { ApplyResult, AttachedImages, Catalog, ChatTurn } from "./chat";
 import type { Grant } from "./policy";
+import { STUDIO_ACCENT, STUDIO_RADIUS_CONTROL, STUDIO_RADIUS_PANEL } from "@/theme/studio";
 
 type Message = ChatTurn & { applied?: string[]; rejected?: string[]; error?: boolean; model?: string; thumbs?: string[] };
 /** An image attached to the next message: uploading to Sanity, plus a small copy for the model to see. */
@@ -191,7 +192,7 @@ export function EditorChat({
           value={current?.id ?? ""}
           onChange={(e) => pickModel(e.target.value)}
           disabled={busy || models.length < 2}
-          style={{ flex: 1, minWidth: 0, padding: "3px 6px", font: "inherit", fontSize: 12, color: "inherit", background: "transparent", border, borderRadius: 6 }}
+          style={{ flex: 1, minWidth: 0, padding: "3px 6px", font: "inherit", fontSize: 12, color: "inherit", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL }}
           title="Models this site offers (set by the agency in the hosting)"
         >
           {models.map((m) => (
@@ -222,7 +223,7 @@ export function EditorChat({
             {m.thumbs?.length ? (
               <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
                 {m.thumbs.map((t) => (
-                  <img key={t} src={t} alt="" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6 }} />
+                  <img key={t} src={t} alt="" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: STUDIO_RADIUS_CONTROL }} />
                 ))}
               </div>
             ) : null}
@@ -268,7 +269,7 @@ export function EditorChat({
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {pending.map((p) => (
               <div key={p.id} style={{ position: "relative" }} title={p.error ?? (p.value ? `${p.name} — ${p.id}` : "Uploading…")}>
-                <img src={p.preview} alt={p.name} style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 6, opacity: p.value || p.value === false ? 1 : 0.5, outline: p.error ? "2px solid #e5484d" : undefined }} />
+                <img src={p.preview} alt={p.name} style={{ width: 52, height: 52, objectFit: "cover", borderRadius: STUDIO_RADIUS_CONTROL, opacity: p.value || p.value === false ? 1 : 0.5, outline: p.error ? "2px solid #e5484d" : undefined }} />
                 <button
                   type="button"
                   aria-label={`Remove ${p.name}`}
@@ -298,7 +299,7 @@ export function EditorChat({
               send();
             }
           }}
-          style={{ width: "100%", boxSizing: "border-box", padding: 8, font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: 6, resize: "vertical" }}
+          style={{ width: "100%", boxSizing: "border-box", padding: 8, font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL, resize: "vertical" }}
         />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <input
@@ -336,8 +337,8 @@ export function EditorChat({
 
 const ENDPOINT = "/api/editor-chat";
 const border = "1px solid color-mix(in srgb, currentColor 14%, transparent)";
-const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: 6, whiteSpace: "nowrap", flexShrink: 0 } as const;
-const chipOn = { background: "#2f5bff", borderColor: "#2f5bff", color: "#fff" } as const;
-const userBubble = { justifySelf: "end", maxWidth: "88%", padding: "7px 10px", borderRadius: 10, background: "#2f5bff", color: "#fff", fontSize: 13 } as const;
-const botBubble = { maxWidth: "95%", padding: "7px 10px", borderRadius: 10, border, fontSize: 13 } as const;
+const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL, whiteSpace: "nowrap", flexShrink: 0 } as const;
+const chipOn = { background: STUDIO_ACCENT, borderColor: STUDIO_ACCENT, color: "#fff" } as const;
+const userBubble = { justifySelf: "end", maxWidth: "88%", padding: "7px 10px", borderRadius: STUDIO_RADIUS_PANEL, background: STUDIO_ACCENT, color: "#fff", fontSize: 13 } as const;
+const botBubble = { maxWidth: "95%", padding: "7px 10px", borderRadius: STUDIO_RADIUS_PANEL, border, fontSize: 13 } as const;
 const list = { margin: "6px 0 0", padding: 0, listStyle: "none", fontSize: 12, opacity: 0.85, display: "grid", gap: 2 } as const;

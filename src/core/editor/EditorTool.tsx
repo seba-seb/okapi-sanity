@@ -18,6 +18,7 @@ import { grantFor, may, mayAdd, mayReorder } from "./policy";
 import { POLICY } from "@/okapi.policy";
 import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
 import { plainToPt } from "./text";
+import { STUDIO_ACCENT, STUDIO_RADIUS_CONTROL, STUDIO_RADIUS_PANEL } from "@/theme/studio";
 
 type Row = { _id: string; title?: string; slug?: string };
 const DEVICES = { Desktop: "100%", Tablet: "768px", Mobile: "390px" } as const;
@@ -489,7 +490,7 @@ function PageEditor({
             </button>
           ) : null}
           {adding ? (
-            <div style={{ position: "absolute", top: 40, left: 220, zIndex: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8, borderRadius: 8, border, background: "var(--card-bg-color, #fff)", color: "inherit", boxShadow: "0 8px 30px #0003", width: 300 }}>
+            <div style={{ position: "absolute", top: 40, left: 220, zIndex: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8, borderRadius: STUDIO_RADIUS_PANEL, border, background: "var(--card-bg-color, #fff)", color: "inherit", boxShadow: "0 8px 30px #0003", width: 300 }}>
               {doc && mayAdd(grant, "componentRef") && insertTarget(doc, selected, "componentRef")
                 ? Object.entries(components).map(([cid, c]) => (
                     <button key={cid} type="button" onClick={() => addInstance(cid)} style={{ ...chip, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -713,7 +714,7 @@ function Resizer({ side, width, onChange }: { side: keyof typeof COLS; width: nu
         cursor: "col-resize",
         zIndex: 5,
         touchAction: "none",
-        background: active ? "color-mix(in srgb, #2f5bff 45%, transparent)" : "transparent",
+        background: active ? `color-mix(in srgb, ${STUDIO_ACCENT} 45%, transparent)` : "transparent",
       }}
     />
   );
@@ -783,17 +784,17 @@ function Layers({
               onClick={(e) => onSelect(n.path, e.shiftKey || e.metaKey || e.ctrlKey)}
               style={{
                 padding: `5px 8px 5px ${8 + depth * 14}px`,
-                borderRadius: 6,
+                borderRadius: STUDIO_RADIUS_CONTROL,
                 cursor: "pointer",
                 userSelect: "none",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 fontWeight: n.type === "section" ? 600 : 400,
-                background: selected === n.path ? "#2f5bff" : selection?.includes(n.path) ? "color-mix(in srgb, #2f5bff 55%, transparent)" : over?.path === n.path && over.zone === "inside" ? "color-mix(in srgb, #2f5bff 25%, transparent)" : "transparent",
+                background: selected === n.path ? STUDIO_ACCENT : selection?.includes(n.path) ? `color-mix(in srgb, ${STUDIO_ACCENT} 55%, transparent)` : over?.path === n.path && over.zone === "inside" ? `color-mix(in srgb, ${STUDIO_ACCENT} 25%, transparent)` : "transparent",
                 color: selected === n.path || selection?.includes(n.path) ? "#fff" : "inherit",
                 boxShadow:
-                  over?.path === n.path && over.zone === "before" ? "inset 0 2px 0 #2f5bff" : over?.path === n.path && over.zone === "after" ? "inset 0 -2px 0 #2f5bff" : undefined,
+                  over?.path === n.path && over.zone === "before" ? `inset 0 2px 0 ${STUDIO_ACCENT}` : over?.path === n.path && over.zone === "after" ? `inset 0 -2px 0 ${STUDIO_ACCENT}` : undefined,
               }}
               title={n.title}
             >
@@ -812,6 +813,6 @@ function Layers({
 const border = "1px solid color-mix(in srgb, currentColor 14%, transparent)";
 const column = { padding: 12, overflowY: "auto", minHeight: 0 } as const;
 const heading = { fontWeight: 600, margin: "4px 4px 8px" } as const;
-const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: 6, whiteSpace: "nowrap", flexShrink: 0 } as const;
-const chipOn = { background: "#2f5bff", borderColor: "#2f5bff", color: "#fff" } as const;
-const select_ = { width: "100%", padding: "6px 8px", font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: 6 } as const;
+const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL, whiteSpace: "nowrap", flexShrink: 0 } as const;
+const chipOn = { background: STUDIO_ACCENT, borderColor: STUDIO_ACCENT, color: "#fff" } as const;
+const select_ = { width: "100%", padding: "6px 8px", font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL } as const;

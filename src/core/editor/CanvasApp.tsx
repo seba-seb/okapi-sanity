@@ -10,6 +10,7 @@ import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
 import { listen, post, type ToCanvas } from "./protocol";
 import { htmlToPt, ptPlain, ptToHtml } from "./richtext";
 import { applyOverrides, splitInstancePath, type Override } from "@/core/render/overrides";
+import { STUDIO_ACCENT, STUDIO_ACCENT_SOFT, STUDIO_RADIUS_CONTROL } from "@/theme/studio";
 
 installStaleChunkReload();
 
@@ -400,12 +401,12 @@ export function CanvasApp() {
   return (
     <>
       {page ?? <p style={{ padding: 32, font: "14px system-ui", opacity: 0.6 }}>This page has no sections yet. Add one from the editor.</p>}
-      <Outline box={boxes.hover} color="#6b8cff" dashed />
-      <Outline box={boxes.sel} color="#2f5bff" />
+      <Outline box={boxes.hover} color={STUDIO_ACCENT_SOFT} dashed />
+      <Outline box={boxes.sel} color={STUDIO_ACCENT} />
       {boxes.sel && !boxes.bar ? <DragHandle box={boxes.sel} onPointerDown={startDrag} /> : null}
-      {dropLine ? <div data-drop-line="" style={{ position: "fixed", ...dropLine, background: "#2f5bff", borderRadius: 2, pointerEvents: "none", zIndex: 2147483647 }} /> : null}
+      {dropLine ? <div data-drop-line="" style={{ position: "fixed", ...dropLine, background: STUDIO_ACCENT, borderRadius: 2, pointerEvents: "none", zIndex: 2147483647 }} /> : null}
       {boxes.multi.map((b, i) => (
-        <Outline key={i} box={b} color="#2f5bff" />
+        <Outline key={i} box={b} color={STUDIO_ACCENT} />
       ))}
       <Outline box={boxes.drop} color="#16a34a" label="Drop image" />
       {boxes.bar ? <FormatBar box={boxes.bar} run={(c) => editing.current?.command(c)} /> : null}
@@ -458,7 +459,7 @@ function FormatBar({ box, run }: { box: NonNullable<Box>; run: (c: "bold" | "ita
   return (
     <div
       data-format-bar=""
-      style={{ position: "fixed", top: Math.max(4, box.top - 38), left: box.left, zIndex: 2147483647, display: "flex", background: "#111", borderRadius: 6, boxShadow: "0 4px 16px #0005" }}
+      style={{ position: "fixed", top: Math.max(4, box.top - 38), left: box.left, zIndex: 2147483647, display: "flex", background: "#111", borderRadius: STUDIO_RADIUS_CONTROL, boxShadow: "0 4px 16px #0005" }}
     >
       {btn("bold", <b>B</b>, "Bold (⌘B)")}
       {btn("italic", <i>I</i>, "Italic (⌘I)")}
@@ -481,7 +482,7 @@ function DragHandle({ box, onPointerDown }: { box: NonNullable<Box>; onPointerDo
         left: box.left + box.width - 26,
         width: 24,
         height: 18,
-        background: "#2f5bff",
+        background: STUDIO_ACCENT,
         color: "#fff",
         borderRadius: "3px 3px 0 0",
         font: "600 12px/18px system-ui",

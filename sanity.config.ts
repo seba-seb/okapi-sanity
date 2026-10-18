@@ -7,6 +7,7 @@ import {
   type StringInputProps,
 } from "sanity";
 import { structureTool } from "sanity/structure";
+import { buildTheme } from "@sanity/themer";
 
 import { dataset, projectId } from "./src/core/sanity/env";
 import { schemaTypes, SINGLETONS } from "./src/schema";
@@ -18,6 +19,14 @@ installStaleChunkReload();
 import { EditIcon } from "@sanity/icons";
 import { PreviewSelect } from "./src/core/studio/PreviewSelect";
 import { TooltipDescriptionField } from "./src/core/studio/TooltipDescriptionField";
+import { STUDIO_ACCENT, STUDIO_BG_DARK } from "./src/theme/studio";
+
+// Studio theme via Sanity's official @sanity/themer (stable buildTheme API, pinned).
+// Only accent + backgrounds: everything else falls back to the stock Studio colours.
+const theme = buildTheme({
+  light: { accent: STUDIO_ACCENT },
+  dark: { accent: STUDIO_ACCENT, background: STUDIO_BG_DARK },
+});
 
 /**
  * Renders enum string fields (those with an `options.list`) as segmented
@@ -80,6 +89,7 @@ function studioLayout(props: LayoutProps) {
 export default defineConfig({
   name: "default",
   title: "Okapi",
+  theme,
   // The Studio is served at /studio (astro.config studioBasePath) with HASH
   // routing, so the workspace lives at the root of the hash: #/editor,
   // #/structure. With "/studio" here the hash had to be #/studio/…, and

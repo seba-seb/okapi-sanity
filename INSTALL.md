@@ -44,7 +44,7 @@ Preguntá en una sola tanda solo lo que no puedas deducir del proyecto:
 Necesitás:
 - Node ≥ 22.
 - `git`.
-- Acceso de lectura al repo privado `seba-seb/Remarkable-Astro`
+- Acceso de lectura al repo `seba-seb/okapi-astro` (mientras sea privado)
   (`gh auth status`).
 
 ## Camino A — proyecto nuevo
@@ -53,7 +53,7 @@ El repo de Okapi ya es un proyecto Astro completo. Incluye bloques de
 ejemplo, tema y header/footer que después se reemplazan.
 
 ```bash
-gh repo clone seba-seb/Remarkable-Astro <carpeta> -- --depth 1
+gh repo clone seba-seb/okapi-astro <carpeta> -- --depth 1
 cd <carpeta> && rm -rf .git && git init -q
 npm install          # aplica patches/. Si falla, no sigas
 ```
@@ -81,7 +81,7 @@ Seguí con los **pasos comunes**.
 
 ```bash
 rm -rf /tmp/okapi   # una copia vieja daría una versión vieja
-gh repo clone seba-seb/Remarkable-Astro /tmp/okapi -- --depth 1   # --branch <ref> si el usuario pide otra versión
+gh repo clone seba-seb/okapi-astro /tmp/okapi -- --depth 1   # --branch <ref> si el usuario pide otra versión
 ```
 
 Copiá desde `/tmp/okapi` **sin pisar nada que ya exista**. Revisá primero
