@@ -33,7 +33,7 @@ export function Logo3d({ block, path, ctx }: BlockProps<Logo3dData & any>) {
   const sceneRef = useRef<Logo3dController | null>(null);
 
   const svg = resolveSvg(c.preset, c.customSvg);
-  // Primary → brand color (purple in light/dark, white in Brand theme);
+  // Primary → brand color (orange in light/dark, tierra in Brand theme);
   // Secondary → the text color. Both resolve per the section's data-theme.
   const color = c.color === "secondary" ? "var(--fg)" : "var(--brand)";
 

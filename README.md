@@ -27,3 +27,11 @@ npm run verify                    # unit checks + build + public JS budget
 ```
 
 `http://localhost:4321` must be a CORS origin (with credentials) of the Sanity project.
+
+## Credits & license
+
+Okapi started as a port of [Remarkable](https://github.com/flowtricks/remarkable)
+by [Timothy Ricks](https://www.timothyricks.com/) — a Sanity + Next.js visual page
+builder he shared with the community. Thanks, Timothy.
+
+MIT — see [LICENSE](LICENSE).

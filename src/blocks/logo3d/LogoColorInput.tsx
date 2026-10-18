@@ -4,11 +4,11 @@ import { Card, Flex, Text } from "@sanity/ui";
 
 /**
  * Segmented control for the 3D Logo's color: Primary / Secondary, each with a
- * swatch (purple / white) so the choice reads at a glance. The rendered color is
+ * swatch (orange / white) so the choice reads at a glance. The rendered color is
  * theme-driven (see `Logo3d`); these swatches just label the two options.
  */
 const OPTIONS = [
-  { value: "primary", title: "Primary", swatch: "#6d5dfc" },
+  { value: "primary", title: "Primary", swatch: "#c2562c" },
   { value: "secondary", title: "Secondary", swatch: "#ffffff" },
 ];
 

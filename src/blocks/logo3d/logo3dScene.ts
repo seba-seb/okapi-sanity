@@ -399,7 +399,7 @@ export function initLogo3dScene(
     input.step = "0.01";
     input.value = String(grainValue);
     input.setAttribute("aria-label", "Dither grain");
-    input.style.cssText = "width:118px;cursor:ew-resize;accent-color:#8b83ff;";
+    input.style.cssText = "width:118px;cursor:ew-resize;accent-color:#f29b6b;";
     input.addEventListener("input", () => {
       grainValue = clampGrain(parseFloat(input.value));
       if (shaderRef) shaderRef.uniforms.uBlockSize.value = baseBlock * grainValue;

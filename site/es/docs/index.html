@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Okapi — Documentación</title>
+<meta name="description" content="Cómo sumar Okapi a un proyecto Astro con tu agente, y cómo está hecho por dentro.">
+<meta name="theme-color" content="#16100D">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="en" href="../../docs/">
+<link rel="alternate" hreflang="es" href="./">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist:wght@400;500;600&family=Unbounded:wght@700&display=swap">
+<script>
+  // Apply the saved view before first paint, so the page doesn't flash the other mode.
+  try { var m = localStorage.getItem("okapi-docs-mode"); if (m === "tech" || m === "vibe") document.documentElement.dataset.mode = m; } catch (e) {}
+</script>
+<style>
+/* Layout: top bar · index | reading column | "en esta sección" rail. Same world as the landing:
+   tierra background, crema text, naranja accent, square corners, Geist + Geist Mono. */
+:root {
+  --tierra: #16100D;
+  --panel: #1D1613;
+  --panel-2: #261D19;
+  --code: #0F0B09;
+  --naranja: #C2562C;
+  --naranja-claro: #F29B6B;
+  --crema: #F2EEE3;
+  --fg: #F2EEE3;
+  --text: color-mix(in srgb, var(--crema) 82%, transparent);
+  --muted: color-mix(in srgb, var(--crema) 52%, transparent);
+  --line: color-mix(in srgb, var(--crema) 12%, transparent);
+  --line-2: color-mix(in srgb, var(--crema) 20%, transparent);
+  --ok: #8FD49A;
+  --warn: #E7B45A;
+  --logo: "Unbounded", system-ui, sans-serif;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --bar: 60px;
+  --nav-w: 268px;
+  --rail-w: 220px;
+  --col: 44rem;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--bar) + 24px); -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
+body { margin: 0; background: var(--tierra); color: var(--text); font: 400 16px/1.7 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+::selection { background: var(--naranja); color: var(--crema); }
+a { color: var(--naranja-claro); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--naranja-claro) 40%, transparent); text-underline-offset: 3px; text-decoration-thickness: 1px; transition: text-decoration-color .2s; }
+a:hover { text-decoration-color: var(--naranja-claro); }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 1.5px solid var(--naranja-claro); outline-offset: 2px; }
+code, kbd, pre { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--panel-2); border: 1px solid var(--line); padding: .08em .38em; color: var(--crema); overflow-wrap: anywhere; }
+kbd { display: inline-block; min-width: 1.8em; padding: .1em .45em; border: 1px solid var(--line-2); border-bottom-width: 2px; background: var(--panel); color: var(--crema); text-align: center; font-size: .78em; }
+strong, b { color: var(--fg); font-weight: 500; }
+
+/* ───────── Top bar ───────── */
+.top { position: sticky; top: 0; z-index: 40; height: var(--bar); display: flex; align-items: center; gap: 16px; padding: 0 clamp(16px, 2.4vw, 28px); background: color-mix(in srgb, var(--tierra) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+.top .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--crema); }
+.top .brand b { font: 700 18px/1 var(--logo); letter-spacing: -.05em; }
+.top .brand span { padding: 4px 7px; border: 1px solid var(--line-2); font: 400 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--naranja-claro); }
+.top .spacer { flex: 1; }
+.search-btn { min-width: 0; display: flex; align-items: center; gap: 10px; width: min(300px, 32vw); padding: 9px 10px 9px 12px; border: 1px solid var(--line-2); background: var(--panel); color: var(--muted); font: 400 13px/16px var(--mono); transition: border-color .2s, color .2s; }
+.search-btn:hover { border-color: var(--naranja-claro); color: var(--crema); }
+.search-btn kbd { margin-left: auto; }
+.search-btn .s { display: none; }
+.search-btn span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-btn::before { content: ""; flex-shrink: 0; width: 9px; height: 9px; border: 1.5px solid currentColor; border-radius: 50%; box-shadow: 4px 4px 0 -3px currentColor; }
+.top .lnk { padding: 9px 12px; font: 400 13px/16px var(--mono); color: var(--crema); text-decoration: none; transition: color .2s; }
+.top .lnk:hover { color: var(--naranja-claro); }
+.top .gh { flex-shrink: 0; white-space: nowrap; padding: 9px 14px; background: var(--crema); color: var(--tierra); font: 400 13px/16px var(--mono); text-decoration: none; transition: background .2s; }
+.top .gh:hover { background: var(--naranja-claro); }
+.top .gh svg { display: none; width: 16px; height: 16px; fill: currentColor; }
+.menu-btn { display: none; flex-shrink: 0; width: 40px; height: 40px; place-items: center; border: 1px solid var(--line-2); }
+.menu-btn i, .menu-btn i::before, .menu-btn i::after { display: block; width: 16px; height: 1.5px; background: var(--crema); position: relative; transition: transform .3s, background .2s; }
+.menu-btn i::before, .menu-btn i::after { content: ""; position: absolute; left: 0; }
+.menu-btn i::before { top: -5px; } .menu-btn i::after { top: 5px; }
+body.nav-open .menu-btn i { background: transparent; }
+body.nav-open .menu-btn i::before { transform: translateY(5px) rotate(45deg); }
+body.nav-open .menu-btn i::after { transform: translateY(-5px) rotate(-45deg); }
+.progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: var(--naranja); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
+
+/* Mode switch (vibe coding / técnico) */
+.mode { display: inline-grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-2); font: 400 12px/16px var(--mono); letter-spacing: .04em; }
+.mode button { padding: 8px 12px; color: var(--muted); transition: color .2s, background .2s; white-space: nowrap; }
+.mode button[aria-pressed="true"] { background: var(--crema); color: var(--tierra); }
+.mode button:not([aria-pressed="true"]):hover { color: var(--crema); }
+
+/* Language switch (EN / ES): same look as the mode switch */
+.lang { display: flex; flex-shrink: 0; border: 1px solid var(--line-2); font: 400 12px/16px var(--mono); letter-spacing: .04em; }
+.lang a { padding: 8px 10px; color: var(--muted); text-decoration: none; transition: color .2s, background .2s; }
+.lang a[aria-current="page"] { background: var(--crema); color: var(--tierra); }
+.lang a:not([aria-current]):hover { color: var(--crema); }
+
+/* ───────── Shell ───────── */
+.shell { display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr) var(--rail-w); max-width: 1480px; margin: 0 auto; }
+:root[data-mode="vibe"] [data-only="tech"], :root:not([data-mode]) [data-only="tech"], :root[data-mode="tech"] [data-only="vibe"] { display: none !important; }
+
+/* Index */
+.index { position: sticky; top: var(--bar); align-self: start; height: calc(100vh - var(--bar)); overflow-y: auto; padding: 28px 20px 40px clamp(16px, 2.4vw, 28px); border-right: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+.index .mode { display: none; width: 100%; margin-bottom: 18px; }
+.index .hint { margin: 0 0 18px; font: 400 12px/1.5 var(--mono); color: var(--muted); }
+.index h2 { margin: 26px 0 8px; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.index h2:first-of-type { margin-top: 0; }
+.index { counter-reset: i; }
+.index ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); }
+.index li { counter-increment: i; }
+.index a { position: relative; display: flex; gap: 10px; padding: 6px 12px; color: var(--muted); text-decoration: none; font-size: 14px; line-height: 1.4; transition: color .2s, background .2s; }
+.index a::before { content: counter(i, decimal-leading-zero); font: 400 11px/19.6px var(--mono); color: color-mix(in srgb, var(--crema) 28%, transparent); transition: color .2s; }
+.index a:hover { color: var(--crema); }
+.index a[aria-current="true"] { color: var(--crema); background: color-mix(in srgb, var(--naranja) 12%, transparent); }
+.index a[aria-current="true"]::before { color: var(--naranja-claro); }
+.index a[aria-current="true"]::after { content: ""; position: absolute; left: -1px; top: 0; bottom: 0; width: 2px; background: var(--naranja); }
+.index .out { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); display: grid; gap: 2px; }
+.index .out a { padding: 6px 0; font: 400 12px/16px var(--mono); letter-spacing: .04em; color: var(--muted); }
+.index .out a::before { content: none; }
+.index .out a:hover { color: var(--naranja-claro); }
+
+/* Rail: headings of the current section */
+.rail { position: sticky; top: var(--bar); align-self: start; max-height: calc(100vh - var(--bar)); overflow-y: auto; padding: 32px 24px 40px 8px; }
+.rail p { margin: 0 0 10px; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rail ol { list-style: none; margin: 0; padding: 0; }
+.rail a { display: block; padding: 5px 0 5px 12px; border-left: 1px solid var(--line); color: var(--muted); text-decoration: none; font-size: 13px; line-height: 1.4; transition: color .2s, border-color .2s; }
+.rail a:hover { color: var(--crema); }
+.rail a.on { color: var(--crema); border-left-color: var(--naranja); }
+.rail:empty { display: none; }
+
+/* ───────── Content ───────── */
+main { min-width: 0; padding: 0 clamp(20px, 4vw, 64px) 120px; }
+.prose { max-width: var(--col); }
+section { counter-increment: sec; padding-top: 72px; margin-top: 72px; border-top: 1px solid var(--line); }
+main { counter-reset: sec; }
+.eyebrow { margin: 0 0 14px; font: 400 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--naranja-claro); }
+section .eyebrow::before { content: counter(sec, decimal-leading-zero) " / "; color: var(--muted); }
+h1, h2, h3, h4 { color: var(--fg); font-family: var(--sans); text-wrap: balance; }
+h1 { margin: 0 0 22px; font-size: clamp(44px, 5vw, 72px); line-height: 1; font-weight: 500; letter-spacing: -.05em; }
+h2 { margin: 0 0 18px; font-size: clamp(30px, 2.6vw, 40px); line-height: 1.1; font-weight: 400; letter-spacing: -.035em; }
+h3 { margin: 40px 0 10px; font-size: 20px; line-height: 1.3; font-weight: 500; letter-spacing: -.02em; }
+h2, h3 { position: relative; }
+.anchor { position: absolute; left: -1.1em; top: 0; padding-right: .3em; color: var(--naranja); text-decoration: none; opacity: 0; transition: opacity .2s; font-weight: 400; }
+h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
+p, ul, ol { margin: 0 0 16px; }
+li { margin-bottom: 6px; }
+li::marker { color: var(--naranja-claro); }
+.lead { max-width: 40rem; font-size: 19px; line-height: 1.6; color: var(--text); }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+
+/* Hero */
+.hero { position: relative; padding: 72px 0 8px; isolation: isolate; }
+.hero .tex { position: absolute; z-index: -1; inset: 0 calc(-1 * clamp(20px, 4vw, 64px)) 0; opacity: .5; -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 85%); mask-image: linear-gradient(180deg, #000 0%, transparent 85%); pointer-events: none; }
+.hero .tex canvas { width: 100%; height: 100%; display: block; }
+.stack-line { display: flex; flex-wrap: wrap; gap: 6px; margin: 28px 0 0; padding: 0; list-style: none; }
+.stack-line li { margin: 0; padding: 7px 10px; border: 1px solid var(--line-2); background: var(--tierra); font: 400 12px/1 var(--mono); color: var(--muted); }
+.stack-line li b { color: var(--crema); font-weight: 400; }
+.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 32px; border: 1px solid var(--line-2); background: var(--tierra); }
+.figures div { min-width: 0; padding: 20px 18px 18px; border-left: 1px solid var(--line-2); }
+.figures div:first-child { border-left: 0; background: var(--naranja); }
+.figures div:first-child span { color: var(--crema); }
+.figures strong { display: block; color: var(--crema); font: 300 34px/1 var(--mono); letter-spacing: -.05em; }
+.figures span { display: block; margin-top: 10px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+@media (max-width: 720px) { .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } .figures div:nth-child(3) { border-left: 0; } .figures div:nth-child(n+3) { border-top: 1px solid var(--line-2); } }
+.switch-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 24px; font-size: 14px; color: var(--muted); }
+.switch-note button { color: var(--naranja-claro); font: 400 13px/1 var(--mono); padding: 8px 12px; border: 1px solid var(--line-2); transition: border-color .2s; }
+.switch-note button:hover { border-color: var(--naranja-claro); }
+.switch-note button::after { content: " →"; }
+
+/* Three-part split */
+.parts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 28px 0 8px; border: 1px solid var(--line); }
+.part { min-width: 0; padding: 20px; border-left: 1px solid var(--line); }
+.part:first-child { border-left: 0; }
+.part h3 { margin: 0 0 8px; font-size: 18px; }
+.part h3::before { content: ""; display: block; width: 10px; height: 10px; margin-bottom: 16px; background: var(--naranja); }
+.part p { margin: 0; font-size: 15px; color: var(--muted); }
+@media (max-width: 860px) { .parts { grid-template-columns: minmax(0, 1fr); } .part { border-left: 0; border-top: 1px solid var(--line); } .part:first-child { border-top: 0; } }
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin: 20px 0 24px; border: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.5; }
+th, td { padding: 11px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+tbody tr { transition: background .2s; }
+tbody tr:hover { background: color-mix(in srgb, var(--crema) 3%, transparent); }
+th { background: var(--panel); font: 400 11px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+td code { white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-block; padding: 4px 7px; font: 400 11px/1 var(--mono); letter-spacing: .04em; white-space: nowrap; border: 1px solid currentColor; }
+.pill.js { color: var(--naranja-claro); }
+.pill.ok { color: var(--ok); }
+.pill.no { color: var(--muted); }
+.pill.warn { color: var(--warn); }
+
+/* Code */
+.code { position: relative; margin: 18px 0 24px; }
+pre { margin: 0; padding: 16px 18px; padding-right: 92px; overflow-x: auto; background: var(--code); border: 1px solid var(--line); color: var(--crema); font-size: 13.5px; line-height: 1.65; }
+pre .c { color: var(--muted); }
+pre .k { color: var(--naranja-claro); }
+.copy { position: absolute; top: 9px; right: 9px; padding: 6px 10px; border: 1px solid var(--line-2); background: var(--tierra); color: var(--muted); font: 400 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; transition: color .2s, border-color .2s; }
+.copy:hover { color: var(--crema); border-color: var(--crema); }
+.copy.ok { color: var(--tierra); background: var(--naranja-claro); border-color: var(--naranja-claro); }
+
+/* Diagrams */
+.diagram { overflow-x: auto; margin: 24px 0 28px; padding: 24px; background: var(--panel); border: 1px solid var(--line); background-image: radial-gradient(color-mix(in srgb, var(--crema) 9%, transparent) 1px, transparent 1px); background-size: 16px 16px; }
+.diagram-inner { min-width: 680px; }
+.lanes { display: grid; grid-template-columns: 1fr 64px 1fr 64px 1fr; align-items: stretch; }
+.node { padding: 12px 14px; background: var(--tierra); border: 1px solid var(--line-2); font-size: 13.5px; line-height: 1.45; }
+.node h4 { margin: 0 0 4px; font: 500 14px/1.3 var(--sans); }
+.node .route { display: block; margin-bottom: 6px; font: 400 12px/1 var(--mono); color: var(--naranja-claro); }
+.node.hl { border-color: var(--naranja); box-shadow: 0 0 0 3px color-mix(in srgb, var(--naranja) 22%, transparent); }
+.node ul { margin: 6px 0 0; padding-left: 16px; color: var(--muted); }
+.node li { margin: 0; }
+.arrow { position: relative; display: grid; place-items: center; text-align: center; color: var(--muted); font: 400 11px/1.2 var(--mono); }
+.arrow::before { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; border-top: 1.5px dashed var(--line-2); }
+.arrow span { position: relative; padding: 2px 4px; background: var(--panel); }
+.arrow.both span::before { content: "⇄ "; color: var(--naranja-claro); }
+.arrow.right span::before { content: "→ "; color: var(--naranja-claro); }
+.col-stack { display: grid; gap: 12px; }
+.row-caption { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.flow { display: flex; align-items: stretch; }
+.flow .node { flex: 1 1 0; min-width: 0; }
+.flow .arrow { flex: 0 0 44px; }
+
+/* Callouts */
+.note { margin: 20px 0; padding: 14px 18px; background: var(--panel); border: 1px solid var(--line); border-left: 2px solid var(--naranja); font-size: 15px; }
+.note.warn { border-left-color: var(--warn); }
+.note strong:first-child { display: block; margin-bottom: 4px; color: var(--crema); }
+.note.warn strong:first-child { color: var(--warn); }
+.note p:last-child { margin-bottom: 0; }
+
+/* Steps */
+.steps { list-style: none; padding: 0; margin: 20px 0; display: grid; gap: 0; counter-reset: s; border-left: 1px solid var(--line); }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; margin: 0; padding: 0 0 18px; }
+.steps > li::before { content: counter(s, decimal-leading-zero); width: 28px; height: 28px; margin-left: -14px; display: grid; place-items: center; background: var(--tierra); border: 1px solid var(--naranja); color: var(--naranja-claro); font: 400 11px/1 var(--mono); }
+.steps > li > div { min-width: 0; padding-top: 3px; }
+.steps strong { display: block; }
+.steps p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+
+/* Tree */
+.tree { font-family: var(--mono); font-size: 13px; line-height: 1.75; white-space: pre; }
+.tree .d { color: var(--naranja-claro); }
+.tree .c { color: var(--muted); }
+
+/* Decisions */
+.decisions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 22px 0; border: 1px solid var(--line); }
+.decision { min-width: 0; padding: 18px 20px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transition: background .25s; }
+.decision:nth-child(2n) { border-right: 0; }
+.decision:hover { background: var(--panel); }
+.decision h3 { margin: 0 0 8px; font-size: 17px; }
+.decision p { margin: 0 0 8px; font-size: 14.5px; color: var(--muted); }
+.decision p:last-child { margin: 0; }
+@media (max-width: 760px) { .decisions { grid-template-columns: minmax(0, 1fr); } .decision { border-right: 0; } }
+
+/* Timeline */
+.timeline { list-style: none; padding: 0; margin: 22px 0; border-left: 1px solid var(--line); }
+.timeline > li { position: relative; margin: 0; padding: 0 0 24px 24px; }
+.timeline > li::before { content: ""; position: absolute; left: -4px; top: 6px; width: 7px; height: 7px; background: var(--naranja); }
+.timeline time { font: 400 12px/1 var(--mono); color: var(--naranja-claro); }
+.timeline h3 { margin: 6px 0 6px; font-size: 17px; }
+.timeline ul { margin: 0; padding-left: 18px; font-size: 14.5px; color: var(--muted); }
+.timeline code { font-size: .8em; }
+
+/* Checklist */
+.check { list-style: none; padding: 0; }
+.check li { position: relative; padding-left: 28px; }
+.check li::before { content: ""; position: absolute; left: 0; top: 6px; width: 13px; height: 13px; border: 1.5px solid var(--naranja-claro); }
+
+/* Prompt cards: what you paste into your agent */
+.prompt-group { margin: 36px 0 12px; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.prompts { display: grid; gap: 14px; }
+.prompt { border: 1px solid var(--line-2); background: var(--tierra); transition: border-color .25s; }
+.prompt:hover { border-color: var(--naranja-claro); }
+.prompt-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px 0; }
+.prompt-head h3 { margin: 0; font-size: 16px; }
+.prompt .copy { position: static; flex: none; }
+.prompt blockquote { margin: 12px 16px 16px; padding: 14px 16px; background: var(--crema); color: var(--tierra); font-size: 15px; line-height: 1.55; }
+.prompt blockquote::before { content: "› "; color: var(--naranja); font-family: var(--mono); }
+.prompt blockquote code { background: color-mix(in srgb, var(--tierra) 8%, transparent); border-color: color-mix(in srgb, var(--tierra) 15%, transparent); color: var(--tierra); }
+.prompt-meta { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.prompt-meta div { min-width: 0; padding: 12px 16px 14px; font-size: 14px; color: var(--muted); }
+.prompt-meta div + div { border-left: 1px solid var(--line); }
+.prompt-meta b { display: block; margin-bottom: 6px; font: 400 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--naranja-claro); }
+@media (max-width: 640px) { .prompt-meta { grid-template-columns: 1fr; } .prompt-meta div + div { border-left: 0; border-top: 1px solid var(--line); } }
+
+/* Glossary */
+.glossary { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0; margin: 22px 0; border-top: 1px solid var(--line); }
+.glossary dt, .glossary dd { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.glossary dt { padding-right: 24px; color: var(--crema); font: 400 14px/1.5 var(--mono); }
+.glossary dd { margin: 0; color: var(--muted); }
+@media (max-width: 560px) { .glossary { grid-template-columns: minmax(0, 1fr); } .glossary dt { border-bottom: 0; padding-bottom: 0; } }
+
+footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--line); font: 400 12px/1.6 var(--mono); color: var(--muted); }
+
+/* Prev / next at the end of every section */
+.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 48px; }
+.pager a { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border: 1px solid var(--line); text-decoration: none; color: var(--crema); font-size: 17px; line-height: 1.3; transition: border-color .25s, background .25s; }
+.pager a span { font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.pager a:hover { border-color: var(--naranja-claro); background: var(--panel); }
+.pager .next { grid-column: 2; text-align: right; }
+.pager .next span::after { content: " →"; color: var(--naranja-claro); }
+.pager .prev span::before { content: "← "; color: var(--naranja-claro); }
+
+/* ───────── Search (⌘K) ───────── */
+.search { position: fixed; inset: 0; z-index: 60; display: none; padding: min(14vh, 120px) 16px 16px; background: color-mix(in srgb, var(--tierra) 72%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.search.open { display: block; }
+.search .box { width: min(640px, 100%); margin: 0 auto; background: var(--panel); border: 1px solid var(--line-2); box-shadow: 0 30px 80px rgb(0 0 0 / .5); }
+.search input { width: 100%; padding: 18px 20px; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--crema); font: 400 16px/1.4 var(--mono); outline: none; }
+.search input::placeholder { color: var(--muted); }
+.search ul { list-style: none; margin: 0; padding: 6px; max-height: min(56vh, 460px); overflow-y: auto; }
+.search li { margin: 0; }
+.search li a { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; color: var(--crema); text-decoration: none; }
+.search li a small { font: 400 11px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.search li a mark { background: none; color: var(--naranja-claro); }
+.search li[aria-selected="true"] a { background: color-mix(in srgb, var(--naranja) 18%, transparent); box-shadow: inset 2px 0 var(--naranja); }
+.search .empty { padding: 18px 20px; color: var(--muted); font: 400 13px/1.5 var(--mono); }
+.search .foot { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font: 400 11px/1 var(--mono); color: var(--muted); }
+
+/* ───────── Responsive ───────── */
+@media (max-width: 1279px) { .shell { grid-template-columns: var(--nav-w) minmax(0, 1fr); } .rail { display: none; } }
+@media (max-width: 1023px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .top .mode, .top .lnk, .search-btn kbd { display: none; }
+  .search-btn { width: auto; flex: 1; max-width: 260px; }
+  .menu-btn { display: grid; }
+  .index { position: fixed; z-index: 35; top: var(--bar); left: 0; width: min(340px, 88vw); height: calc(100dvh - var(--bar)); background: var(--tierra); transform: translateX(-102%); transition: transform .45s cubic-bezier(.2,.8,.2,1); padding-left: 20px; }
+  .index .mode { display: inline-grid; }
+  body.nav-open .index { transform: none; box-shadow: 30px 0 80px rgb(0 0 0 / .5); }
+  .scrim { position: fixed; inset: var(--bar) 0 0; z-index: 34; background: rgb(0 0 0 / .45); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  body.nav-open .scrim { opacity: 1; pointer-events: auto; }
+  .anchor { display: none; }
+}
+@media (max-width: 560px) {
+  .top { gap: 10px; }
+  .top .brand span, .search-btn .l { display: none; }
+  .search-btn .s { display: inline; }
+  .top .gh { padding: 9px 10px; }
+  .lang a { padding: 8px 7px; }
+  .pager { grid-template-columns: 1fr; }
+  .pager .next { grid-column: 1; }
+  section { padding-top: 56px; margin-top: 56px; }
+}
+@media (max-width: 440px) {
+  /* Narrow phones: the GitHub link becomes its mark so search keeps its label. */
+  .top { gap: 8px; }
+  .top .spacer { display: none; }
+  .top .gh svg { display: block; }
+  .top .gh .t { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Abrir índice" aria-controls="index" aria-expanded="false"><i></i></button>
+  <a class="brand" href="../" aria-label="Okapi, volver al inicio"><b>Okapi</b><span>Docs</span></a>
+  <div class="mode" role="group" aria-label="Vista de la documentación">
+    <button type="button" data-set-mode="vibe" aria-pressed="true">Con tu agente</button>
+    <button type="button" data-set-mode="tech" aria-pressed="false">Técnico</button>
+  </div>
+  <span class="spacer"></span>
+  <button class="search-btn" type="button" data-open-search aria-label="Buscar en la documentación"><span class="l">Buscar en la docs…</span><span class="s">Buscar</span><kbd>⌘K</kbd></button>
+  <a class="lnk" href="../">Inicio</a>
+  <nav class="lang" aria-label="Idioma"><a href="../../docs/" hreflang="en" lang="en">EN</a><a href="./" hreflang="es" lang="es" aria-current="page">ES</a></nav>
+  <a class="gh" href="https://github.com/seba-seb/okapi-sanity" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span class="t">GitHub ↗</span></a>
+  <span class="progress" aria-hidden="true"></span>
+</header>
+<div class="scrim" aria-hidden="true"></div>
+
+<div class="shell">
+  <nav class="index" id="index" aria-label="Índice">
+    <div class="mode" role="group" aria-label="Vista de la documentación">
+      <button type="button" data-set-mode="vibe" aria-pressed="true">Con tu agente</button>
+      <button type="button" data-set-mode="tech" aria-pressed="false">Técnico</button>
+    </div>
+    <p class="hint" data-only="vibe">Cómo pedírselo a tu agente y trabajar después.</p>
+    <p class="hint" data-only="tech">Cómo está hecho por dentro.</p>
+    <h2 data-only="vibe">Con tu agente</h2>
+    <ol data-only="vibe">
+      <li><a href="#que-es">Qué es</a></li>
+      <li><a href="#instalar">Sumarlo a tu proyecto</a></li>
+      <li><a href="#prompts">Qué pedirle después</a></li>
+      <li><a href="#pedir-bien">Para pedir bien</a></li>
+      <li><a href="#editor">El editor</a></li>
+      <li><a href="#componentes">Componentes</a></li>
+      <li><a href="#bloques">Bloques</a></li>
+      <li><a href="#si-falla">Si algo falla</a></li>
+      <li><a href="#entregar">Antes de entregar</a></li>
+      <li><a href="#glosario">Glosario</a></li>
+      <li><a href="#pendiente">Lo que sigue</a></li>
+    </ol>
+    <h2 data-only="tech">Producto</h2>
+    <ol data-only="tech">
+      <li><a href="#que-es">Qué es</a></li>
+      <li><a href="#arquitectura">Arquitectura</a></li>
+      <li><a href="#sitio">El sitio público</a></li>
+      <li><a href="#editor">Okapi Editor</a></li>
+      <li><a href="#estilos">Estilos y tokens</a></li>
+      <li><a href="#componentes">Componentes</a></li>
+      <li><a href="#bloques">Bloques</a></li>
+      <li><a href="#motion">Motion</a></li>
+    </ol>
+    <h2 data-only="tech">Integración</h2>
+    <ol data-only="tech">
+      <li><a href="#instalacion">Instalación</a></li>
+      <li><a href="#contrato">Contrato con tu proyecto</a></li>
+      <li><a href="#codigo">El código</a></li>
+      <li><a href="#agregar-bloque">Agregar un bloque</a></li>
+      <li><a href="#publicar">Hosting y publicación</a></li>
+      <li><a href="#calidad">Calidad y pruebas</a></li>
+      <li><a href="#problemas">Problemas conocidos</a></li>
+    </ol>
+    <h2 data-only="tech">Contexto</h2>
+    <ol data-only="tech">
+      <li><a href="#decisiones">Decisiones</a></li>
+      <li><a href="#historial">Historial</a></li>
+      <li><a href="#pendiente">Lo que sigue</a></li>
+    </ol>
+    <div class="out">
+      <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md">INSTALL.md ↗</a>
+      <a href="https://github.com/seba-seb/okapi-sanity/blob/main/AGENTS.md">AGENTS.md ↗</a>
+      <a href="../">← Volver a la landing</a>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- ───────────────────────── Hero ───────────────────────── -->
+    <header id="inicio" class="hero">
+      <div class="tex" aria-hidden="true"><canvas data-okapi-tex="puntos" data-bg="#16100D" data-fg="#C2562C" data-speed=".6"></canvas></div>
+      <p class="eyebrow">Sanity + editor visual para Astro · open source</p>
+      <h1>Okapi</h1>
+      <p class="lead">Okapi se suma a un proyecto Astro, nuevo o ya empezado, y le da dos cosas: Sanity como base de datos y un editor visual propio donde el equipo y los clientes arman y editan las páginas sobre el diseño real.</p>
+      <p class="lead" data-only="vibe">Lo instala tu agente de código, el que uses, siguiendo una guía del repo. Esta vista explica cómo pedírselo y cómo se trabaja después.</p>
+      <ul class="stack-line" aria-label="Stack">
+        <li><b>Astro</b> 7.3 · estático</li>
+        <li><b>Sanity</b> 6.3.0 · fijo</li>
+        <li><b>React</b> 19</li>
+        <li><b>Tailwind</b> 4 sobre tokens</li>
+        <li><b>GSAP</b> 3.15</li>
+      </ul>
+      <div class="figures">
+        <div><strong>≈1 KB</strong><span>de JS en una página sin bloques animados</span></div>
+        <div><strong>138 KB</strong><span>de JS (gzip) en una página con motion</span></div>
+        <div><strong>0 KB</strong><span>del editor en el sitio público, controlado en cada build</span></div>
+        <div><strong>2</strong><span>caminos: proyecto nuevo o proyecto Astro existente</span></div>
+      </div>
+      <div class="switch-note" data-only="vibe">Estás en la guía para trabajar con tu agente. <button type="button" data-set-mode="tech">Ver la documentación técnica</button></div>
+      <div class="switch-note" data-only="tech">Estás en la documentación técnica. <button type="button" data-set-mode="vibe">Ver la guía para trabajar con tu agente</button></div>
+    </header>
+
+    <!-- ───────────────────────── Qué es ───────────────────────── -->
+    <section id="que-es">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Qué es</h2>
+        <p>No es un template de sitio. Okapi es la capa de contenido y edición que se suma a un proyecto Astro. Tu proyecto sigue siendo tuyo: tus páginas, tu diseño y tu deploy. Okapi agrega:</p>
+      </div>
+      <div class="parts">
+        <div class="part">
+          <h3>Sanity como base de datos</h3>
+          <p>Login, roles, borradores, historial, imágenes y CDN. No lo mantenemos nosotros. El Studio queda en <code>/studio</code> de tu sitio.</p>
+        </div>
+        <div class="part">
+          <h3>Okapi Editor</h3>
+          <p>Nuestro editor visual en <code>/studio#/editor</code>. Se escribe sobre la página, se arrastran bloques, se estila con tus tokens y se arman componentes.</p>
+        </div>
+        <div class="part">
+          <h3>Páginas que salen del editor</h3>
+          <p>Las rutas que elijas se arman en el editor y se sirven como HTML estático. Solo las secciones animadas cargan JavaScript.</p>
+        </div>
+      </div>
+
+      <h3>Equipo y cliente</h3>
+      <p class="prose">El mismo editor muestra dos vistas según el rol en Sanity. El equipo (rol <code>administrator</code>) puede alternar a la vista de cliente para revisar lo que ve el cliente.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Puede…</th><th>Equipo</th><th>Cliente</th></tr></thead>
+          <tbody>
+            <tr><td>Editar textos, rich text, links e imágenes</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
+            <tr><td>Reordenar bloques dentro de lo diseñado</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
+            <tr><td>Insertar, duplicar y borrar bloques</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Panel de estilo (espaciado, color, radio, breakpoints)</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Crear, editar y separar componentes</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Publicar</td><td><span class="pill ok">Sí</span></td><td><span class="pill warn">Según rol</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted prose">Con <code>editor</code> el cliente publica solo. Con <code>contributor</code> deja borradores y publica alguien del equipo. Los roles disponibles dependen del plan de Sanity.</p>
+    </section>
+
+    <!-- ───────────────────────── Vibe: instalar ───────────────────────── -->
+    <section id="instalar" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Sumarlo a tu proyecto</h2>
+        <p>La instalación está escrita en el <code>INSTALL.md</code> del repo, pensado para que lo siga cualquier agente de código: Claude Code, Codex, Cursor u otro. Abrí tu agente en la carpeta del proyecto y pedíselo.</p>
+      </div>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Cualquier agente</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su INSTALL.md para sumar Okapi a este proyecto.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Detecta si el proyecto es nuevo o existente, te hace las preguntas que faltan, copia lo necesario sin pisar tus archivos, configura Sanity y corre verify.</div><div><b>Vos revisás</b>Que tus páginas sigan igual, que <code>/studio</code> abra y que el editor muestre la página.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Claude Code, con la skill instalada</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Sumá Okapi a este proyecto.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>La skill <code>okapi-astro</code> trae el mismo INSTALL.md y lo sigue.</div><div><b>Vos revisás</b>Lo mismo. La skill se instala una vez con <code>cp -R skills/okapi-astro ~/.claude/skills/</code> desde el repo.</div></div>
+        </article>
+      </div>
+      <div class="prose">
+        <h3>Proyecto nuevo o existente</h3>
+        <ul>
+          <li><strong>Carpeta vacía:</strong> el agente parte del repo de Okapi, que ya es un proyecto Astro con bloques de ejemplo que después reemplazás.</li>
+          <li><strong>Proyecto existente:</strong> el agente suma Okapi a tu proyecto. Tus páginas, tu layout y tu configuración quedan. Las páginas del editor se sirven en las rutas que no existan, o donde le indiques.</li>
+        </ul>
+        <h3>Qué te va a preguntar</h3>
+        <ul>
+          <li>En qué organización de Sanity va el proyecto, o el project ID si ya lo creaste.</li>
+          <li>Si el proyecto existe: qué rutas salen del editor y si la home sale del editor o queda la tuya.</li>
+        </ul>
+        <h3>Qué hacés vos</h3>
+        <p>Lo que necesita tu cuenta. El agente te pasa el comando o los pasos exactos:</p>
+        <ul>
+          <li>Entrar a Sanity y, si querés, importar la página de ejemplo.</li>
+          <li>Invitar al cliente.</li>
+          <li>En el hosting: variables de entorno, el dominio en CORS y el webhook de publicación.</li>
+          <li>La prueba logueada del editor (<a href="#entregar">Antes de entregar</a>).</li>
+        </ul>
+      </div>
+      <div class="note warn">
+        <strong>Nunca pegues tokens ni contraseñas en el chat</strong>
+        <p>La guía está escrita para que ningún agente los necesite. Si te pide uno, no se lo des: decile que siga INSTALL.md.</p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: prompts ───────────────────────── -->
+    <section id="prompts" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Qué pedirle después</h2>
+        <p>Con Okapi instalado, esto es lo que más se pide. Sirve para cualquier agente: las reglas que sigue están en el <code>AGENTS.md</code> que queda en tu proyecto.</p>
+      </div>
+      <p class="prompt-group">Conectar tu proyecto</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Hacer editable un componente que ya tenés</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Pasá el Hero de la home a un bloque de Okapi: título, bajada, botón e imagen editables desde el editor. El diseño tiene que quedar igual.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Crea el bloque con tu componente adaptado, lo registra, hace el texto editable sobre la página y corre verify.</div><div><b>Vos revisás</b>En el editor: + Add → Hero, escribir sobre la página y comparar con el original.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Tu diseño en el panel de estilo</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Asigná nuestros colores, espaciados y radios a los tokens de Okapi, sin cambiar los nombres, para que el panel de estilo ofrezca nuestra paleta.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Completa <code>tokens.css</code> con los valores de tu diseño. Los nombres quedan porque el editor los usa.</div><div><b>Vos revisás</b>Abrir el panel de estilo de un bloque y ver tus colores y espaciados.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Tu header y footer</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Que las páginas del editor usen nuestro header y footer en vez de los de Okapi.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Cambia el layout de las páginas del editor para usar tus componentes.</div><div><b>Vos revisás</b>Una página del editor y una tuya se ven con el mismo header.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Pasar una página al editor</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Que /servicios salga del editor: armala en Sanity con bloques de Okapi y sacá la página hardcodeada.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Arma la página con bloques existentes (o propone bloques nuevos) y quita la ruta vieja. Si tiene el MCP de Sanity, crea el documento; si no, te dice cómo.</div><div><b>Vos revisás</b>Que <code>/servicios</code> se vea igual y se pueda editar.</div></div>
+        </article>
+      </div>
+      <p class="prompt-group">Bloques</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Un bloque nuevo</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Creá un bloque Testimonios: foto, cita, nombre y cargo. Grid de 3 en desktop y una columna en mobile. La cita se edita sobre la página.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Schema, componente, registro, contenido inicial y texto editable en el canvas. Corre verify.</div><div><b>Vos revisás</b>+ Add → Testimonios, y escribir la cita sobre la página.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Que un bloque se anime</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>El bloque Testimonios tiene que entrar con una animación al scrollear.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Agrega la animación con las reglas de motion y marca el bloque para que cargue su JavaScript.</div><div><b>Vos revisás</b>Verlo en el sitio. En el editor las animaciones decorativas quedan quietas: usá ▶ Play.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Sacar los bloques de ejemplo</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Borrá los bloques de ejemplo de Okapi que no usamos en este proyecto.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Borra carpetas y registros y corre verify. Menos bloques con animación = páginas más livianas.</div><div><b>Vos revisás</b>Que ya no aparezcan en + Add.</div></div>
+        </article>
+      </div>
+      <p class="prompt-group">Publicar y mantener</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Publicar = deployar</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Conectá publicar en el editor con el deploy de Vercel y decime exactamente qué tengo que configurar yo.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Te pasa el deploy hook, el webhook de Sanity y las variables, paso a paso.</div><div><b>Vos revisás</b>Publicar un cambio y verlo en el sitio unos minutos después.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Invitar al cliente</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>¿Cómo invito a Ana (ana@cliente.com) para que edite textos pero no publique?</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Te da el comando con el rol <code>contributor</code> y te explica qué va a ver Ana.</div><div><b>Vos revisás</b>Correrlo y que Ana acepte la invitación.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Actualizar Okapi</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>Traé la última versión de Okapi a este proyecto: actualizá src/core desde el repo, avisame si cambió algún schema y corré verify.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Reemplaza <code>src/core</code> por la versión nueva, revisa cambios de schema y corre verify.</div><div><b>Vos revisás</b>Que el editor y las páginas sigan funcionando.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Un bug del editor</h3><button class="copy" type="button">Copiar</button></div>
+          <blockquote>En el editor, al arrastrar una card dentro del grid se va al final. Esto es de Okapi: decime qué cambiar en el repo.</blockquote>
+          <div class="prompt-meta"><div><b>El agente</b>Lo arregla en el repo de Okapi (no solo en tu proyecto), con un chequeo para que no vuelva.</div><div><b>Vos revisás</b>Probar el caso en el editor.</div></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: pedir bien ───────────────────────── -->
+    <section id="pedir-bien" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Para pedir bien</h2>
+        <p>La división que más ordena el trabajo:</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Se hace en el editor</th><th>Se le pide al agente</th></tr></thead>
+          <tbody>
+            <tr><td>Textos, links e imágenes</td><td>Bloques nuevos o hacer editable algo que ya existe</td></tr>
+            <tr><td>Agregar, ordenar y duplicar secciones y bloques</td><td>Cómo se ve un bloque y sus animaciones</td></tr>
+            <tr><td>Estilo de un bloque dentro de los tokens</td><td>Los valores de los tokens (tu diseño)</td></tr>
+            <tr><td>Armar y reusar componentes</td><td>Rutas, layout, header y footer de las páginas del editor</td></tr>
+            <tr><td>Publicar</td><td>Conectar publicar con el deploy</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="prose">
+        <li><strong>Los nombres de los tokens no se cambian.</strong> Los valores sí. El panel de estilo usa esos nombres.</li>
+        <li><strong>El editor solo ve bloques registrados.</strong> Para que algo se edite, tiene que ser un bloque.</li>
+        <li><strong>Lo que se mueve carga JavaScript.</strong> El agente lo marca. Si algo se ve pero no se anima en el sitio, decíselo así.</li>
+        <li><strong>Pedí que verifique.</strong> "Corré verify" antes de dar algo por terminado.</li>
+        <li><strong>Publicar no es deployar.</strong> Publish deja el contenido listo; el sitio cambia en el próximo build.</li>
+        <li><strong>Okapi se arregla en su repo.</strong> <code>src/core</code> es igual en todos los proyectos: si algo del editor falla, el arreglo va al repo y después se trae a cada proyecto.</li>
+        <li><strong>No pidas actualizar Sanity de paso.</strong> Está fijo en 6.3.0 a propósito.</li>
+      </ul>
+    </section>
+
+    <!-- ───────────────────────── Arquitectura ───────────────────────── -->
+    <section id="arquitectura" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Arquitectura</h2>
+        <p>La idea central: <strong>el mismo componente <code>PageBuilder</code> dibuja la página en el editor y en el sitio</strong>. Lo que ves mientras editás es el sitio real, con sus estilos y animaciones.</p>
+      </div>
+
+      <div class="diagram" role="img" aria-label="Diagrama: el editor en el Studio se comunica con el canvas por postMessage y guarda en Sanity; el build lee Sanity y genera HTML estático con islas.">
+        <div class="diagram-inner">
+          <div class="lanes">
+            <div class="col-stack">
+              <div class="node hl">
+                <span class="route">/studio#/editor</span>
+                <h4>Okapi Editor</h4>
+                Herramienta del Studio: páginas y capas, canvas, propiedades.
+                <ul><li>Lee con <code>useEditState</code></li><li>Escribe con <code>useDocumentOperation</code></li></ul>
+              </div>
+            </div>
+            <div class="arrow both"><span>postMessage</span></div>
+            <div class="col-stack">
+              <div class="node hl">
+                <span class="route">/edit-canvas</span>
+                <h4>Canvas (iframe)</h4>
+                PageBuilder renderizando el documento que manda el editor. No busca datos.
+                <ul><li>Selección y overlay propios</li><li>Edición de texto en el lugar</li></ul>
+              </div>
+            </div>
+            <div class="arrow"><span></span></div>
+            <div class="col-stack">
+              <div class="node">
+                <h4>Sanity</h4>
+                Content Lake: borradores, publicados, historial, assets en CDN.
+              </div>
+            </div>
+          </div>
+          <div class="row-caption">El editor guarda borradores en Sanity a medida que editás. Publicar los vuelve públicos.</div>
+          <div class="flow" style="margin-top:18px">
+            <div class="node"><h4>Sanity</h4>Contenido publicado</div>
+            <div class="arrow right"><span>build</span></div>
+            <div class="node"><h4>astro build</h4><code>loadSite()</code> + una query por página, sin CDN</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node hl"><h4>dist/</h4>HTML + islas <code>[data-island]</code> + Studio en <code>/studio</code></div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Visitante</h4>HTML puro; hidrata solo lo que se mueve</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3>Por qué un iframe</h3>
+        <p>El canvas vive en su propia ruta (<code>/edit-canvas</code>), separado del Studio:</p>
+        <ul>
+          <li><strong>CSS aislado:</strong> el CSS del sitio no se mezcla con el del Studio.</li>
+          <li><strong>Breakpoints reales:</strong> desktop, tablet y mobile cambian el ancho del iframe.</li>
+          <li><strong>Motion con la misma política que el sitio</strong> (ver <a href="#motion">Motion</a>).</li>
+          <li><strong>Sin borradores expuestos:</strong> la ruta es pública pero no tiene datos propios. Solo dibuja lo que le manda, por <code>postMessage</code> del mismo origen, un editor ya autenticado.</li>
+        </ul>
+        <h3>Rutas de un bloque</h3>
+        <p>Cada bloque lleva en su raíz <code>data-sanity-path</code> con su ruta GROQ dentro del documento, por ejemplo:</p>
+      </div>
+      <div class="code"><pre>sections[_key=="a1f3"].content[_key=="9c2e"].items[_key=="77d0"]</pre></div>
+      <p class="prose">Esa ruta une el clic en el canvas, la capa seleccionada, el panel de propiedades y la escritura en Sanity. Las operaciones de estructura (<code>core/editor/ops.ts</code>) son funciones puras sobre esas rutas, validadas contra el registro de bloques. El historial de deshacer es una pila de snapshots del documento.</p>
+    </section>
+
+    <!-- ───────────────────────── Sitio ───────────────────────── -->
+    <section id="sitio" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>El sitio público</h2>
+        <p>El sitio es 100% estático (<code>output: "static"</code>, sin adapter). En el build, cada página pide su documento a Sanity y <code>loadSite()</code> trae settings, navegación, el mapa de rutas y la librería de componentes. Las lecturas del build salen sin la CDN de Sanity, a propósito: un rebuild disparado por una publicación podría leer una respuesta vieja de la caché.</p>
+        <h3>HTML primero, JavaScript solo donde hace falta</h3>
+        <p>El PageBuilder se renderiza en el servidor. Cada sección de primer nivel que contiene un bloque con <code>js</code> en el registro se envuelve como isla:</p>
+      </div>
+      <div class="code"><pre><span class="c">&lt;!-- display: contents → no altera el layout --&gt;</span>
+&lt;div data-island='{"section":{…},"ctx":{…},"components":{…}}'&gt;
+  &lt;section class="section" data-theme="dark"&gt;…HTML ya renderizado…&lt;/section&gt;
+&lt;/div&gt;</pre></div>
+      <div class="prose">
+        <p><code>Base.astro</code> incluye un script mínimo. Si la página tiene al menos una isla, importa <code>core/render/hydrate.tsx</code>, que hace <code>hydrateRoot</code> sobre cada isla con los mismos props. Si no tiene ninguna, la página no carga React.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Quién descarga qué</th><th class="num">JS (gzip)</th><th>Cuándo</th></tr></thead>
+          <tbody>
+            <tr><td>Página sin bloques con <code>js</code></td><td class="num">≈1 KB</td><td>Siempre (solo el script que busca islas)</td></tr>
+            <tr><td>Página con motion: React DOM, bloques, GSAP, Portable Text</td><td class="num">138 KB</td><td>Si hay al menos una isla</td></tr>
+            <tr><td>three.js del bloque 3D Logo</td><td class="num">140 KB</td><td>Solo si la página tiene ese bloque</td></tr>
+            <tr><td>Studio + Okapi Editor</td><td class="num">≈1.650 KB</td><td>Solo quien entra a <code>/studio</code></td></tr>
+            <tr><td>Canvas del editor</td><td class="num">144 KB</td><td>Solo dentro del editor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p><code>npm run verify</code> controla esto en cada build: ningún HTML público referencia código del editor ni del Studio, y la home no supera 250 KB de JS.</p>
+        <h3>SEO incluido</h3>
+        <ul>
+          <li><strong>Títulos y descripción:</strong> cada página tiene <code>metaTitle</code>, <code>metaDescription</code>, <code>ogImage</code> y <code>noindex</code>. Si están vacíos, usan los valores de Settings, y si tampoco hay ahí, los del código.</li>
+          <li><strong>Etiquetas generadas:</strong> canonical absoluto, <code>og:*</code>, Twitter card, <code>sitemap.xml</code>, <code>robots.txt</code> y JSON-LD <code>Organization</code> en la home.</li>
+          <li><strong>URLs:</strong> todas salen de <code>pageHref()</code> y <code>resolveLink()</code>. Los links internos son referencias a páginas, no paths escritos a mano. Agregar idiomas más adelante es cambiar esas dos funciones.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Editor ───────────────────────── -->
+    <section id="editor">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Okapi Editor</h2>
+        <p>Es la primera pestaña del Studio. Tiene tres columnas: <strong>páginas y capas</strong>, <strong>canvas</strong> y <strong>propiedades</strong>. Arriba están deshacer y rehacer, <strong>+ Add</strong>, el selector de dispositivo, <strong>▶ Play</strong> y <strong>Publish</strong>.</p>
+        <h3>Qué se puede hacer</h3>
+        <ul>
+          <li><strong>Texto en el lugar.</strong> Doble clic en headings, párrafos, eyebrows, botones, título y cuerpo de cards, Big Type y Scroll Text. El rich text tiene una barra flotante con negrita, itálica, link y quitar link.</li>
+          <li><strong>Capas.</strong> Árbol con arrastre (antes, después o adentro), insertar, duplicar, borrar, mover, y copiar y pegar entre páginas.</li>
+          <li><strong>Arrastre en el canvas.</strong> El bloque seleccionado muestra un agarre ⠿. Una línea azul indica dónde cae, y se valida con las mismas reglas que las capas.</li>
+          <li><strong>Selección múltiple.</strong> Con ⇧ o ⌘ + clic en el canvas o en capas. Borrar, duplicar, copiar y mover aplican a todos.</li>
+          <li><strong>Imágenes.</strong> Se arrastra un archivo sobre una imagen, card, parallax o fondo de sección, o se sube desde el panel.</li>
+          <li><strong>Propiedades generadas del schema.</strong> Cada campo de cada bloque tiene su control; verify falla si alguno queda sin control.</li>
+          <li><strong>▶ Play.</strong> Reproduce las animaciones decorativas una vez. Mientras editás quedan quietas.</li>
+        </ul>
+        <h3>Atajos</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Atajo</th><th>Acción</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>⌘</kbd> <kbd>Z</kbd> · <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>Z</kbd></td><td>Deshacer · rehacer (el tipeo se agrupa)</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>D</kbd></td><td>Duplicar la selección</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>C</kbd> · <kbd>⌘</kbd> <kbd>V</kbd></td><td>Copiar · pegar bloques (también entre páginas)</td></tr>
+            <tr><td><kbd>⌫</kbd></td><td>Borrar la selección</td></tr>
+            <tr><td><kbd>⌥</kbd> <kbd>↑</kbd> · <kbd>⌥</kbd> <kbd>↓</kbd></td><td>Mover un lugar arriba · abajo</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Seleccionar el bloque padre</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>B</kbd> · <kbd>⌘</kbd> <kbd>I</kbd> · <kbd>⌘</kbd> <kbd>K</kbd></td><td>Negrita · itálica · link, mientras editás rich text</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose" data-only="vibe">
+        <h3>Guardar y publicar</h3>
+        <p>Todo lo que hacés se guarda solo, como borrador. Nadie lo ve hasta que tocás <strong>Publish</strong>. Después de publicar, el sitio se actualiza en el próximo build: un par de minutos si el proyecto tiene el webhook configurado.</p>
+      </div>
+      <div class="prose" data-only="tech">
+        <h3>Cómo guarda</h3>
+        <p>El editor usa el almacén de documentos del propio Studio, sin otro SDK. Los cambios se aplican al instante en local y se guardan como borrador. <strong>Publish</strong> publica el documento. Como el sitio es estático, publicar dispara un rebuild (ver <a href="#publicar">Hosting y publicación</a>).</p>
+        <h3>Edición de texto sin saltos del cursor</h3>
+        <p>Mientras escribís, el canvas retiene los renders que llegan del editor. Al terminar, restaura el DOM exacto que React espera y recién ahí aplica el valor nuevo. El rich text se convierte entre Portable Text y HTML editable en <code>core/editor/richtext.ts</code>, y mantiene los destinos de los links existentes por su clave.</p>
+        <h3>Protocolo editor ⇄ canvas</h3>
+        <p>Son mensajes <code>postMessage</code> del mismo origen, tipados en <code>core/editor/protocol.ts</code>.</p>
+      </div>
+      <div class="table-wrap" data-only="tech">
+        <table>
+          <thead><tr><th>Dirección</th><th>Mensaje</th><th>Para qué</th></tr></thead>
+          <tbody>
+            <tr><td>Editor → canvas</td><td><code>render</code></td><td>Documento, rutas y componentes a dibujar</td></tr>
+            <tr><td>Editor → canvas</td><td><code>select</code></td><td>Resaltar la selección, con scroll opcional</td></tr>
+            <tr><td>Editor → canvas</td><td><code>replay</code></td><td>▶ Play: remontar con motion decorativo</td></tr>
+            <tr><td>Canvas → editor</td><td><code>ready</code></td><td>El iframe cargó</td></tr>
+            <tr><td>Canvas → editor</td><td><code>select</code></td><td>Clic en un bloque (con <code>add</code> para multi-selección)</td></tr>
+            <tr><td>Canvas → editor</td><td><code>text</code></td><td>Texto editado (string o Portable Text)</td></tr>
+            <tr><td>Canvas → editor</td><td><code>move</code></td><td>Arrastre en el canvas: antes o después de otro bloque</td></tr>
+            <tr><td>Canvas → editor</td><td><code>drop</code></td><td>Archivo de imagen soltado sobre un bloque</td></tr>
+            <tr><td>Canvas → editor</td><td><code>key</code></td><td>Atajos presionados con el foco en el canvas</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Estilos ───────────────────────── -->
+    <section id="estilos" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Estilos y tokens</h2>
+        <p>Todo el diseño sale de <code>src/theme/tokens.css</code>, el primer archivo que se toca en cada proyecto. Ahí están los colores por tema (<code>light</code>, <code>dark</code>, <code>brand</code>), los radios, la escala tipográfica, el espaciado y el ancho de página. Tailwind 4 los expone como utilities (<code>bg-surface text-fg gap-md rounded-main</code>), y como los colores leen el <code>data-theme</code> de la sección, cada bloque se adapta solo al tema. La paleta por defecto de Tailwind no está, a propósito: un color nuevo se agrega como token.</p>
+        <h3>Panel de estilo</h3>
+        <p>Cada bloque tiene un campo <code>design</code> que el editor muestra como panel de estilo. Hay solo tokens, no CSS libre, y se puede definir para todas las pantallas, tablet y mobile.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Propiedad</th><th>Valores</th></tr></thead>
+          <tbody>
+            <tr><td>Margin, padding</td><td><code>none xs sm md lg xl 2xl 3xl</code></td></tr>
+            <tr><td>Fondo, color de texto</td><td><code>bg surface surface-2 fg muted brand brand-contrast border</code></td></tr>
+            <tr><td>Radio</td><td><code>none sm md lg main pill</code></td></tr>
+            <tr><td>Ancho máximo</td><td><code>prose</code> 65ch · <code>narrow</code> 40rem · <code>page</code> · <code>full</code></td></tr>
+            <tr><td>Alineación de texto, ocultar</td><td><code>left center right</code> · ocultar por breakpoint</td></tr>
+            <tr><td>Breakpoints</td><td>tablet ≤ 1023px · mobile ≤ 767px (desktop-first)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><code>core/style/stylesheet.ts</code> convierte esos valores en una sola hoja de estilos por página, con un selector por bloque. Los valores del panel van con <code>!important</code> porque el panel es la autoridad final sobre ese bloque:</p>
+      <div class="code"><pre>[data-b="9c2e"][data-b] { padding-top: var(--space-lg) !important; }
+@media (max-width: 767px) {
+  [data-b="9c2e"][data-b] { padding-top: var(--space-sm) !important; }
+}</pre></div>
+      <div class="prose">
+        <h3>Box</h3>
+        <p>Es el contenedor libre: apila, pone en fila o arma una grilla, con gaps de token, alineación y wrap. Se puede anidar. En tablet las grillas pasan a 2 columnas y en mobile a 1; las filas se apilan en mobile.</p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Componentes ───────────────────────── -->
+    <section id="componentes">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Componentes</h2>
+        <p>Un componente es un documento <code>component</code> con secciones. Una página lo usa con un bloque <code>componentRef</code> (una instancia). Si editás el componente, cambian todas sus instancias.</p>
+        <h3>En el editor</h3>
+        <ul>
+          <li><strong>Make component:</strong> guarda la sección seleccionada en la librería y la reemplaza por una instancia.</li>
+          <li><strong>+ Add:</strong> lista los componentes de la librería para insertarlos como instancia.</li>
+          <li><strong>Edit component:</strong> abre el componente original para editarlo.</li>
+          <li><strong>Detach:</strong> convierte la instancia en una copia suelta y editable.</li>
+          <li>El canvas selecciona una instancia como un solo bloque.</li>
+        </ul>
+        <h3>Overrides por instancia</h3>
+        <p>Si hacés doble clic en un texto o soltás una imagen <em>dentro</em> de una instancia, el cambio se guarda solo en esa instancia, en su lista <code>overrides</code>. El original no se toca. Cada override apunta a <code>"&lt;claveDelBloque&gt;.&lt;campo&gt;"</code>, se aplica al renderizar (<code>core/render/overrides.ts</code>) y el panel los lista con un botón Reset.</p>
+        <div class="note">
+          <strong>Límite actual</strong>
+          <p>Los componentes son secciones enteras y solo viven en el primer nivel de una página. No se anidan ni se insertan adentro de otra sección. Ver <a href="#pendiente">Lo que sigue</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Bloques ───────────────────────── -->
+    <section id="bloques">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Bloques</h2>
+        <p>Okapi trae estos bloques de ejemplo: cada proyecto borra los que no usa y suma los suyos. El registro único está en <code>src/blocks/meta.ts</code>. Define qué tipos existen, qué pueden contener, cuáles necesitan JS y qué ofrece el editor en cada lugar. <code>schemas.ts</code> y <code>components.tsx</code> están tipados contra el registro: si falta algo, el compilador lo marca.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bloque</th><th>Contiene</th><th>JS</th><th>En el canvas</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Section</strong></td><td>Cualquier bloque</td><td><span class="pill no">No</span></td><td>Tema, espaciado, fondo (soltar imagen)</td></tr>
+            <tr><td><strong>Component</strong> <code>componentRef</code></td><td>Una instancia de la librería</td><td>Según contenido</td><td>Overrides de texto e imagen</td></tr>
+            <tr><td><strong>Eyebrow</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Texto en el lugar</td></tr>
+            <tr><td><strong>Heading</strong></td><td>—</td><td><span class="pill js">Si tiene animación</span></td><td>Rich text en el lugar</td></tr>
+            <tr><td><strong>Paragraph</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Rich text en el lugar</td></tr>
+            <tr><td><strong>Button Group</strong></td><td>Button</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Button</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Label en el lugar</td></tr>
+            <tr><td><strong>Image</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Soltar imagen</td></tr>
+            <tr><td><strong>Looping Video</strong></td><td>—</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Content</strong></td><td>Eyebrow, Heading, Paragraph, Button Group</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Card</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Título y cuerpo en el lugar, soltar imagen</td></tr>
+            <tr><td><strong>Grid</strong></td><td>Card, Content, Image, 3D Logo</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Box</strong></td><td>Cualquier bloque</td><td><span class="pill no">No</span></td><td>—</td></tr>
+            <tr><td><strong>Slider</strong></td><td>Card, Image</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>3D Logo</strong></td><td>—</td><td><span class="pill js">Sí · three.js aparte</span></td><td>—</td></tr>
+            <tr><td><strong>Horizontal Scroll</strong></td><td>Card, Image, Content</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>Stacked Cards</strong></td><td>Card</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>Marquee</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
+            <tr><td><strong>Scroll Text</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Texto en el lugar</td></tr>
+            <tr><td><strong>Big Type</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Texto en el lugar</td></tr>
+            <tr><td><strong>Parallax Media</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Soltar imagen</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose small muted">Todos los bloques tienen además el panel de estilo. "JS" indica si hacen que su sección se hidrate en el sitio público.</p>
+    </section>
+
+    <!-- ───────────────────────── Motion ───────────────────────── -->
+    <section id="motion" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Producto</p>
+        <h2>Motion</h2>
+        <p>GSAP se importa en un solo lugar, <code>core/motion/gsap.ts</code>, que además define cuándo corre cada tipo de animación. La regla es distinguir el movimiento que hace falta para llegar al contenido del que es decorativo:</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tipo</th><th>Ejemplos</th><th>Sitio</th><th>Canvas del editor</th><th>Reduced motion</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Layout</strong></td><td>Pin, scroll horizontal, sticky con scrub, parallax</td><td><span class="pill ok">Corre</span></td><td><span class="pill ok">Corre</span></td><td>Alternativa nativa</td></tr>
+            <tr><td><strong>Decorativo</strong></td><td>Splits de texto, entradas, loop del marquee, reveals</td><td><span class="pill ok">Corre</span></td><td><span class="pill no">Quieto</span> · ▶ Play</td><td><span class="pill no">No corre</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <h3>Reglas para bloques animados</h3>
+        <ul>
+          <li><code>useGSAP</code> con <code>scope</code>, dentro del componente React. Nunca un <code>&lt;script&gt;</code> de Astro con <code>querySelector</code>: el editor re-renderiza bloques y el script no ve los nodos nuevos.</li>
+          <li>Si el bloque tiene hijos: <code>dependencies: [claves]</code> y <code>revertOnUpdate: true</code>, para que insertar o borrar reconstruya la animación.</li>
+          <li>Pinear un elemento <em>interno</em>, nunca el que lleva <code>data-sanity-path</code>. React es dueño del nodo exterior y el pin-spacer de GSAP va en el medio.</li>
+          <li>El texto se divide en un wrapper con <code>key</code> por texto. <code>SplitReveal</code> y <code>useSplit</code> ya lo hacen; reusarlos.</li>
+          <li>Lo que está en pantalla al cargar entra por tiempo, no por scrub, porque arrancaría a mitad de camino.</li>
+          <li>Declarar <code>js</code> en <code>meta.ts</code>. Si no, en el sitio público el bloque se ve pero no se mueve.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Instalación ───────────────────────── -->
+    <section id="instalacion" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Integración</p>
+        <h2>Instalación</h2>
+        <p>La guía completa es <code>INSTALL.md</code>, en la raíz del repo, escrita para que la siga cualquier agente. Hay dos caminos y los dos terminan en los mismos pasos comunes: Sanity, <code>.env</code>, arranque, roles, producción y verify.</p>
+        <h3>Camino A: proyecto nuevo</h3>
+        <p>El repo de Okapi ya es un proyecto Astro completo: se clona, se le saca el <code>.git</code> y se corre <code>npm install</code>, que aplica <code>patches/</code>.</p>
+        <h3>Camino B: proyecto existente</h3>
+        <p>Se copian piezas al proyecto sin pisar nada que ya exista. Si una ruta choca, el agente frena y pregunta.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Se copia</th><th>Qué es</th></tr></thead>
+          <tbody>
+            <tr><td><code>src/core/</code></td><td>El producto: editor, render, estilos, motion, Sanity. No se modifica por proyecto</td></tr>
+            <tr><td><code>src/blocks/</code></td><td>Registro y bloques de ejemplo. Se borran o se suman bloques</td></tr>
+            <tr><td><code>src/documents/</code>, <code>src/schema.ts</code></td><td>page, component, settings, navigation</td></tr>
+            <tr><td><code>src/theme/</code></td><td>Tokens (nombres que usa el editor) y CSS de los bloques. Solo lo cargan las páginas del editor</td></tr>
+            <tr><td><code>src/layouts/Base.astro</code></td><td>Layout de las páginas del editor (o <code>OkapiBase.astro</code> si ya hay un Base)</td></tr>
+            <tr><td><code>src/pages/[slug].astro</code>, <code>edit-canvas.astro</code></td><td>Páginas del editor y el canvas. <code>index.astro</code> solo si la home sale del editor</td></tr>
+            <tr><td><code>sanity.config.ts</code>, <code>sanity.cli.ts</code>, <code>patches/</code></td><td>Studio y ajustes a sanity@6.3.0</td></tr>
+            <tr><td><code>scripts/verify.mjs</code>, <code>check-editor-schema.ts</code></td><td>Chequeos</td></tr>
+            <tr><td><code>src/chrome/</code>, <code>public/placeholder.svg</code></td><td>Header y footer de las páginas del editor (reemplazables) e imagen por defecto de bloques nuevos</td></tr>
+            <tr><td><code>AGENTS.md</code></td><td>Reglas para agentes. Si el proyecto ya tiene uno, se agrega como sección</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p class="small muted">Probado sobre el template de blog oficial de Astro: build y verify en verde, el blog intacto y <code>src/core</code> sin cambios.</p>
+        <h3>Configuración que se integra</h3>
+        <ul>
+          <li><strong><code>package.json</code>:</strong> dependencias de Sanity, React 19 y Tailwind 4 (más GSAP, Embla y three si quedan los bloques de motion), <code>overrides: { sanity: "6.3.0" }</code> y <code>postinstall: patch-package --error-on-fail</code>.</li>
+          <li><strong><code>astro.config</code>:</strong> la integración <code>sanity()</code> con <code>studioBasePath: "/studio"</code> y hash routing, <code>react()</code>, el plugin de Tailwind y <code>optimizeDeps</code> completo. Sin eso último, el Studio queda en blanco en dev. El <code>output</code> y el <code>site</code> del proyecto se respetan.</li>
+          <li><strong><code>tsconfig</code>:</strong> JSX de React y el alias <code>@/*</code> → <code>./src/*</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Contrato ───────────────────────── -->
+    <section id="contrato" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Integración</p>
+        <h2>Contrato con tu proyecto</h2>
+        <p>Lo que tu código tiene que respetar para que el editor funcione. Todo lo demás es libre.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Regla</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Todo lo editable es un bloque registrado en <code>src/blocks/meta.ts</code>, <code>schemas.ts</code> y <code>components.tsx</code></td><td>El registro define qué existe, qué contiene qué y qué ofrece el editor</td></tr>
+            <tr><td>Un bloque recibe <code>{ block, path, ctx }</code>, nunca hace fetch y pone <code>{...editable(…)}</code> en su raíz</td><td>El canvas dibuja el documento que recibe y selecciona por <code>data-sanity-path</code></td></tr>
+            <tr><td><code>js</code> en <code>meta.ts</code> si el bloque corre algo en el navegador</td><td>Si no, el sitio lo sirve como HTML y nunca se hidrata</td></tr>
+            <tr><td>Cada layout que renderiza <code>&lt;PageBuilder islands /&gt;</code> incluye <code>&lt;Islands /&gt;</code></td><td>Es el que hidrata las secciones animadas, y en dev instala el preámbulo de React</td></tr>
+            <tr><td>Los nombres de <code>tokens.css</code> no cambian; los valores sí</td><td>El panel de estilo ofrece esos nombres</td></tr>
+            <tr><td>Links con <code>resolveLink()</code> y <code>pageHref()</code></td><td>Una sola fuente de URLs: links, sitemap, canonical, futuros idiomas</td></tr>
+            <tr><td>GSAP desde <code>@/core/motion/gsap</code>, con <code>useGSAP</code> y <code>scope</code></td><td>Ahí vive la política de motion del editor y del sitio</td></tr>
+            <tr><td><code>sanity</code> en 6.3.0</td><td><code>patches/</code> solo encaja en esa versión</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose small muted">Las únicas tablas de <code>src/core</code> que un proyecto toca son <code>TEXT_TARGETS</code> e <code>IMAGE_FIELDS</code> (<code>CanvasApp.tsx</code>), y <code>pageHref()</code> si las páginas del editor se montan bajo un prefijo.</p>
+    </section>
+
+    <!-- ───────────────────────── Código ───────────────────────── -->
+    <section id="codigo" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>El código</h2>
+        <p>La regla que sostiene el producto: <strong><code>src/core</code> es igual en todos los proyectos</strong>. Un arreglo en core se hace en el repo de Okapi y después se trae a cada proyecto. Lo propio de cada proyecto vive en <code>blocks</code>, <code>theme</code> y sus layouts. Cuando haya 3 o más proyectos en producción, core pasa a ser un paquete privado y los arreglos llegan con <code>npm update</code>.</p>
+      </div>
+      <div class="diagram"><div class="tree" style="min-width:560px">
+<span class="d">src/core/</span>          <span class="c">el producto · igual en todos los proyectos</span>
+  <span class="d">editor/</span>         <span class="c">EditorTool, CanvasApp, FieldControls, ops, paths, protocol, richtext</span>
+  <span class="d">render/</span>         <span class="c">PageBuilder, BlockRenderer, instancias, overrides, Islands.astro + hydrate</span>
+  <span class="d">style/</span>          <span class="c">tokens del panel, stylesheet por página, schema del campo design</span>
+  <span class="d">motion/</span>         <span class="c">gsap.ts (política), ScrollRefresh, useSplit, SplitReveal</span>
+  <span class="d">sanity/</span>         <span class="c">client + loadQuery, site loader, queries, editable(), env</span>
+  <span class="d">studio/</span>         <span class="c">inputs propios del Studio (sliders, enums, responsive)</span>
+  <span class="d">lib/</span>            <span class="c">routes (pageHref/resolveLink), clean, staleChunkReload, types</span>
+<span class="d">src/blocks/</span>        <span class="c">una carpeta por bloque · meta.ts = el registro</span>
+<span class="d">src/theme/</span>         <span class="c">tokens.css (lo primero que se cambia) + globals.css</span>
+<span class="d">src/chrome/</span>        <span class="c">header y footer del proyecto</span>
+<span class="d">src/documents/</span>     <span class="c">page, component, settings, navigation</span>
+<span class="d">src/pages/</span>         <span class="c">[slug] = páginas del editor · /edit-canvas = canvas · /lab = banco de motion (solo este repo)</span>
+<span class="d">patches/</span>           <span class="c">ajustes a sanity@6.3.0 (ver su README)</span>
+<span class="d">scripts/</span>           <span class="c">verify, check-editor-schema, seeds</span>
+<span class="d">skills/</span>            <span class="c">skill okapi-astro (Claude Code): sigue INSTALL.md</span>
+<span class="d">docs/</span>              <span class="c">esta documentación</span>
+INSTALL.md         <span class="c">instalación en un proyecto nuevo o existente, para cualquier agente</span>
+AGENTS.md          <span class="c">reglas para trabajar en el código (CLAUDE.md lo importa)</span>
+      </div></div>
+      <div class="prose">
+        <h3>Reglas que más se rompen</h3>
+        <ul>
+          <li>Los bloques reciben todo por props y llevan <code>{...editable(…)}</code> en su raíz. Nunca hacen fetch: el canvas los dibuja con el documento que recibe.</li>
+          <li>Estilos con utilities de Tailwind sobre tokens. Sin colores literales.</li>
+          <li>Los assets de diseño (logos, texturas) son código, no van al CMS.</li>
+          <li>macOS no distingue mayúsculas: nunca <code>Foo.tsx</code> y <code>foo.ts</code> en la misma carpeta.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Agregar bloque ───────────────────────── -->
+    <section id="agregar-bloque" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Agregar un bloque</h2>
+      </div>
+      <ol class="steps prose">
+        <li><div><strong>Schema y componente</strong><p><code>src/blocks/&lt;tipo&gt;/schema.ts</code> con <code>defineType</code> y un ícono de <code>@sanity/icons</code>, más <code>&lt;Tipo&gt;.tsx</code>, que recibe <code>{ block, path, ctx }</code>.</p></div></li>
+        <li><div><strong>Registro</strong><p>Entrada en <code>meta.ts</code>: título, <code>slot</code> si contiene otros bloques, <code>margin</code>, y <code>js</code> si corre algo en el navegador.</p></div></li>
+        <li><div><strong>Mapas</strong><p>Registrarlo en <code>schemas.ts</code> y <code>components.tsx</code>. El compilador marca error hasta que esté.</p></div></li>
+        <li><div><strong>Editor (opcional)</strong><p>Contenido al insertarlo en <code>defaults.ts</code>, texto editable en <code>TEXT_TARGETS</code> y soltar imagen en <code>IMAGE_FIELDS</code> (ambos en <code>CanvasApp.tsx</code>).</p></div></li>
+      </ol>
+      <div class="code"><pre><span class="c">// src/blocks/meta.ts</span>
+quote: { title: <span class="k">"Quote"</span>, margin: true },
+ticker: { title: <span class="k">"Ticker"</span>, js: true },
+heading: { title: <span class="k">"Heading"</span>, js: (b) =&gt; !!b.animation &amp;&amp; b.animation !== <span class="k">"none"</span> },</pre></div>
+      <div class="code"><pre><span class="c">// src/blocks/quote/Quote.tsx</span>
+export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
+  return (
+    &lt;blockquote className="text-h-lg text-fg"
+      {...editable(ctx.documentId, ctx.documentType, path, block._type)}&gt;
+      {block.text}
+    &lt;/blockquote&gt;
+  );
+}</pre></div>
+      <p class="prose"><strong>Si el componente ya existe en tu proyecto</strong>, es el mismo camino: el componente pasa a leer todo de <code>block</code> en vez de props o texto fijo, y si era <code>.astro</code> se pasa a <code>.tsx</code>.</p>
+      <p class="prose">Para borrar un bloque: su carpeta, su entrada en <code>meta.ts</code>, las dos entradas de los mapas y cualquier <code>accepts</code> que lo nombre. El compilador te lleva a cada una.</p>
+    </section>
+
+    <!-- ───────────────────────── Publicar ───────────────────────── -->
+    <section id="publicar" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Hosting y publicación</h2>
+        <p>Cualquier hosting estático sirve: Vercel, Netlify, Cloudflare Pages u otro. Se configura con build <code>npm run build</code>, output <code>dist</code> y Node 22.</p>
+      </div>
+      <div class="diagram" role="img" aria-label="Flujo de publicación: Publish en el editor, Sanity dispara un webhook, el host reconstruye y sirve el HTML nuevo.">
+        <div class="diagram-inner">
+          <div class="flow">
+            <div class="node hl"><h4>Publish</h4>En el editor</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Sanity</h4>Webhook al publicar</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Deploy hook</h4>Del host</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Build</h4>≈4 s + instalación</div>
+            <div class="arrow right"><span></span></div>
+            <div class="node"><h4>Sitio</h4>HTML nuevo en el CDN</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Publicar no cambia el sitio hasta el próximo build</strong>
+        <p>Sin el webhook, el cambio queda publicado en Sanity pero el sitio sigue mostrando la versión anterior. El webhook se crea en sanity.io/manage → API → Webhooks, con filtro <code>_type in ["page","settings","navigation","component"]</code>.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Para qué</th></tr></thead>
+          <tbody>
+            <tr><td><code>PUBLIC_SANITY_PROJECT_ID</code></td><td>Proyecto de Sanity</td></tr>
+            <tr><td><code>PUBLIC_SANITY_DATASET</code></td><td>Normalmente <code>production</code></td></tr>
+            <tr><td><code>PUBLIC_SANITY_API_VERSION</code></td><td>Fecha de la API, por ejemplo <code>2024-10-01</code></td></tr>
+            <tr><td><code>PUBLIC_SITE_URL</code></td><td>Origen para canonical, og:url y sitemap. En Vercel, Netlify y Cloudflare usa la URL del deploy si falta. Vacía cuenta como no definida.</td></tr>
+            <tr><td><code>SANITY_API_READ_TOKEN</code></td><td>Solo si el dataset es privado: token <em>Viewer</em>, leído en el build</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Cada dominio desde el que se abra <code>/studio</code> tiene que estar en los orígenes CORS del proyecto, <strong>con credenciales</strong>. Sin eso, el Studio pide "Connect this studio to your project".</p>
+    </section>
+
+    <!-- ───────────────────────── Calidad ───────────────────────── -->
+    <section id="calidad" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Calidad y pruebas</h2>
+        <h3><code>npm run verify</code></h3>
+        <p>Corre antes de cada entrega y después de cualquier cambio en core. Revisa lo que se rompe sin avisar:</p>
+        <ul>
+          <li>La versión de Sanity instalada tiene su parche.</li>
+          <li>Los links y las rutas resuelven bien (<code>routes.check</code>).</li>
+          <li>Cada campo de cada bloque tiene un control en el panel (<code>check-editor-schema</code>).</li>
+          <li>Insertar, mover, borrar y duplicar mantienen el documento válido, y la detección de islas es correcta (<code>ops.check</code>).</li>
+          <li>Los tokens generan el CSS esperado, sin inyección de selectores (<code>stylesheet.check</code>).</li>
+          <li>Los overrides se aplican al bloque correcto y nunca tocan el original (<code>overrides.check</code>).</li>
+          <li>El build pasa, el HTML público no tiene código del editor ni del Studio, y la home queda en 250 KB de JS o menos.</li>
+          <li>La home tiene contenido real, canonical absoluto, sitemap y robots.</li>
+          <li>Con una URL (<code>npm run verify -- https://dominio</code>), además responden <code>/</code>, <code>/studio</code> y <code>/edit-canvas</code>.</li>
+        </ul>
+        <h3>Banco de motion</h3>
+        <p><code>/lab/&lt;slug&gt;</code>, solo en dev, repite sobre el PageBuilder real lo que hace el editor. Escribe en cada texto, inserta y borra dentro de bandas pineadas, invierte y duplica secciones, cicla animaciones y temas, y hace 25 ediciones rápidas, la mitad scrolleado dentro de un pin. Después de cada paso verifica:</p>
+        <ul>
+          <li>sin errores de React;</li>
+          <li>un pin-spacer por banda;</li>
+          <li>el recorrido del pin coincide con el del track;</li>
+          <li>sin ScrollTriggers colgados;</li>
+          <li>sin splits trabados;</li>
+          <li>sin overflow horizontal.</li>
+        </ul>
+        <p>Las páginas de prueba son <code>/lab-noir</code>, <code>/lab-kinetic</code> y <code>/lab-stack</code>.</p>
+        <h3>Smoke test logueado</h3>
+        <p>Los flujos que necesitan login no se pueden automatizar sin credenciales. Se prueban a mano, en una página descartable, antes de entregar un sitio:</p>
+        <ol class="check">
+          <li>Escribir en un heading sobre la página, recargar, y que el texto siga ahí.</li>
+          <li>Negrita, itálica y link en un párrafo. Insertar, duplicar, borrar y arrastrar una capa. Deshacer y rehacer.</li>
+          <li>Soltar una imagen sobre un bloque Image: se sube y aparece.</li>
+          <li>Make component sobre una sección. Editar texto en una instancia: cambia solo esa. Reset. Edit component: cambian todas.</li>
+          <li>Publish, después <code>npm run build</code>, y el cambio está en la página estática.</li>
+          <li>Entrar con un usuario de rol cliente: no ve estilos ni acciones de estructura.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Problemas ───────────────────────── -->
+    <section id="problemas" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Trabajar con él</p>
+        <h2>Problemas conocidos</h2>
+        <p>Todos ya aparecieron alguna vez y tienen solución.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Síntoma</th><th>Causa</th><th>Arreglo</th></tr></thead>
+          <tbody>
+            <tr><td>"Connect this studio to your project"</td><td>El origen no está en CORS. Cada puerto cuenta como un origen distinto.</td><td>Agregar el origen exacto con credenciales. En local se usa <code>:4321</code>.</td></tr>
+            <tr><td>Studio o canvas en blanco + <code>504 (Outdated Optimize Dep)</code></td><td>Vite re-optimizó dependencias con la pestaña abierta.</td><td>Parar el server, <code>rm -rf node_modules/.vite</code>, <code>npm run dev</code>, <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>.</td></tr>
+            <tr><td>Studio en blanco justo después del login</td><td>La pestaña pide chunks de un server o deploy anterior.</td><td><code>staleChunkReload</code> recarga una vez sola. Si sigue: <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>.</td></tr>
+            <tr><td>Studio en blanco solo en Brave</td><td>Shields y el routing.</td><td>Resuelto con hash routing y <code>basePath: "/"</code>.</td></tr>
+            <tr><td>La home muestra la pantalla de bienvenida</td><td>Falta <code>.env</code> o el contenido.</td><td>Completar <code>.env</code> e importar el seed.</td></tr>
+            <tr><td>Un bloque se ve pero no se anima en el sitio</td><td>Le falta <code>js</code> en <code>meta.ts</code>.</td><td>Agregarlo.</td></tr>
+            <tr><td><code>npm install</code> falla en patch-package</td><td><code>sanity</code> no está en 6.3.0.</td><td>Volver a 6.3.0. Actualizar es un trabajo aparte: rehacer <code>patches/</code>.</td></tr>
+            <tr><td>"can't detect preamble" en dev</td><td>El layout no incluye <code>&lt;Islands /&gt;</code>.</td><td>Agregarlo al final del <code>&lt;body&gt;</code>.</td></tr>
+            <tr><td>Publiqué y el sitio no cambió</td><td>El sitio es estático.</td><td>Revisar el webhook al deploy hook o correr un build.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Decisiones ───────────────────────── -->
+    <section id="decisiones" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Contexto</p>
+        <h2>Decisiones</h2>
+        <p>Por qué está hecho así. Antes de cambiar alguna de estas, conviene leer el motivo.</p>
+      </div>
+      <div class="decisions">
+        <div class="decision">
+          <h3>Editor propio en vez de Sanity Presentation</h3>
+          <p><b>Problema.</b> Presentation era lento para editar: había que hacer clic en el overlay, buscar el campo en un formulario y esperar la ida y vuelta. No se podía escribir sobre la página y dependía de 7 parches.</p>
+          <p><b>Decisión.</b> Reemplazar solo la UI de edición, con APIs públicas del Studio. Presentation, <code>/preview</code>, el draft mode y visual-editing se eliminaron.</p>
+        </div>
+        <div class="decision">
+          <h3>Sanity como base de datos</h3>
+          <p><b>Problema.</b> Login, roles, borradores, historial, tiempo real e imágenes son meses de infraestructura.</p>
+          <p><b>Decisión.</b> No construir eso: Sanity lo resuelve y el Studio sigue disponible para settings, menús y colecciones.</p>
+        </div>
+        <div class="decision">
+          <h3>Canvas en iframe, sin datos propios</h3>
+          <p><b>Problema.</b> El CSS del sitio y el del Studio no pueden mezclarse, y una ruta del canvas con datos expondría borradores.</p>
+          <p><b>Decisión.</b> Un iframe del mismo origen que solo dibuja lo que le manda el editor autenticado. Además da breakpoints reales.</p>
+        </div>
+        <div class="decision">
+          <h3>Sitio estático con islas por sección</h3>
+          <p><b>Problema.</b> Hidratar toda la página costaba 138 KB de JS aunque casi nada se moviera.</p>
+          <p><b>Decisión.</b> Sin Presentation ya no hace falta hidratar todo: HTML puro y React solo en las secciones con <code>js</code>.</p>
+        </div>
+        <div class="decision">
+          <h3>Sanity fijo en 6.3.0</h3>
+          <p><b>Problema.</b> <code>patches/</code> ajusta formularios del Studio y solo encaja en una versión exacta.</p>
+          <p><b>Decisión.</b> Fijar la versión y hacer que install y verify fallen si se desvía. Actualizar es un trabajo planificado.</p>
+        </div>
+        <div class="decision">
+          <h3>Estilos solo con tokens</h3>
+          <p><b>Problema.</b> El CSS libre y el posicionamiento absoluto equivalen a construir un page builder entero, y rompen la consistencia de la marca.</p>
+          <p><b>Decisión.</b> El panel solo ofrece tokens. Los bloques nuevos se escriben en código y el editor compone y estila con ellos.</p>
+        </div>
+        <div class="decision">
+          <h3>Se copia, todavía no es un paquete</h3>
+          <p><b>Problema.</b> Un paquete privado desde el día uno agrega versionado antes de saber qué cambia por proyecto.</p>
+          <p><b>Decisión.</b> Instalar copiando con una guía para agentes, con <code>src/core</code> intacto. Pasarlo a paquete cuando haya 3 o más sitios en producción.</p>
+        </div>
+        <div class="decision">
+          <h3>Instalación para cualquier agente</h3>
+          <p><b>Problema.</b> El equipo no usa un solo agente, y una instalación atada a uno se desactualiza en los demás.</p>
+          <p><b>Decisión.</b> Un <code>INSTALL.md</code> y un <code>AGENTS.md</code> en markdown plano. La skill de Claude Code solo los trae y los sigue.</p>
+        </div>
+        <div class="decision">
+          <h3>Sin i18n, pero preparado</h3>
+          <p><b>Problema.</b> Ningún proyecto actual lo pide.</p>
+          <p><b>Decisión.</b> Todas las URLs pasan por <code>pageHref()</code> y <code>resolveLink()</code>. Agregar idiomas se hace en un solo lugar.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Historial ───────────────────────── -->
+    <section id="historial" data-only="tech">
+      <div class="prose">
+        <p class="eyebrow">Contexto</p>
+        <h2>Historial</h2>
+        <p>Los hitos, agrupados. El detalle está en los commits del repo.</p>
+      </div>
+      <ol class="timeline prose">
+        <li>
+          <time datetime="2026-09-29">29 sep 2026</time>
+          <h3>Port a Astro y base</h3>
+          <ul>
+            <li>Page builder de Next.js portado a Astro 7. Separación en <code>core</code>, <code>blocks</code> y <code>theme</code>, con el registro tipado de bloques.</li>
+            <li>Tipo <code>link</code>, Settings y Navigation, header y footer, SEO completo, <code>npm run verify</code> y <code>CLAUDE.md</code>.</li>
+            <li>Tailwind 4 sobre los tokens. Primeras animaciones con SplitText.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-09-30">30 sep 2026</time>
+          <h3>Bloques de motion y banco de pruebas</h3>
+          <ul>
+            <li>Horizontal Scroll, Stacked Cards, Marquee, Scroll Text, Big Type y Parallax Media, más <code>/lab</code> con sus tres sitios de estrés.</li>
+            <li>Ajustes de velocidad en el entorno de dev.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-10-08">8 oct 2026</time>
+          <h3>Okapi Editor</h3>
+          <ul>
+            <li>Fase 0: herramienta del Studio con canvas en vivo y panel generado del schema.</li>
+            <li>Fase 1: texto en el lugar, capas con arrastre, operaciones de estructura, deshacer e imágenes.</li>
+            <li>Salen Presentation, Vision, <code>/preview</code> y visual-editing. El sitio pasa a ser 100% estático.</li>
+            <li>Fase 2: panel de estilo con tokens y breakpoints, bloque Box y componentes con instancias.</li>
+            <li>Fase 3: rich text en el lugar, overrides por instancia, selección múltiple, arrastre en el canvas y ▶ Play.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-10-08">8 oct 2026</time>
+          <h3>Peso y robustez</h3>
+          <ul>
+            <li>El sitio público no importa nada del editor.</li>
+            <li>Islas por sección: las páginas sin motion bajan de 138 KB a ≈1 KB de JS.</li>
+            <li>Install y verify fallan si Sanity se desvía de su parche.</li>
+            <li>Instalable en proyectos Astro existentes, con <code>INSTALL.md</code> y <code>AGENTS.md</code> para cualquier agente. Esta documentación.</li>
+          </ul>
+        </li>
+      </ol>
+    </section>
+
+
+    <!-- ───────────────────────── Vibe: si falla ───────────────────────── -->
+    <section id="si-falla" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Si algo falla</h2>
+        <p>Contale a tu agente lo que ves, tal cual. Estos ya pasaron y tienen solución.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ves</th><th>Lo más probable</th><th>Decile al agente</th></tr></thead>
+          <tbody>
+            <tr><td>"Connect this studio to your project"</td><td>Entraste por otro puerto. El local es <code>:4321</code>.</td><td>"Me aparece Connect this studio en localhost:&lt;puerto&gt;"</td></tr>
+            <tr><td>El Studio queda en blanco</td><td>La pestaña quedó vieja después de reiniciar el server.</td><td>Primero <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>. Si sigue: "El Studio queda en blanco, mirá la consola"</td></tr>
+            <tr><td>La home muestra "Your visual page builder is ready"</td><td>Falta la configuración o el contenido.</td><td>"La home muestra la pantalla de bienvenida"</td></tr>
+            <tr><td>Un bloque se ve pero no se anima en el sitio</td><td>No está marcado como bloque con JS.</td><td>"El bloque X no se anima en el sitio publicado"</td></tr>
+            <tr><td>Publiqué y el sitio no cambió</td><td>Falta el webhook o el build todavía no terminó.</td><td>"Publiqué y el sitio no cambió"</td></tr>
+            <tr><td><code>npm install</code> falla en patch-package</td><td>Cambió la versión de Sanity.</td><td>"npm install falla en patch-package"</td></tr>
+            <tr><td>Una página mía dejó de verse igual</td><td>El CSS de Okapi se cargó fuera de sus páginas.</td><td>"Desde que sumamos Okapi, /&lt;ruta&gt; se ve distinta"</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: entregar ───────────────────────── -->
+    <section id="entregar" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Antes de entregar</h2>
+        <p>Pedile al agente "corré verify". Después, con tu usuario y en una página descartable:</p>
+        <ol class="check">
+          <li>Escribir en un título sobre la página, recargar, y que el texto siga ahí.</li>
+          <li>Negrita, itálica y link en un párrafo. Insertar, duplicar, borrar y arrastrar un bloque. Deshacer y rehacer.</li>
+          <li>Soltar una imagen sobre un bloque Image: se sube y aparece.</li>
+          <li>Crear un componente, cambiar el texto de una instancia (cambia solo esa) y editar el original (cambian todas).</li>
+          <li>Publicar y ver el cambio en el sitio después del build.</li>
+          <li>Entrar como el cliente: no ve estilos ni acciones de estructura.</li>
+          <li>Settings completos: nombre del sitio, descripción e imagen para redes.</li>
+          <li>El dominio está en CORS y el webhook de publicación funciona.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Vibe: glosario ───────────────────────── -->
+    <section id="glosario" data-only="vibe">
+      <div class="prose">
+        <p class="eyebrow">Con tu agente</p>
+        <h2>Glosario</h2>
+        <dl class="glossary">
+          <dt>Bloque</dt><dd>Una pieza de la página: título, párrafo, imagen, card, slider…</dd>
+          <dt>Sección</dt><dd>Una franja de la página que contiene bloques. Tiene tema (claro, oscuro o brand), espaciado y fondo.</dd>
+          <dt>Box</dt><dd>Un contenedor libre para poner bloques en columna, en fila o en grilla.</dd>
+          <dt>Componente</dt><dd>Una sección guardada en la librería para reusarla en varias páginas.</dd>
+          <dt>Instancia</dt><dd>Cada uso de un componente en una página. Si cambiás el componente, cambian todas.</dd>
+          <dt>Override</dt><dd>Un texto o una imagen cambiados solo en una instancia, sin tocar el componente.</dd>
+          <dt>Token</dt><dd>Un valor de diseño con nombre: un color, un espaciado, un radio. Cambiarlo cambia todo el sitio.</dd>
+          <dt>Borrador</dt><dd>Lo que editaste y todavía no publicaste. Solo lo ve el equipo.</dd>
+          <dt>Publicar</dt><dd>Dejar el contenido listo para el sitio. Se ve después del próximo build.</dd>
+          <dt>Build</dt><dd>Cuando se genera el sitio con el contenido publicado. Tarda unos segundos más la instalación.</dd>
+          <dt>Webhook</dt><dd>El aviso que manda Sanity al publicar para que el hosting haga un build.</dd>
+          <dt>Studio</dt><dd>El panel de Sanity en <code>/studio</code>. Adentro está el editor.</dd>
+          <dt>Canvas</dt><dd>La vista de la página dentro del editor, donde hacés clic y escribís.</dd>
+          <dt>verify</dt><dd>El chequeo automático del proyecto: si pasa, lo importante funciona.</dd>
+          <dt>INSTALL.md</dt><dd>La guía que sigue cualquier agente para sumar Okapi a un proyecto.</dd>
+          <dt>AGENTS.md</dt><dd>Las reglas que el agente lee antes de trabajar en el proyecto. Claude Code las lee a través de <code>CLAUDE.md</code>.</dd>
+          <dt>Skill</dt><dd>Atajo para Claude Code: <code>okapi-astro</code> trae INSTALL.md y lo sigue.</dd>
+          <dt>Core</dt><dd><code>src/core</code>, el código del editor. Es igual en todos los proyectos y se arregla en el repo de Okapi.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Pendiente ───────────────────────── -->
+    <section id="pendiente">
+      <div class="prose">
+        <p class="eyebrow">Contexto</p>
+        <h2>Lo que sigue</h2>
+        <p>Ordenado por impacto. Ninguno bloquea el uso actual.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Qué</th><th>Por qué</th><th>Tamaño</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Galería de la librería</strong></td><td>Ver los componentes con una miniatura en vivo y arrastrarlos al canvas. Hoy son una lista de nombres.</td><td><span class="pill ok">Chico</span></td></tr>
+            <tr><td><strong>Componentes de cualquier tamaño</strong></td><td>Guardar una card o un botón como componente e insertarlo dentro de secciones, grids o boxes.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Insertar como copia o enlazado</strong></td><td>Elegirlo al insertar desde la librería.</td><td><span class="pill ok">Chico</span></td></tr>
+            <tr><td><strong>UI propia del Studio</strong></td><td>Reemplazar la barra y el marco de Sanity con la API oficial (<code>studio.components</code>) para que el editor sea la app entera.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>JS por bloque</strong></td><td>Que una sección con solo un marquee no cargue todos los bloques. Baja los 138 KB en páginas con poco motion.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Paquete npm privado</strong></td><td>Instalar y actualizar con <code>npm</code> en vez de copiar <code>src/core</code>. Cuando haya 3 o más sitios en producción.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Idiomas</strong></td><td>Cuando un cliente lo pida. La base está en <code>pageHref</code> y <code>resolveLink</code>.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>Gizmo 3D en el canvas</strong></td><td>Rotar el 3D Logo directamente en el canvas. Postergado.</td><td><span class="pill no">Pausado</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <footer class="end">Okapi · repo <code>seba-seb/okapi-sanity</code> · instalación en <code>INSTALL.md</code> · reglas en <code>AGENTS.md</code> · actualizado el 8 de octubre de 2026</footer>
+    </section>
+  </main>
+
+  <aside class="rail" aria-label="En esta sección"></aside>
+</div>
+
+<div class="search" role="dialog" aria-modal="true" aria-label="Buscar en la documentación">
+  <div class="box">
+    <input type="search" placeholder="Buscar: tokens, publicar, componentes…" aria-label="Buscar" autocomplete="off" spellcheck="false">
+    <ul role="listbox"></ul>
+    <div class="foot"><span>↑↓ moverse</span><span>↵ abrir</span><span>esc cerrar</span></div>
+  </div>
+</div>
+
+<script src="../../okapi-textures.js"></script>
+<script>
+(() => {
+  const root = document.documentElement, main = document.getElementById("main");
+  const sections = [...main.querySelectorAll("section[id]")];
+  const visible = (el) => el.offsetParent !== null;
+  const slug = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const fold = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+  /* Every heading gets an id and a "#" link, so any part of the docs can be shared. */
+  sections.forEach((sec) => {
+    sec.querySelectorAll("h2, h3").forEach((h) => {
+      if (h.closest(".prompt-head, .decision, .timeline, .part")) { if (!h.id) h.id = sec.id + "--" + slug(h.textContent); return; }
+      if (!h.id) h.id = h.tagName === "H2" ? sec.id + "-top" : sec.id + "--" + slug(h.textContent);
+      const a = document.createElement("a");
+      a.className = "anchor"; a.href = "#" + (h.tagName === "H2" ? sec.id : h.id); a.textContent = "#"; a.setAttribute("aria-label", "Enlace a esta parte");
+      h.prepend(a);
+    });
+  });
+
+  /* Mode: vibe coding (default) / técnico. Remembered per viewer. */
+  const setMode = (mode, save) => {
+    root.dataset.mode = mode;
+    document.querySelectorAll(".mode [data-set-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.setMode === mode)));
+    if (save) { try { localStorage.setItem("okapi-docs-mode", mode); } catch (e) {} }
+    buildPagers(); spy();
+  };
+  document.querySelectorAll("[data-set-mode]").forEach((b) => b.addEventListener("click", () => {
+    const here = current && document.getElementById(current);
+    setMode(b.dataset.setMode, true);
+    if (here && !visible(here)) window.scrollTo({ top: 0 });
+  }));
+
+  /* Prev / next at the end of each section, following the index of the current mode. */
+  function order() {
+    const ids = [];
+    document.querySelectorAll(".index ol a").forEach((a) => { if (visible(a)) { const id = a.hash.slice(1); if (!ids.includes(id)) ids.push(id); } });
+    return ids;
+  }
+  const titleOf = (id) => { const a = [...document.querySelectorAll(`.index ol a[href="#${id}"]`)].find(visible); return a ? a.textContent : id; };
+  function buildPagers() {
+    main.querySelectorAll(".pager").forEach((p) => p.remove());
+    const ids = order();
+    ids.forEach((id, i) => {
+      const sec = document.getElementById(id); if (!sec) return;
+      const nav = document.createElement("nav"); nav.className = "pager"; nav.setAttribute("aria-label", "Seguir leyendo");
+      if (i > 0) nav.insertAdjacentHTML("beforeend", `<a class="prev" href="#${ids[i - 1]}"><span>Anterior</span>${titleOf(ids[i - 1])}</a>`);
+      if (i < ids.length - 1) nav.insertAdjacentHTML("beforeend", `<a class="next" href="#${ids[i + 1]}"><span>Siguiente</span>${titleOf(ids[i + 1])}</a>`);
+      const end = sec.querySelector("footer.end");
+      end ? end.before(nav) : sec.append(nav);
+    });
+  }
+
+  /* Scroll spy: the index marks the section you're reading; the rail lists its headings. */
+  const rail = document.querySelector(".rail");
+  let current = null;
+  function spy() {
+    const line = innerHeight * .3;
+    let id = null;
+    for (const s of sections) { if (!visible(s)) continue; if (s.getBoundingClientRect().top <= line) id = s.id; else break; }
+    if (id !== current) {
+      current = id;
+      document.querySelectorAll(".index ol a").forEach((a) => a.toggleAttribute("aria-current", a.hash === "#" + id));
+      document.querySelectorAll('.index ol a[aria-current]').forEach((a) => a.setAttribute("aria-current", "true"));
+      const hs = id ? [...document.getElementById(id).querySelectorAll("h3[id]")].filter((h) => visible(h) && !h.closest(".prompt-head, .decision, .timeline, .part")) : [];
+      rail.innerHTML = hs.length > 1 ? `<p>En esta sección</p><ol>${hs.map((h) => `<li><a href="#${h.id}">${h.textContent.replace(/^#/, "")}</a></li>`).join("")}</ol>` : "";
+    }
+    let on = null;
+    rail.querySelectorAll("a").forEach((a) => { const h = document.getElementById(a.hash.slice(1)); if (h && h.getBoundingClientRect().top <= line) on = a; });
+    rail.querySelectorAll("a").forEach((a) => a.classList.toggle("on", a === on));
+    const max = document.documentElement.scrollHeight - innerHeight;
+    document.querySelector(".progress").style.setProperty("--p", max > 0 ? (scrollY / max).toFixed(4) : 0);
+  }
+  let ticking = false;
+  addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { spy(); ticking = false; }); } }, { passive: true });
+  addEventListener("resize", spy);
+
+  /* Mobile index drawer */
+  const menuBtn = document.querySelector(".menu-btn");
+  const setNav = (open) => { document.body.classList.toggle("nav-open", open); menuBtn.setAttribute("aria-expanded", String(open)); menuBtn.setAttribute("aria-label", open ? "Cerrar índice" : "Abrir índice"); };
+  menuBtn.addEventListener("click", () => setNav(!document.body.classList.contains("nav-open")));
+  document.querySelector(".scrim").addEventListener("click", () => setNav(false));
+  document.querySelectorAll(".index a").forEach((a) => a.addEventListener("click", () => setNav(false)));
+
+  /* Language switch: the other language opens at the same section (ids are shared). */
+  document.querySelectorAll(".lang a:not([aria-current])").forEach((a) => a.addEventListener("click", () => {
+    a.hash = location.hash || (current ? "#" + current : "");
+  }));
+
+  /* Copy buttons (code blocks and prompt cards) */
+  document.querySelectorAll(".copy").forEach((btn) => btn.addEventListener("click", () => {
+    const src = btn.closest(".code, .prompt").querySelector("pre, blockquote");
+    const done = () => { btn.textContent = "Copiado"; btn.classList.add("ok"); setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("ok"); }, 1600); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(src); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Seleccionado"; };
+    navigator.clipboard ? navigator.clipboard.writeText(src.innerText.trim()).then(done, fallback) : fallback();
+  }));
+
+  /* Search (⌘K, Ctrl+K or /): headings, prompts and glossary terms of the current mode. */
+  const dlg = document.querySelector(".search"), input = dlg.querySelector("input"), list = dlg.querySelector("ul");
+  let items = [], sel = 0, opener = null;
+  const collect = () => {
+    items = [];
+    sections.filter(visible).forEach((sec) => {
+      const secTitle = titleOf(sec.id);
+      sec.querySelectorAll("h2, h3, dt").forEach((h) => {
+        if (!visible(h)) return;
+        const text = h.textContent.replace(/^#/, "").trim();
+        const target = h.tagName === "DT" ? sec.id : h.tagName === "H2" ? sec.id : h.id;
+        items.push({ text, where: h.tagName === "H2" ? "Sección" : secTitle, href: "#" + target, key: fold(text + " " + secTitle) });
+      });
+    });
+  };
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  const render = () => {
+    const q = fold(input.value.trim());
+    const words = q.split(/\s+/).filter(Boolean);
+    const hits = (words.length ? items.filter((it) => words.every((w) => it.key.includes(w))) : items.filter((it) => it.where === "Sección")).slice(0, 40);
+    sel = Math.min(sel, Math.max(hits.length - 1, 0));
+    list.innerHTML = hits.length ? hits.map((it, i) => {
+      let t = esc(it.text);
+      if (words[0]) { const at = fold(it.text).indexOf(words[0]); if (at >= 0) t = esc(it.text.slice(0, at)) + "<mark>" + esc(it.text.slice(at, at + words[0].length)) + "</mark>" + esc(it.text.slice(at + words[0].length)); }
+      return `<li role="option" aria-selected="${i === sel}"><a href="${it.href}"><small>${esc(it.where)}</small><span>${t}</span></a></li>`;
+    }).join("") : `<li class="empty">Nada con “${esc(input.value)}”. Probá otra palabra o cambiá a la vista ${root.dataset.mode === "tech" ? "Con tu agente" : "Técnico"}.</li>`;
+    list.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  };
+  const openSearch = () => { opener = document.activeElement; collect(); sel = 0; input.value = ""; render(); dlg.classList.add("open"); input.focus(); };
+  const closeSearch = () => { dlg.classList.remove("open"); opener?.focus?.(); };
+  document.querySelectorAll("[data-open-search]").forEach((b) => b.addEventListener("click", openSearch));
+  input.addEventListener("input", () => { sel = 0; render(); });
+  list.addEventListener("click", (e) => { if (e.target.closest("a")) closeSearch(); });
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) closeSearch(); });
+  addEventListener("keydown", (e) => {
+    const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+    if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || (e.key === "/" && !typing)) { e.preventDefault(); dlg.classList.contains("open") ? closeSearch() : openSearch(); return; }
+    if (e.key === "Escape") { if (dlg.classList.contains("open")) closeSearch(); else setNav(false); return; }
+    if (!dlg.classList.contains("open")) return;
+    const n = list.querySelectorAll('[role="option"]').length;
+    if (e.key === "ArrowDown") { e.preventDefault(); sel = (sel + 1) % Math.max(n, 1); render(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); sel = (sel - 1 + n) % Math.max(n, 1); render(); }
+    if (e.key === "Enter") { const a = list.querySelector('[aria-selected="true"] a'); if (a) { e.preventDefault(); closeSearch(); location.hash = a.hash; } }
+  });
+
+  setMode(root.dataset.mode === "tech" ? "tech" : "vibe", false);
+})();
+</script>
+</body>
+</html>

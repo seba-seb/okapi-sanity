@@ -1,14 +1,25 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Okapi — Edición visual para Astro + Sanity</title>
-<meta name="description" content="Un editor visual sobre Sanity para sitios en Astro: tus clientes editan sobre la página real, con permisos por rol. Open source, lo instala tu agente.">
-<meta property="og:title" content="Okapi — Edición visual para Astro + Sanity">
-<meta property="og:description" content="Edición visual sobre la página, permisos por rol y HTML estático. Open source, para Astro + Sanity.">
+<title>Okapi — Visual editing for Astro + Sanity</title>
+<meta name="description" content="A visual editor on top of Sanity for Astro sites: your clients edit on the real page, with role-based permissions. Open source, installed by your coding agent.">
+<meta property="og:title" content="Okapi — Visual editing for Astro + Sanity">
+<meta property="og:description" content="On-page visual editing, role-based permissions and static HTML. Open source, for Astro + Sanity.">
 <meta name="theme-color" content="#16100D">
-<link rel="icon" href="okapi.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:image" content="og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@seba__seb">
+<meta name="twitter:image" content="og.png">
+<link rel="alternate" hreflang="en" href="./">
+<link rel="alternate" hreflang="es" href="es/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@400;500;600&family=Unbounded:wght@700&display=swap">
@@ -83,8 +94,9 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 .iso-wrap { position: absolute; z-index: 1; right: calc(-40 * var(--u)); top: calc(224 * var(--u)); width: calc(780 * var(--u)); }
 .iso-wrap svg { display: block; width: 100%; height: auto; }
 .card { position: absolute; z-index: 4; left: 18px; top: calc(128 * var(--u)); width: calc(600 * var(--u)); display: flex; flex-direction: column; gap: calc(22 * var(--u)); padding: calc(32 * var(--u)); background: var(--crema); color: var(--tierra); }
-.card .meta { display: flex; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--tierra); font: 400 12px/16px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.card .meta span:last-child { color: var(--naranja); }
+.card .tab { position: absolute; left: 0; bottom: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 28px 6px 14px; background: var(--crema); color: var(--tierra); font: 400 11px/14px var(--mono); letter-spacing: .1em; text-transform: uppercase; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); }
+.card .tab::before { content: ""; width: 7px; height: 7px; flex-shrink: 0; background: var(--naranja); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.card .tab:hover::before { transform: rotate(45deg); }
 .card h1 { margin: 0; font: 500 calc(60 * var(--u))/.97 var(--sans); letter-spacing: -.05em; }
 .card p { margin: 0; font: 400 calc(19 * var(--u))/1.47 var(--sans); }
 .card .cmd { background: var(--tierra); color: var(--crema); border: 0; padding: 8px 8px 8px 18px; font-size: calc(15 * var(--u)); line-height: 18px; }
@@ -100,20 +112,20 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
   .hero { height: max(100svh, 760px); }
   .nav { top: 16px; left: var(--g); right: var(--g); }
   .nav .links a { padding: 10px 14px; font-size: 13px; }
-  .card { left: var(--g); top: 92px; width: min(560px, 100% - 2 * var(--g)); gap: 18px; padding: clamp(20px, 4vw, 32px); }
+  /* centered in the space between the nav and the wordmark */
+  .card { left: 0; right: 0; top: 104px; bottom: calc(13% + min(29vw, 240px) * .86 + 24px); height: fit-content; margin: auto; width: min(560px, 100% - 2 * var(--g)); gap: 18px; padding: clamp(20px, 4vw, 32px); }
   .card h1 { font-size: clamp(38px, 7.4vw, 56px); }
   .card p { font-size: clamp(16px, 2.6vw, 19px); }
   .card .cmd { font-size: clamp(11px, 2.9vw, 15px); padding-left: 14px; }
   .card .cmd button { padding: 9px 12px; }
   .wordmark { font-size: min(29vw, 240px); }
-  .iso-wrap { right: 3vw; top: auto; bottom: calc(13% + min(29vw, 240px) * .92); width: min(44vw, 360px); }
+  .iso-wrap { display: none; }
   .band { height: 13%; }
   .wordmark-wrap { top: auto; bottom: calc(13% - min(29vw, 240px) * .14); }
 }
 @media (max-width: 520px) {
   .nav .links a:first-child { display: none; }
   .card .doclink { margin-top: -4px; }
-  .card .meta span:last-child { display: none; }
 }
 
 /* ───────── Roles: same panel, two views ───────── */
@@ -121,10 +133,15 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 .roles-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 812px); gap: 48px; align-items: stretch; }
 .words { display: flex; flex-direction: column; justify-content: space-between; gap: 48px; }
 .views { display: grid; grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr); }
-.view { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.vtop { display: flex; justify-content: space-between; align-items: center; font: 400 12px/16px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
-.vtop .tag { padding: 3px 7px; border: 1px solid var(--naranja-claro); color: var(--naranja-claro); font-size: 11px; line-height: 14px; letter-spacing: .08em; }
-.view.client .vtop .tag { border-color: color-mix(in srgb, var(--crema) 40%, transparent); color: var(--crema); }
+.view { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.vtop { display: flex; justify-content: space-between; align-items: flex-end; font: 400 12px/16px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.vtop > span:first-child { padding-bottom: 10px; }
+/* role = a folder tab sitting on the panel's top edge (same idea as the "Open source" tab) */
+.vtop .tag { position: relative; z-index: 1; margin-bottom: -1px; padding: 1px 1px 0; background: color-mix(in srgb, var(--crema) 18%, var(--tierra)); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); }
+.vtop .tag > span { display: flex; align-items: center; gap: 8px; padding: 8px 28px 8px 12px; background: #1B1411; clip-path: polygon(0 0, calc(100% - 14.4px) 0, 100% 100%, 0 100%); font-size: 11px; line-height: 14px; letter-spacing: .08em; color: var(--naranja-claro); }
+.vtop .tag > span::before { content: ""; width: 7px; height: 7px; flex-shrink: 0; background: var(--naranja); }
+.view.client .vtop .tag > span { color: var(--crema); }
+.view.client .vtop .tag > span::before { background: color-mix(in srgb, var(--crema) 45%, transparent); }
 .ppanel { flex: 1; display: flex; flex-direction: column; min-height: 520px; background: #1B1411; border: 1px solid var(--line-2); font-size: 12px; line-height: 16px; }
 .ppanel .ptabs { display: flex; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); font: 400 11px/14px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 .ppanel .ptabs span { flex: 1; padding: 12px 14px; color: color-mix(in srgb, var(--crema) 45%, transparent); }
@@ -172,6 +189,48 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
   .ppanel { min-height: 0; }
   .words { flex-direction: column; align-items: flex-start; gap: 32px; }
 }
+
+/* Roles panels are live: tabs, controls and a role-aware demo chat */
+.ppanel button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.ppanel .ptabs > button { flex: 1; padding: 12px 14px; text-align: left; letter-spacing: inherit; text-transform: inherit; color: color-mix(in srgb, var(--crema) 45%, transparent); transition: color .2s, box-shadow .25s; }
+.ppanel .ptabs > button:hover { color: var(--crema); }
+.ppanel .ptabs > button.on { color: var(--crema); box-shadow: inset 0 -1.5px var(--naranja); }
+.ppanel .pane { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.ppanel .pane[hidden] { display: none; }
+input.pfield { width: 100%; font-family: var(--sans); outline: none; transition: box-shadow .2s, color .3s; }
+input.pfield:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--naranja) 25%, transparent); }
+input.pfield.flash { animation: pflash .9s ease-out; }
+@keyframes pflash { from { background: color-mix(in srgb, var(--naranja) 35%, transparent); } }
+.ppanel .seg button { padding: 3px 8px; color: color-mix(in srgb, var(--crema) 60%, transparent); transition: background .2s, color .2s; }
+.ppanel .seg button:hover { color: var(--crema); }
+.ppanel .seg button.on { background: var(--crema); color: var(--tierra); }
+.ppanel .sw button { width: 16px; height: 16px; transition: outline-color .2s; outline: 1.5px solid transparent; outline-offset: 2px; }
+.ppanel .sw button.on { outline-color: var(--naranja); }
+.ppanel .range { -webkit-appearance: none; appearance: none; width: 140px; height: 12px; background: linear-gradient(var(--naranja), var(--naranja)) 0 50% / var(--v, 60%) 2px no-repeat, linear-gradient(var(--line-2), var(--line-2)) 0 50% / 100% 2px no-repeat; cursor: pointer; }
+.ppanel .range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--crema); border: 0; border-radius: 0; }
+.ppanel .range::-moz-range-thumb { width: 12px; height: 12px; background: var(--crema); border: 0; border-radius: 0; }
+.ppanel .range:focus-visible { outline: 1.5px solid var(--naranja-claro); outline-offset: 4px; }
+.chips button { padding: 6px 9px; border: 1px solid var(--line-2); color: var(--crema); transition: border-color .2s, background .2s; }
+.chips button:hover { border-color: var(--naranja-claro); }
+.chips button.on { border-color: var(--naranja); background: color-mix(in srgb, var(--naranja) 18%, transparent); }
+.pchat { padding: 14px; gap: 10px; }
+.pchat .log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.pchat .log::-webkit-scrollbar { display: none; }
+.msg { max-width: 86%; padding: 8px 10px; font-size: 13px; line-height: 18px; animation: msgin .35s cubic-bezier(.2,.8,.2,1); }
+@keyframes msgin { from { opacity: 0; transform: translateY(6px); } }
+.msg.me { align-self: flex-end; background: var(--crema); color: var(--tierra); }
+.msg.ai { align-self: flex-start; background: color-mix(in srgb, var(--crema) 5%, transparent); border: 1px solid var(--line); color: var(--crema); }
+.msg.ai.ok { box-shadow: inset 2px 0 var(--naranja); }
+.msg.ai.no { box-shadow: inset 2px 0 color-mix(in srgb, var(--crema) 35%, transparent); color: color-mix(in srgb, var(--crema) 70%, transparent); }
+.msg.ai.typing { letter-spacing: .2em; color: color-mix(in srgb, var(--crema) 50%, transparent); }
+.pchat .sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.pchat .sugg button { padding: 5px 8px; border: 1px solid color-mix(in srgb, var(--crema) 16%, transparent); font-size: 11px; line-height: 14px; color: color-mix(in srgb, var(--crema) 75%, transparent); transition: border-color .2s, color .2s; }
+.pchat .sugg button:hover { border-color: var(--naranja-claro); color: var(--crema); }
+.pchat .cin { display: flex; align-items: center; border: 1px solid color-mix(in srgb, var(--crema) 22%, transparent); background: color-mix(in srgb, var(--crema) 4%, transparent); }
+.pchat .cin input { flex: 1; min-width: 0; padding: 10px 12px; background: none; border: 0; outline: none; color: var(--crema); font: 400 12px/16px var(--sans); }
+.pchat .cin input::placeholder { color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.pchat .cin button { width: 34px; height: 34px; font: 400 12px/1 var(--mono); color: var(--crema); }
+.pchat .cin:focus-within { border-color: var(--naranja); }
 
 /* ───────── Por qué no Sanity solo ───────── */
 .vs { position: relative; margin-top: clamp(96px, 10vw, 160px); background: var(--tierra); border: 1px solid var(--line-2); }
@@ -250,7 +309,7 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 .win { height: 720px; display: flex; flex-direction: column; background: #1B1411; border: 1px solid var(--line); font-size: 13px; line-height: 16px; }
 .bar { height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); }
 .bar .l, .bar .r { display: flex; align-items: center; gap: 10px; }
-.bar .sq { width: 18px; height: 18px; background: var(--naranja); }
+.bar .sq { width: 20px; height: 20px; flex-shrink: 0; display: block; }
 .bar .mut { color: color-mix(in srgb, var(--crema) 40%, transparent); }
 .bar .chip { padding: 2px 6px; border: 1px solid var(--line-2); font: 400 10px/12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 55%, transparent); }
 .devices { display: flex; border: 1px solid var(--line); }
@@ -362,8 +421,15 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 .sign { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 22px var(--g); background: var(--naranja); color: var(--tierra); }
 .sign .logo { display: flex; align-items: flex-end; gap: 4px; }
 .sign .logo b { font: 700 28px/34px var(--logo); letter-spacing: -.06em; }
-.sign small { font: 400 11px/14px var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .8; text-align: right; }
-@media (max-width: 640px) { .foot { padding-top: 80px; } .sign { flex-direction: column; align-items: flex-start; } .sign small { text-align: left; } }
+.sign small { font: 400 11px/14px var(--mono); letter-spacing: .1em; text-transform: uppercase; text-align: right; }
+.sign small a { text-transform: none; letter-spacing: .02em; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--tierra) 40%, transparent); transition: text-decoration-color .2s; }
+.sign small a:hover { text-decoration-color: var(--tierra); }
+.credits { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: flex-end; }
+.lang { display: flex; border: 1px solid color-mix(in srgb, var(--tierra) 45%, transparent); }
+.lang a { padding: 5px 9px; font: 400 11px/14px var(--mono); letter-spacing: .08em; transition: background .2s, color .2s; }
+.lang a[aria-current="page"] { background: var(--tierra); color: var(--naranja-claro); }
+.lang a:not([aria-current]):hover { background: color-mix(in srgb, var(--tierra) 14%, transparent); }
+@media (max-width: 640px) { .foot { padding-top: 80px; } .sign { flex-direction: column; align-items: flex-start; } .sign small { text-align: left; } .credits { justify-content: flex-start; } }
 
 /* Reveal targets start hidden only when motion is on (GSAP shows them). */
 .motion [data-split], .motion [data-reveal], .motion [data-stagger] > *, .motion .hero .card, .motion .wordmark .slice, .motion .iso-wrap svg, .motion .nav > *, .motion .hero .tex { visibility: hidden; }
@@ -375,8 +441,8 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <header class="hero" id="top">
   <div class="tex"><canvas data-okapi-tex="glitch" data-bg="#C2562C" data-fg="#F2EEE3" data-speed=".8" aria-hidden="true"></canvas></div>
 
-  <nav class="nav" aria-label="Principal">
-    <a class="brand" href="#top" aria-label="Okapi, inicio"><b>Okapi</b><span>v0</span></a>
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="#top" aria-label="Okapi, home"><b>Okapi</b><span>v0</span></a>
     <div class="links">
       <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md">INSTALL.md</a>
       <a href="docs/">Docs</a>
@@ -404,11 +470,11 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
   </div>
 
   <div class="card">
-    <div class="meta"><span data-scramble>Astro · Sanity</span><span data-scramble>v0.1 — open source</span></div>
-    <h1 data-split>Edición visual<br>para Sanity.</h1>
-    <p data-split>Tus clientes editan textos, imágenes y secciones directamente sobre tu sitio en Astro, con permisos por rol. Sin formularios y sin tocar el diseño.</p>
-    <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copiar</button></div>
-    <a class="doclink" href="docs/">Leer la documentación <span>→</span></a>
+    <a class="tab" href="https://github.com/seba-seb/okapi-sanity/blob/main/LICENSE"><span data-scramble>Open source · MIT</span></a>
+    <h1 data-split>Visual editing<br>for Sanity.</h1>
+    <p data-split>Your clients edit text, images and sections right on your Astro site, with role-based permissions. No forms, and the design stays untouched.</p>
+    <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copy</button></div>
+    <a class="doclink" href="docs/">Read the docs <span>→</span></a>
   </div>
   <div class="band"></div>
 </header>
@@ -418,36 +484,42 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <section class="roles" aria-labelledby="t-roles">
   <div class="wrap roles-grid">
     <div class="words">
-      <h2 class="title" id="t-roles" data-split><span class="sl">/</span> Permisos por rol,<br><span class="dim">definidos por vos.</span> <span class="sl">/</span></h2>
+      <h2 class="title" id="t-roles" data-split><span class="sl">/</span> Role-based permissions,<br><span class="dim">defined by you.</span> <span class="sl">/</span></h2>
       <div class="punch" data-reveal>
-        <p class="big">Cada rol ve solo<br><em>lo que puede editar.</em></p>
-        <p>Tu equipo controla estilos, componentes y estructura. El cliente edita contenido y publica, o deja borradores para revisión. El chat con IA respeta los mismos límites.</p>
-        <code>roles de Sanity → okapi.policy.ts</code>
+        <p class="big">Each role only sees<br><em>what it can edit.</em></p>
+        <p>Your team owns styles, components and structure. Clients edit content and publish, or leave drafts for review. The AI chat follows the same rules.</p>
+        <code>Sanity roles → okapi.policy.ts</code>
       </div>
     </div>
     <div class="views" data-stagger>
       <div class="view">
-        <div class="vtop"><span>Vista admin</span><span class="tag">administrator</span></div>
+        <div class="vtop"><span>Admin view</span><span class="tag"><span>administrator</span></span></div>
         <div class="ppanel">
-          <div class="ptabs"><span class="on">Propiedades</span><span>✦ Chat</span></div>
-          <div class="pgroup"><span class="k">Contenido</span><div class="pfield">Espacios que se editan solos.</div><div class="pimg"><i></i><span>casa-del-rio.jpg</span></div></div>
-          <div class="pgroup"><div class="prow"><span class="k">Estilo</span><span class="acc">Todas las pantallas ▾</span></div>
-            <div class="prow"><span>Tamaño</span><span class="seg"><span>M</span><span>L</span><span class="on">XL</span></span></div>
-            <div class="prow"><span>Color</span><span class="sw"><i style="background:#16100D"></i><i style="background:#F2EEE3"></i><i style="background:#C2562C"></i><i style="background:#F29B6B"></i></span></div>
-            <div class="prow"><span>Margen abajo</span><span class="slider"><i></i></span></div></div>
-          <div class="pgroup"><span class="k">Estructura</span><div class="chips"><span>◆ Hacer componente</span><span>+ Bloque</span><span>Permisos</span></div></div>
-          <div class="pfoot"><span class="pub">Publicar</span></div>
+          <div class="ptabs" role="tablist"><button type="button" role="tab" class="on" aria-selected="true" data-ptab="props">Properties</button><button type="button" role="tab" aria-selected="false" data-ptab="chat">✦ Chat</button></div>
+          <div class="pane" data-pane="props">
+          <div class="pgroup"><span class="k">Content</span><input class="pfield" value="Spaces that edit themselves." aria-label="Heading text" spellcheck="false"><div class="pimg"><i></i><span>river-house.jpg</span></div></div>
+          <div class="pgroup"><div class="prow"><span class="k">Style</span><span class="acc">All screens ▾</span></div>
+            <div class="prow"><span>Size</span><span class="seg"><button type="button">M</button><button type="button">L</button><button type="button" class="on">XL</button></span></div>
+            <div class="prow"><span>Color</span><span class="sw"><button type="button" class="on" aria-label="#16100D" style="background:#16100D"></button><button type="button" aria-label="#F2EEE3" style="background:#F2EEE3"></button><button type="button" aria-label="#C2562C" style="background:#C2562C"></button><button type="button" aria-label="#F29B6B" style="background:#F29B6B"></button></span></div>
+            <div class="prow"><span>Bottom margin</span><input class="range" type="range" min="0" max="5" value="3" aria-label="Bottom margin"></div></div>
+          <div class="pgroup"><span class="k">Structure</span><div class="chips"><button type="button">◆ Make component</button><button type="button">+ Block</button><button type="button">Permissions</button></div></div>
+          </div>
+          <div class="pane pchat" data-pane="chat" hidden><div class="log" aria-live="polite"></div><div class="sugg"></div><form class="cin"><input type="text" placeholder="Ask the chat…" aria-label="Ask the chat…" autocomplete="off"><button type="submit" aria-label="Send">↑</button></form></div>
+          <div class="pfoot"><span class="pub">Publish</span></div>
         </div>
       </div>
-      <div class="bridge" aria-hidden="true"><i></i><span>mismo <br>documento <br>→</span><i></i></div>
+      <div class="bridge" aria-hidden="true"><i></i><span>same <br>document <br>→</span><i></i></div>
       <div class="view client">
-        <div class="vtop"><span>Vista cliente</span><span class="tag">editor</span></div>
+        <div class="vtop"><span>Client view</span><span class="tag"><span>editor</span></span></div>
         <div class="ppanel">
-          <div class="ptabs"><span class="on">Propiedades</span><span>✦ Chat</span></div>
-          <div class="pgroup"><span class="k">Contenido</span><div class="pfield">Espacios que se editan solos.</div><div class="pimg"><i></i><span>casa-del-rio.jpg</span></div></div>
-          <div class="pgap tall"><span>— Estilo · no aparece</span></div>
-          <div class="pgap"><span>— Componentes · no aparece</span></div>
-          <div class="pfoot"><span class="pub">Publicar</span></div>
+          <div class="ptabs" role="tablist"><button type="button" role="tab" class="on" aria-selected="true" data-ptab="props">Properties</button><button type="button" role="tab" aria-selected="false" data-ptab="chat">✦ Chat</button></div>
+          <div class="pane" data-pane="props">
+          <div class="pgroup"><span class="k">Content</span><input class="pfield" value="Spaces that edit themselves." aria-label="Heading text" spellcheck="false"><div class="pimg"><i></i><span>river-house.jpg</span></div></div>
+          <div class="pgap tall"><span>— Style · hidden</span></div>
+          <div class="pgap"><span>— Components · hidden</span></div>
+          </div>
+          <div class="pane pchat" data-pane="chat" hidden><div class="log" aria-live="polite"></div><div class="sugg"></div><form class="cin"><input type="text" placeholder="Ask the chat…" aria-label="Ask the chat…" autocomplete="off"><button type="submit" aria-label="Send">↑</button></form></div>
+          <div class="pfoot"><span class="pub">Publish</span></div>
         </div>
       </div>
     </div>
@@ -458,22 +530,22 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <section class="trae" aria-labelledby="t-trae">
   <div class="tex"><canvas data-okapi-tex="puntos" data-bg="#16100D" data-fg="#C2562C" aria-hidden="true"></canvas></div>
   <div class="wrap">
-    <h2 class="title" id="t-trae" data-split><span class="sl">/</span> Edición visual sin lock-in,<br><span class="dim">sobre un stack que controlás.</span> <span class="sl">/</span></h2>
+    <h2 class="title" id="t-trae" data-split><span class="sl">/</span> Visual editing without lock-in,<br><span class="dim">on a stack you control.</span> <span class="sl">/</span></h2>
     <div class="cards" data-stagger>
-      <article class="tcard"><span class="n">01</span><h3>Edición inline</h3><p>Texto, rich text, imágenes y links se editan sobre la página, con deshacer y guardado en borrador.</p></article>
-      <article class="tcard"><span class="n">02</span><h3>Bloques y componentes</h3><p>Insertá, reordená y reutilizá secciones. Un cambio en el componente llega a todas sus instancias.</p></article>
-      <article class="tcard hot"><span class="big" data-scramble>~1 KB</span><p>de JS en páginas sin animación. El editor no entra en el bundle público.</p></article>
-      <article class="tcard"><span class="n">04</span><h3>Chat con IA</h3><p>Cambios por instrucción, validados contra el schema y los permisos. Con tu propia API key.</p></article>
+      <article class="tcard"><span class="n">01</span><h3>Inline editing</h3><p>Text, rich text, images and links are edited on the page, with undo and draft autosave.</p></article>
+      <article class="tcard"><span class="n">02</span><h3>Blocks and components</h3><p>Insert, reorder and reuse sections. Change a component once and every instance follows.</p></article>
+      <article class="tcard hot"><span class="big" data-scramble>~1 KB</span><p>of JS on pages without motion. The editor never ships in the public bundle.</p></article>
+      <article class="tcard"><span class="n">04</span><h3>AI chat</h3><p>Changes by instruction, validated against the schema and permissions. Bring your own API key.</p></article>
     </div>
     <div class="vs" data-reveal>
-      <h3 class="vs-title"><span>Sanity solo vs. Sanity + Okapi</span><span class="dim">El mismo contenido, otra forma de editarlo.</span></h3>
-      <div class="vs-table" role="table" aria-label="Sanity solo contra Sanity con Okapi">
-        <div class="vs-row vs-head" role="row"><span role="columnheader"></span><span role="columnheader">Sanity solo</span><span role="columnheader">Sanity + Okapi</span></div>
-        <div class="vs-row" role="row"><span role="rowheader">Edición</span><span role="cell">Formularios en el Studio</span><span role="cell">Sobre la página renderizada</span></div>
-        <div class="vs-row" role="row"><span role="rowheader">Preview</span><span role="cell">Separado de lo que se edita</span><span role="cell">Es la página misma</span></div>
-        <div class="vs-row" role="row"><span role="rowheader">Permisos</span><span role="cell">Por documento</span><span role="cell">Por campo y por acción</span></div>
-        <div class="vs-row" role="row"><span role="rowheader">Armado de páginas</span><span role="cell">Requiere desarrollo</span><span role="cell">Con los bloques que define tu equipo</span></div>
-        <div class="vs-row" role="row"><span role="rowheader">Cambios menores</span><span role="cell">Pasan por el equipo</span><span role="cell">Los resuelve el cliente</span></div>
+      <h3 class="vs-title"><span>Sanity alone vs. Sanity + Okapi</span><span class="dim">Same content, a different way to edit it.</span></h3>
+      <div class="vs-table" role="table" aria-label="Sanity alone compared with Sanity plus Okapi">
+        <div class="vs-row vs-head" role="row"><span role="columnheader"></span><span role="columnheader">Sanity alone</span><span role="columnheader">Sanity + Okapi</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Editing</span><span role="cell">Forms in the Studio</span><span role="cell">On the rendered page</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Preview</span><span role="cell">Separate from what you edit</span><span role="cell">It is the page</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Permissions</span><span role="cell">Per document</span><span role="cell">Per field and per action</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Page building</span><span role="cell">Needs a developer</span><span role="cell">With the blocks your team defines</span></div>
+        <div class="vs-row" role="row"><span role="rowheader">Small changes</span><span role="cell">Go through your team</span><span role="cell">Handled by the client</span></div>
       </div>
     </div>
   </div>
@@ -483,35 +555,35 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <section class="install" aria-labelledby="t-install">
   <div class="wrap">
     <div class="head">
-      <h2 class="title" id="t-install" data-split><span class="sl">/</span> Tres pasos,<br><span class="dim">guiados por tu agente.</span> <span class="sl">/</span></h2>
-      <div class="ctas" data-reveal><a class="btn ghost" href="docs/">Leer la documentación</a><a class="btn" href="https://github.com/seba-seb/okapi-sanity">Ver en GitHub</a></div>
+      <h2 class="title" id="t-install" data-split><span class="sl">/</span> Three steps,<br><span class="dim">guided by your agent.</span> <span class="sl">/</span></h2>
+      <div class="ctas" data-reveal><a class="btn ghost" href="docs/">Read the docs</a><a class="btn" href="https://github.com/seba-seb/okapi-sanity">View on GitHub</a></div>
     </div>
     <div class="steps" data-stagger>
       <article class="step">
-        <div class="top label"><span data-scramble>Clonar</span><span data-scramble>// 001</span></div>
+        <div class="top label"><span data-scramble>Clone</span><span data-scramble>// 001</span></div>
         <svg class="ico" data-mesh="cube" viewBox="0 0 160 120" aria-hidden="true"></svg>
         <div class="body">
-          <h3>Cloná el repo</h3>
-          <p>Un proyecto Astro completo, con bloques de ejemplo listos para reemplazar.</p>
-          <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity" aria-label="Copiar comando">⧉</button></div>
+          <h3>Clone the repo</h3>
+          <p>A complete Astro project, with sample blocks ready to be replaced.</p>
+          <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity" aria-label="Copy command">⧉</button></div>
         </div>
       </article>
       <article class="step">
-        <div class="top label"><span data-scramble>Instalar</span><span data-scramble>// 002</span></div>
+        <div class="top label"><span data-scramble>Install</span><span data-scramble>// 002</span></div>
         <svg class="ico" data-mesh="pyramid" viewBox="0 0 160 120" aria-hidden="true"></svg>
         <div class="body">
-          <h3>Instalalo con tu agente</h3>
-          <p>Claude Code, Codex o Cursor siguen INSTALL.md: conectan Sanity, configuran el Studio y hacen editables tus secciones.</p>
-          <div class="cmd"><code>&gt; Seguí INSTALL.md y sumá Okapi</code><button data-copy="Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su INSTALL.md para sumar Okapi a este proyecto." aria-label="Copiar pedido">⧉</button></div>
+          <h3>Install it with your agent</h3>
+          <p>Claude Code, Codex or Cursor follow INSTALL.md: they connect Sanity, set up the Studio and make your sections editable.</p>
+          <div class="cmd"><code>&gt; Follow INSTALL.md and add Okapi</code><button data-copy="Clone seba-seb/okapi-sanity into /tmp/okapi and follow its INSTALL.md to add Okapi to this project." aria-label="Copy prompt">⧉</button></div>
         </div>
       </article>
       <article class="step">
-        <div class="top label"><span data-scramble>Entregar</span><span data-scramble>// 003</span></div>
+        <div class="top label"><span data-scramble>Hand off</span><span data-scramble>// 003</span></div>
         <svg class="ico" data-mesh="globe" viewBox="0 0 160 120" aria-hidden="true"></svg>
         <div class="body">
-          <h3>Sumá al cliente</h3>
-          <p>Lo invitás como editor en Sanity. Edita en /studio y cada publicación dispara el deploy.</p>
-          <div class="cmd"><code>→ tusitio.com/studio</code><button data-copy="/studio" aria-label="Copiar ruta">⧉</button></div>
+          <h3>Invite your client</h3>
+          <p>Add them as an editor in Sanity. They edit at /studio, and every publish triggers a deploy.</p>
+          <div class="cmd"><code>→ yoursite.com/studio</code><button data-copy="/studio" aria-label="Copy path">⧉</button></div>
         </div>
       </article>
     </div>
@@ -522,77 +594,77 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <section class="how" aria-labelledby="t-how">
   <div class="wrap">
     <div class="head">
-      <h2 class="title" id="t-how" data-split><span class="sl">/</span> El editor,<br><span class="dim">tal como lo usa tu cliente.</span> <span class="sl">/</span></h2>
-      <nav class="refs" data-stagger aria-label="Referencias">
-        <a href="docs/"><span>Documentación</span><span>docs →</span></a>
-        <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md"><span>Guía</span><span>INSTALL.md</span></a>
-        <a href="https://github.com/seba-seb/okapi-sanity/blob/main/AGENTS.md"><span>Reglas del código</span><span>AGENTS.md</span></a>
-        <a href="https://github.com/seba-seb/okapi-sanity/tree/main/skills/okapi-astro"><span>Atajo Claude Code</span><span>skills/okapi-astro</span></a>
+      <h2 class="title" id="t-how" data-split><span class="sl">/</span> The editor,<br><span class="dim">the way your client uses it.</span> <span class="sl">/</span></h2>
+      <nav class="refs" data-stagger aria-label="References">
+        <a href="docs/"><span>Documentation</span><span>docs →</span></a>
+        <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md"><span>Guide</span><span>INSTALL.md</span></a>
+        <a href="https://github.com/seba-seb/okapi-sanity/blob/main/AGENTS.md"><span>Code rules</span><span>AGENTS.md</span></a>
+        <a href="https://github.com/seba-seb/okapi-sanity/tree/main/skills/okapi-astro"><span>Claude Code shortcut</span><span>skills/okapi-astro</span></a>
       </nav>
     </div>
 
     <div class="viewer" data-reveal>
-      <div class="tabs" role="tablist" aria-label="Partes del editor">
+      <div class="tabs" role="tablist" aria-label="Parts of the editor">
         <button role="tab" data-tab="editor" aria-selected="true">01 Editor</button>
-        <button role="tab" data-tab="layers" aria-selected="false">02 Capas</button>
-        <button role="tab" data-tab="style" aria-selected="false">03 Estilos</button>
+        <button role="tab" data-tab="layers" aria-selected="false">02 Layers</button>
+        <button role="tab" data-tab="style" aria-selected="false">03 Styles</button>
         <button role="tab" data-tab="chat" aria-selected="false">04 Chat ✦</button>
-        <button role="tab" data-tab="publish" aria-selected="false">05 Publicar</button>
-        <button role="tab" data-tab="client" aria-selected="false">06 Vista cliente</button>
+        <button role="tab" data-tab="publish" aria-selected="false">05 Publish</button>
+        <button role="tab" data-tab="client" aria-selected="false">06 Client view</button>
         <span class="url">localhost:4321/studio#/editor</span>
       </div>
       <div class="win" aria-hidden="true">
         <div class="bar">
-          <div class="l"><i class="sq"></i><span>Okapi Editor</span><span class="mut">/</span><span class="crumb">Home</span><span class="chip">Borrador</span></div>
+          <div class="l"><svg class="sq" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" fill="#C2562C"/><svg x="74" y="64" width="367" height="390" viewBox="-25.5 -14.8 237.2 251.5" fill="#16100D"><path fill-rule="evenodd" d="M-25.519 38.75H105.116C161.231 38.75 206.721 84.358 206.721 140.619V236.666H125.438V137.708L70.279 236.666H35.445V99.872L-25.519 38.75ZM125.438 192.113H206.721V198.829H125.438ZM125.438 206.665H206.721V214.501H125.438ZM125.438 222.337H206.721V229.053H125.438ZM49.29 76.587C51.316 73.876 53.947 71.677 56.97 70.161 59.995 68.645 63.328 67.855 66.708 67.855 70.087 67.855 73.422 68.645 76.445 70.161 79.467 71.677 82.097 73.876 84.125 76.587 82.097 79.298 79.467 81.499 76.445 83.014 73.422 84.529 70.087 85.319 66.708 85.319 63.328 85.319 59.995 84.529 56.97 83.014 53.947 81.499 51.316 79.298 49.29 76.587ZM66.986 83.134C70.594 83.134 73.517 80.203 73.517 76.586 73.517 72.97 70.594 70.038 66.986 70.038 63.377 70.038 60.454 72.97 60.454 76.586 60.454 80.203 63.377 83.134 66.986 83.134Z"/><path d="M101.321 41.661C110.305 21.159 126.573 4.741 146.961-4.405 167.349-13.549 190.4-14.767 211.633-7.818 202.649 12.685 186.38 29.102 165.993 38.248 145.605 47.392 122.553 48.61 101.321 41.661Z"/><path d="M88.256 17.648C88.256 13.229 84.683 9.646 80.273 9.646 75.864 9.646 72.29 13.229 72.29 17.648V36.567C72.29 40.987 75.864 44.572 80.273 44.572 84.683 44.572 88.256 40.987 88.256 36.567V17.648Z"/></svg></svg><span>Okapi Editor</span><span class="mut">/</span><span class="crumb">Home</span><span class="chip">Draft</span></div>
           <div class="devices"><i></i><i></i><i></i></div>
-          <div class="r"><span class="ghost"><span class="as-admin">Ver como: Admin ▾</span><span class="as-client">Ver como: Cliente ▾</span></span><span class="undo mut">↶ ↷</span><span class="saved">Guardado</span><span class="pub" data-zone="publish">Publicar</span></div>
+          <div class="r"><span class="ghost"><span class="as-admin">View as: Admin ▾</span><span class="as-client">View as: Client ▾</span></span><span class="undo mut">↶ ↷</span><span class="saved">Saved</span><span class="pub" data-zone="publish">Publish</span></div>
         </div>
         <div class="panes">
           <div class="side left" data-zone="layers">
-            <div class="ptabs"><span>Páginas</span><span class="on">Capas</span></div>
+            <div class="ptabs"><span>Pages</span><span class="on">Layers</span></div>
             <div class="pg"><span>Home</span><span>/ ▾</span></div>
             <div class="layers">
               <div class="layer"><i>▾</i><span>Hero</span></div>
               <div class="layer sel"><i>T</i><span>Heading</span><em>⠿</em></div>
-              <div class="layer in"><i>¶</i><span>Texto</span></div>
-              <div class="layer in"><i>▭</i><span>Botón</span></div>
-              <div class="layer in"><i>◩</i><span>Imagen</span></div>
-              <div class="layer"><i>▸</i><span>Grilla de servicios</span></div>
-              <div class="layer"><i style="color:var(--naranja-claro)">◆</i><span>Testimonios</span></div>
+              <div class="layer in"><i>¶</i><span>Text</span></div>
+              <div class="layer in"><i>▭</i><span>Button</span></div>
+              <div class="layer in"><i>◩</i><span>Image</span></div>
+              <div class="layer"><i>▸</i><span>Services grid</span></div>
+              <div class="layer"><i style="color:var(--naranja-claro)">◆</i><span>Testimonials</span></div>
               <div class="layer"><i>▸</i><span>Marquee</span></div>
             </div>
-            <div class="add">+ Agregar bloque</div>
+            <div class="add">+ Add block</div>
           </div>
           <div class="stage" data-zone="editor">
             <div class="page">
-              <div class="pnav"><b>Estudio Norte</b><span><span>Servicios</span><span>Proyectos</span><span>Contacto</span></span></div>
+              <div class="pnav"><b>North Studio</b><span><span>Services</span><span>Projects</span><span>Contact</span></span></div>
               <div class="pbody">
-                <div class="eyebrow">Arquitectura · Rosario</div>
-                <div class="h"><div class="tag"><span>Heading · H1</span><span>⠿</span></div><span class="typed">Espacios que se editan solos.</span><i class="caret"></i></div>
-                <div class="lead">Proyectos residenciales y comerciales en el litoral. Del boceto a la obra, con el mismo equipo.</div>
-                <div class="cta">Ver proyectos →</div>
+                <div class="eyebrow">Architecture · Rosario</div>
+                <div class="h"><div class="tag"><span>Heading · H1</span><span>⠿</span></div><span class="typed">Spaces that edit themselves.</span><i class="caret"></i></div>
+                <div class="lead">Residential and commercial projects along the river. From sketch to site, with the same team.</div>
+                <div class="cta">See projects →</div>
               </div>
-              <div class="img"><div><span>casa-del-rio.jpg · 2400×1600</span><span>Soltá una imagen</span></div></div>
+              <div class="img"><div><span>river-house.jpg · 2400×1600</span><span>Drop an image</span></div></div>
             </div>
           </div>
           <div class="side right">
-            <div class="ptabs"><span class="on">Propiedades</span><span>✦ Chat</span></div>
+            <div class="ptabs"><span class="on">Properties</span><span>✦ Chat</span></div>
             <div class="props">
               <div class="k">Contenido</div>
-              <div class="field typed-mirror">Espacios que se editan solos.</div>
-              <div class="row"><span>Nivel</span><span class="seg"><span class="on">H1</span><span>H2</span><span>H3</span></span></div>
+              <div class="field typed-mirror">Spaces that edit themselves.</div>
+              <div class="row"><span>Level</span><span class="seg"><span class="on">H1</span><span>H2</span><span>H3</span></span></div>
             </div>
             <div class="props style" data-zone="style">
-              <div class="row"><span class="k">Estilo</span><span class="acc">Todas las pantallas ▾</span></div>
-              <div class="row"><span>Tamaño</span><span class="seg"><span>S</span><span>M</span><span>L</span><span class="on">XL</span></span></div>
+              <div class="row"><span class="k">Style</span><span class="acc">All screens ▾</span></div>
+              <div class="row"><span>Size</span><span class="seg"><span>S</span><span>M</span><span>L</span><span class="on">XL</span></span></div>
               <div class="row"><span>Color</span><span class="sw"><i style="background:#16100D"></i><i style="background:#F2EEE3"></i><i style="background:#C2562C"></i><i style="background:#F29B6B"></i><i style="background:#6E625B"></i></span></div>
-              <div class="row"><span>Margen abajo</span><span class="mono" style="color:var(--crema);font-size:11px">lg</span></div>
+              <div class="row"><span>Bottom margin</span><span class="mono" style="color:var(--crema);font-size:11px">lg</span></div>
               <div class="slider"><i></i></div>
-              <div class="row"><span>Alinear</span><span class="seg"><span class="on">≡</span><span>≣</span><span>☰</span></span></div>
+              <div class="row"><span>Align</span><span class="seg"><span class="on">≡</span><span>≣</span><span>☰</span></span></div>
             </div>
             <div class="chat" data-zone="chat">
-              <div class="sugg"><span>Hacelo más corto</span><span>Traducilo al inglés</span></div>
-              <div class="in"><span>✦ Pedile algo al chat…</span><b>↑</b></div>
+              <div class="sugg"><span>Make it shorter</span><span>Translate to Spanish</span></div>
+              <div class="in"><span>✦ Ask the chat…</span><b>↑</b></div>
             </div>
           </div>
         </div>
@@ -606,13 +678,13 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
 <footer class="foot">
   <div class="wrap cols">
     <div>
-      <p class="say" data-split>Open source, listo para tu próximo proyecto. <span>Cloná el repo y seguí INSTALL.md.</span></p>
-      <div class="cmd" data-reveal><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copiar</button></div>
+      <p class="say" data-split>Open source, ready for your next project. <span>Clone the repo and follow INSTALL.md.</span></p>
+      <div class="cmd" data-reveal><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copy</button></div>
     </div>
-    <nav class="flinks" data-stagger aria-label="Enlaces">
+    <nav class="flinks" data-stagger aria-label="Links">
       <a href="https://github.com/seba-seb/okapi-sanity"><span>GitHub</span><span>↗</span></a>
       <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md"><span>INSTALL.md</span><span>↗</span></a>
-      <a href="docs/index.html"><span>Docs</span><span>↗</span></a>
+      <a href="docs/"><span>Docs</span><span>↗</span></a>
     </nav>
   </div>
   <div class="fin"><canvas data-okapi-tex="fin" data-bg="#16100D" data-fg="#C2562C" aria-hidden="true"></canvas></div>
@@ -621,7 +693,10 @@ canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%
       <svg width="36" height="38" viewBox="-55.688 263.265 12.542 13.241" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M-55.492 266.324H-48.839C-45.981 266.324-43.665 268.633-43.665 271.481V276.343H-47.804V271.334L-50.613 276.343H-52.387V269.418L-55.492 266.324ZM-47.804 274.088H-43.665V274.428H-47.804ZM-47.804 274.825H-43.665V275.221H-47.804ZM-47.804 275.618H-43.665V275.959H-47.804ZM-51.682 268.239C-51.579 268.102-51.445 267.991-51.291 267.914-51.138 267.837-50.967 267.797-50.796 267.797-50.623 267.797-50.454 267.837-50.299 267.914-50.145 267.991-50.012 268.102-49.909 268.239-50.012 268.376-50.145 268.488-50.299 268.565-50.454 268.642-50.623 268.682-50.796 268.682-50.967 268.682-51.138 268.642-51.291 268.565-51.445 268.488-51.579 268.376-51.682 268.239ZM-50.781 268.57C-50.598 268.57-50.449 268.422-50.449 268.239-50.449 268.056-50.598 267.907-50.781 267.907-50.965 267.907-51.114 268.056-51.114 268.239-51.114 268.422-50.965 268.57-50.781 268.57Z"/><path d="M-49.032 266.471C-48.575 265.433-47.747 264.602-46.709 264.139-45.67 263.676-44.496 263.615-43.415 263.967-43.872 265.004-44.701 265.836-45.739 266.298-46.777 266.761-47.952 266.823-49.032 266.471Z"/><path d="M-49.698 265.255C-49.698 265.032-49.88 264.85-50.104 264.85-50.329 264.85-50.511 265.032-50.511 265.255V266.213C-50.511 266.437-50.329 266.619-50.104 266.619-49.88 266.619-49.698 266.437-49.698 266.213V265.255Z"/></svg>
       <b>Okapi</b>
     </div>
-    <small>Hecho por Paisanos · Ituri 1°30′N 28°30′E · ©2026</small>
+    <div class="credits">
+      <small>Made by Paisanos · <a href="https://x.com/seba__seb" rel="me">@seba__seb</a> · ©2026</small>
+      <nav class="lang" aria-label="Language"><a href="./" aria-current="page">EN</a><a href="es/" hreflang="es" lang="es">ES</a></nav>
+    </div>
   </div>
 </footer>
 
@@ -636,7 +711,7 @@ document.querySelectorAll("[data-copy]").forEach((b) => {
   const label = b.textContent;
   b.addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(b.dataset.copy); } catch { return; }
-    b.classList.add("ok"); b.textContent = label === "⧉" ? "✓" : "Copiado";
+    b.classList.add("ok"); b.textContent = label === "⧉" ? "✓" : "Copied";
     setTimeout(() => { b.classList.remove("ok"); b.textContent = label; }, 1600);
   });
 });
@@ -759,6 +834,91 @@ if (document.documentElement.classList.contains("motion")) {
   select(0);
 })();
 
+/* ───────── Roles panels: tabs, live controls and a demo chat that respects the role ───────── */
+(() => {
+  const es = document.documentElement.lang === "es";
+  const L = es ? {
+    alt: "Spaces that edit themselves.", short: "Espacios editables.",
+    chips: ["Hacelo más corto", "Poné el título en naranja", "Traducilo al inglés"],
+    hiAdmin: "Hola. Puedo cambiar textos, imágenes, estilos y bloques de esta página.",
+    hiClient: "Hola. Puedo cambiar los textos y las imágenes de esta página.",
+    doneShort: "Listo: acorté el título.", doneStyle: "Listo: el título ahora es naranja.",
+    noStyle: "Los estilos están bloqueados para el rol editor. Puedo cambiar el texto o la imagen.",
+    doneTr: "Listo: traduje el título.", other: "Es una demo. Probá con “Hacelo más corto” o “Poné el título en naranja”.",
+  } : {
+    alt: "Espacios que se editan solos.", short: "Self-editing spaces.",
+    chips: ["Make it shorter", "Make the title orange", "Translate to Spanish"],
+    hiAdmin: "Hi. I can change text, images, styles and blocks on this page.",
+    hiClient: "Hi. I can change the text and images on this page.",
+    doneShort: "Done: shortened the heading.", doneStyle: "Done: the heading is orange now.",
+    noStyle: "Styles are locked for the editor role. I can change the wording or the image instead.",
+    doneTr: "Done: translated the heading.", other: "This is a demo. Try “Make it shorter” or “Make the title orange”.",
+  };
+  const panels = [...document.querySelectorAll(".roles .ppanel")];
+  if (!panels.length) return;
+  const fields = panels.map((p) => p.querySelector("input.pfield"));
+  const original = fields[0].value;
+  // same document: whatever is typed in one panel shows up in the other
+  const setHeading = (v, flash) => fields.forEach((f) => { f.value = v; if (flash) { f.classList.remove("flash"); void f.offsetWidth; f.classList.add("flash"); } });
+  fields.forEach((f) => f.addEventListener("input", () => fields.forEach((o) => { if (o !== f) o.value = f.value; })));
+
+  panels.forEach((panel) => {
+    const isClient = !!panel.closest(".view.client");
+    // tabs
+    const tabs = [...panel.querySelectorAll("[data-ptab]")];
+    const show = (name) => {
+      tabs.forEach((t) => { const on = t.dataset.ptab === name; t.classList.toggle("on", on); t.setAttribute("aria-selected", String(on)); });
+      panel.querySelectorAll("[data-pane]").forEach((p) => { p.hidden = p.dataset.pane !== name; });
+      if (name === "chat") panel.querySelector(".cin input").focus({ preventScroll: true });
+    };
+    tabs.forEach((t) => t.addEventListener("click", () => show(t.dataset.ptab)));
+
+    // segmented size, swatches, chips: single choice / toggle
+    panel.querySelectorAll(".seg").forEach((seg) => seg.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      seg.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    }));
+    panel.querySelectorAll(".sw").forEach((sw) => sw.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      sw.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    }));
+    panel.querySelectorAll(".chips button").forEach((b) => b.addEventListener("click", () => b.classList.toggle("on")));
+    panel.querySelectorAll(".range").forEach((r) => {
+      const paint = () => r.style.setProperty("--v", ((r.value - r.min) / (r.max - r.min)) * 100 + "%");
+      r.addEventListener("input", paint); paint();
+    });
+
+    // chat
+    const log = panel.querySelector(".log"), form = panel.querySelector(".cin"), input = form.querySelector("input");
+    const say = (text, who, cls = "") => {
+      const m = document.createElement("div");
+      m.className = `msg ${who} ${cls}`.trim(); m.textContent = text; log.append(m); log.scrollTop = log.scrollHeight; return m;
+    };
+    say(isClient ? L.hiClient : L.hiAdmin, "ai");
+    const sugg = panel.querySelector(".sugg");
+    L.chips.forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.addEventListener("click", () => ask(c)); sugg.append(b); });
+    let busy = false;
+    const ask = (q) => {
+      q = q.trim(); if (!q || busy) return;
+      busy = true; say(q, "me"); input.value = "";
+      const dots = say("•••", "ai", "typing");
+      setTimeout(() => {
+        dots.remove(); busy = false;
+        if (/short|corto|breve/i.test(q)) { setHeading(fields[0].value === L.short ? original : L.short, true); return say(L.doneShort, "ai", "ok"); }
+        if (/orange|naranja|color|style|estilo|size|tamaño|margin|margen|bigger|grande/i.test(q)) {
+          if (isClient) return say(L.noStyle, "ai", "no");
+          const sw = panel.querySelectorAll(".sw button"); sw.forEach((x, i) => x.classList.toggle("on", i === 2));
+          fields.forEach((f) => (f.style.color = "var(--naranja-claro)"));
+          return say(L.doneStyle, "ai", "ok");
+        }
+        if (/translat|tradu|spanish|español|english|inglés|ingles/i.test(q)) { setHeading(fields[0].value === L.alt ? original : L.alt, true); return say(L.doneTr, "ai", "ok"); }
+        say(L.other, "ai");
+      }, 650);
+    };
+    form.addEventListener("submit", (e) => { e.preventDefault(); ask(input.value); });
+  });
+})();
+
 /* ───────── GSAP motion ───────── */
 (() => {
   const root = document.documentElement;
@@ -801,7 +961,8 @@ if (document.documentElement.classList.contains("motion")) {
     intro
       .from(hero.querySelector(".tex"), { autoAlpha: 0, scale: 1.06, duration: 1.6, ease: "power2.out" }, 0)
       .fromTo(hero.querySelectorAll(".nav > *"), { autoAlpha: 0, y: -16 }, { autoAlpha: 1, y: 0, stagger: .08, duration: .9 }, .2)
-      .fromTo(card, { autoAlpha: 1, clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 1.1, ease: EASE_IO }, .25)
+      .fromTo(card, { autoAlpha: 1, clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 1.1, ease: EASE_IO, clearProps: "clipPath" }, .25)
+      .fromTo(card.querySelector(".tab"), { yPercent: 100, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: .6 }, 1.35)
       .add(splitReveal(card.querySelector("h1")).play(), .8)
       .add(splitReveal(card.querySelector("p")).play(), .95)
       .add(() => cardLabels.forEach((a) => a.play()), .75)
@@ -864,7 +1025,7 @@ if (document.documentElement.classList.contains("motion")) {
 
     // The heading in the mock re-types itself now and then (the inline editor at work)
     const typed = win.querySelector(".typed"), mirror = win.querySelector(".typed-mirror");
-    const lines = ["Espacios que se editan solos.", "Tu sitio, editable en vivo.", "Espacios que se editan solos."];
+    const lines = ["Spaces that edit themselves.", "Your site, editable live.", "Spaces that edit themselves."];
     const caret = { n: lines[0].length }; let li = 0;
     const show = () => { typed.textContent = lines[li].slice(0, Math.round(caret.n)); mirror.textContent = typed.textContent; };
     gsap.timeline({ repeat: -1, repeatDelay: 3, delay: 5, scrollTrigger: { trigger: win, start: "top 80%", toggleActions: "play pause resume pause" } })
