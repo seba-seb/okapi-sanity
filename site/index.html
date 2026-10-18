@@ -3,455 +3,746 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Okapi</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Okapi suma a cualquier proyecto Astro un editor visual sobre Sanity, con un chat de IA que solo toca lo que vos le dejás.">
-<meta property="og:title" content="Okapi — editá tu sitio Astro arriba del sitio">
-<meta property="og:description" content="Editor visual para Astro + Sanity, con IA que respeta permisos. Open source.">
+<title>Okapi — Tu Astro, editable</title>
+<meta name="description" content="Okapi suma a cualquier proyecto Astro un editor visual sobre Sanity. Lo instala tu agente; vos editás sobre la página real.">
+<meta property="og:title" content="Okapi — Tu Astro, editable">
+<meta property="og:description" content="Sanity de base, un editor visual encima. Lo instala tu agente. Open source.">
+<meta name="theme-color" content="#16100D">
 <link rel="icon" href="okapi.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500..900,100,1&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@400;500;600&family=Unbounded:wght@700&display=swap">
+<script>
+  // Motion only when allowed. The class hides reveal targets until GSAP shows them;
+  // if GSAP never loads, the fallback at the bottom removes it so nothing stays hidden.
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("motion");
+</script>
 <style>
-/* Layout: one column that walks down the okapi — head, stripes, body, tongue — with
-   striped bands between chapters. Single visual world: the Ituri rainforest at night. */
 :root {
-  --canopy: #0D261C;      /* page: rainforest at night */
-  --canopy-2: #133325;    /* raised surfaces */
-  --leaf: #275341;        /* hairlines */
-  --cream: #F1E4CF;       /* okapi face + stripes; main text */
-  --fog: #AFBDAA;         /* secondary text */
-  --chestnut: #8A3B22;    /* okapi coat */
-  --ink: #2B1510;         /* okapi blaze */
-  --tongue: #7480FF;      /* the long blue tongue: the one accent */
-  --tongue-ink: #0B1033;
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --font-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
-  --col: 68rem;
+  --tierra: #16100D;
+  --naranja: #C2562C;
+  --naranja-claro: #F29B6B;
+  --crema: #F2EEE3;
+  --line: color-mix(in srgb, var(--crema) 14%, transparent);
+  --line-2: color-mix(in srgb, var(--crema) 18%, transparent);
+  --dim: color-mix(in srgb, var(--crema) 50%, transparent);
+  --logo: "Unbounded", system-ui, sans-serif;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --g: clamp(16px, 3.9vw, 56px);              /* side gutter */
+  --sec: clamp(80px, 8.4vw, 120px);           /* section padding */
+  --wrap: min(1328px, 100% - 2 * var(--g));
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
-body {
-  margin: 0;
-  background: var(--canopy);
-  color: var(--cream);
-  font: 400 17px/1.6 var(--font-body);
-  -webkit-font-smoothing: antialiased;
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--tierra); color: var(--crema); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 1.5px solid var(--naranja-claro); outline-offset: 3px; }
+.wrap { width: var(--wrap); margin-inline: auto; }
+.mono { font-family: var(--mono); }
+.label { font: 400 12px/16px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 45%, transparent); }
+canvas[data-okapi-tex] { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* Section titles: "/ line one, / line two dim /" */
+.title { margin: 0; font: 400 clamp(30px, 3.06vw, 44px)/1.14 var(--sans); letter-spacing: -.035em; max-width: 18em; }
+.title .sl { color: var(--naranja); }
+.title .dim { color: var(--dim); }
+
+/* Buttons and command boxes */
+.btn { display: inline-flex; align-items: center; gap: 14px; padding: 16px 22px; background: var(--crema); color: var(--tierra); font: 500 13px/16px var(--mono); letter-spacing: .08em; text-transform: uppercase; transition: background .25s, color .25s; }
+.btn::before { content: ""; width: 8px; height: 8px; background: var(--naranja); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.btn:hover { background: var(--naranja-claro); }
+.btn:hover::before { transform: rotate(45deg) scale(1.2); background: var(--tierra); }
+.btn.ghost { background: transparent; color: var(--crema); box-shadow: inset 0 0 0 1px var(--line-2); }
+.btn.ghost::before { background: var(--naranja-claro); }
+.btn.ghost:hover { background: var(--crema); color: var(--tierra); }
+.ctas { display: flex; flex-wrap: wrap; gap: 8px; }
+.cmd { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--crema) 4%, transparent); border: 1px solid var(--line); font: 400 13px/16px var(--mono); min-width: 0; }
+.cmd code { font: inherit; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+.cmd code::-webkit-scrollbar { display: none; }
+.cmd button { flex-shrink: 0; color: color-mix(in srgb, var(--crema) 45%, transparent); font: 400 11px/14px var(--mono); letter-spacing: .08em; text-transform: uppercase; transition: color .2s; }
+.cmd button:hover, .cmd button.ok { color: var(--naranja-claro); }
+
+/* ───────── Hero ───────── */
+.hero { --u: min(100vw / 1440, 1.25px); position: relative; height: calc(900 * var(--u)); overflow: clip; background: var(--naranja); isolation: isolate; }
+.hero .tex { position: absolute; inset: 0; }
+.nav { position: absolute; z-index: 5; top: 27px; left: 18px; right: 18px; display: flex; justify-content: space-between; align-items: center; }
+.nav .brand { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--tierra); }
+.nav .brand b { font: 700 18px/22px var(--logo); letter-spacing: -.04em; }
+.nav .brand span { font: 400 12px/16px var(--mono); color: var(--naranja-claro); }
+.nav .links { display: flex; gap: 8px; }
+.nav .links a { padding: 12px 18px; background: var(--tierra); font: 400 14px/18px var(--mono); transition: background .25s, color .25s; }
+.nav .links a.light { background: var(--crema); color: var(--tierra); }
+.nav .links a:hover { background: var(--naranja-claro); color: var(--tierra); }
+.wordmark-wrap { position: absolute; z-index: 2; left: 0; top: calc(567 * var(--u)); }
+.wordmark { font: 700 calc(240 * var(--u))/1 var(--logo); letter-spacing: -.07em; color: var(--tierra); width: 3.6em; }
+.wordmark .slice { position: relative; height: .25em; overflow: hidden; }
+.wordmark .slice span { position: absolute; left: 0; white-space: nowrap; }
+.iso-wrap { position: absolute; z-index: 1; right: calc(-40 * var(--u)); top: calc(224 * var(--u)); width: calc(780 * var(--u)); }
+.iso-wrap svg { display: block; width: 100%; height: auto; }
+.card { position: absolute; z-index: 4; left: 18px; top: calc(167 * var(--u)); width: calc(600 * var(--u)); display: flex; flex-direction: column; gap: calc(22 * var(--u)); padding: calc(32 * var(--u)); background: var(--crema); color: var(--tierra); }
+.card .meta { display: flex; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--tierra); font: 400 12px/16px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.card .meta span:last-child { color: var(--naranja); }
+.card h1 { margin: 0; font: 500 calc(60 * var(--u))/.97 var(--sans); letter-spacing: -.05em; }
+.card p { margin: 0; font: 400 calc(19 * var(--u))/1.47 var(--sans); }
+.card .cmd { background: var(--tierra); color: var(--crema); border: 0; padding: 8px 8px 8px 18px; font-size: calc(15 * var(--u)); line-height: 18px; }
+.card .cmd button { padding: 10px 16px; background: var(--naranja-claro); color: var(--tierra); font: 600 13px/16px var(--mono); letter-spacing: 0; text-transform: none; transition: background .2s; }
+.card .cmd button:hover, .card .cmd button.ok { background: var(--crema); color: var(--tierra); }
+.card .doclink { align-self: flex-start; margin-top: calc(-8 * var(--u)); font: 400 13px/16px var(--mono); color: var(--tierra); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--tierra) 35%, transparent); text-underline-offset: 4px; transition: text-decoration-color .2s; }
+.card .doclink span { display: inline-block; color: var(--naranja); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.card .doclink:hover { text-decoration-color: var(--tierra); }
+.card .doclink:hover span { transform: translateX(4px); }
+.band { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: calc(125 * var(--u)); background: var(--tierra); }
+
+@media (max-width: 1099px) {
+  .hero { height: max(100svh, 760px); }
+  .nav { top: 16px; left: var(--g); right: var(--g); }
+  .nav .links a { padding: 10px 14px; font-size: 13px; }
+  .card { left: var(--g); top: 92px; width: min(560px, 100% - 2 * var(--g)); gap: 18px; padding: clamp(20px, 4vw, 32px); }
+  .card h1 { font-size: clamp(38px, 7.4vw, 56px); }
+  .card p { font-size: clamp(16px, 2.6vw, 19px); }
+  .card .cmd { font-size: clamp(11px, 2.9vw, 15px); padding-left: 14px; }
+  .card .cmd button { padding: 9px 12px; }
+  .wordmark { font-size: min(29vw, 240px); }
+  .iso-wrap { right: 3vw; top: auto; bottom: calc(13% + min(29vw, 240px) * .92); width: min(44vw, 360px); }
+  .band { height: 13%; }
+  .wordmark-wrap { top: auto; bottom: calc(13% - min(29vw, 240px) * .14); }
 }
-a { color: inherit; }
-:focus-visible { outline: 2px solid var(--tongue); outline-offset: 3px; border-radius: 6px; }
-code, pre { font-family: var(--font-mono); }
-.wrap { max-width: var(--col); margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
-h1, h2, h3 { font-family: var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; text-wrap: balance; margin: 0; }
-h1 { font-weight: 850; font-size: clamp(2.8rem, 1.6rem + 5.4vw, 5.6rem); line-height: 0.95; letter-spacing: -0.025em; }
-h2 { font-weight: 800; font-size: clamp(2rem, 1.4rem + 2.6vw, 3.3rem); line-height: 1; letter-spacing: -0.02em; }
-h3 { font-weight: 700; font-size: 1.35rem; line-height: 1.15; }
-p { margin: 0; }
-.lead { font-size: clamp(1.1rem, 1rem + 0.4vw, 1.3rem); color: var(--fog); max-width: 36rem; }
-.label { font: 500 12px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fog); }
-.tongue { color: var(--tongue); }
+@media (max-width: 520px) {
+  .nav .links a:first-child { display: none; }
+  .card .doclink { margin-top: -4px; }
+  .card .meta span:last-child { display: none; }
+}
 
-/* Header */
-header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--canopy) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid color-mix(in srgb, var(--leaf) 60%, transparent); }
-header.top .wrap { display: flex; align-items: center; gap: 20px; padding-block: 12px; }
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 850 26px/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.02em; }
-.brand svg { width: 38px; height: 38px; }
-nav.links { display: flex; gap: 18px; margin-left: auto; font-size: 15px; }
-nav.links a { text-decoration: none; color: var(--fog); }
-nav.links a:hover { color: var(--cream); }
-.gh { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--cream); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; white-space: nowrap; }
-.gh:hover { background: #fff; }
-@media (max-width: 760px) { nav.links { display: none; } .gh { margin-left: auto; } }
+/* ───────── Instalación ───────── */
+.install { padding: var(--sec) 0; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; flex-wrap: wrap; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: clamp(40px, 3.4vw, 48px); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.step { min-height: 440px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px; padding: 24px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; position: relative; transition: background .4s; }
+.step:hover { background: color-mix(in srgb, var(--crema) 2.5%, transparent); }
+.step .top { display: flex; justify-content: space-between; }
+.step .ico { width: 208px; height: 156px; display: block; overflow: visible; }
+.step h3 { margin: 0 0 6px; font: 500 22px/28px var(--sans); letter-spacing: -.02em; }
+.step p { margin: 0 0 16px; font: 400 15px/22px var(--sans); color: color-mix(in srgb, var(--crema) 60%, transparent); }
+@media (max-width: 960px) {
+  .steps { grid-template-columns: 1fr; }
+  .step { min-height: 0; display: grid; grid-template-columns: 1fr auto; grid-template-areas: "top top" "body ico"; }
+  .step .top { grid-area: top; }
+  .step .ico { grid-area: ico; width: 140px; height: 105px; align-self: center; }
+  .step .body { grid-area: body; min-width: 0; }
+}
+@media (max-width: 560px) {
+  .step { grid-template-columns: 1fr; grid-template-areas: "top" "ico" "body"; gap: 20px; }
+  .step .ico { width: 176px; height: 132px; }
+}
 
-/* Hero */
-.hero { padding-block: clamp(48px, 8vw, 96px) 40px; }
-.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 40px; align-items: center; }
-.hero .copy { display: grid; gap: 22px; min-width: 0; }
-.hero-mark { position: relative; justify-self: center; width: min(100%, 340px); aspect-ratio: 1; }
-.hero-mark .halo { position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(circle at 50% 45%, #1C4733 0%, transparent 70%); }
-.hero-mark svg { position: relative; width: 100%; height: 100%; }
-.tongue-path { transform-box: view-box; transform-origin: 99px 168px; animation: lick 5s ease-in-out 1.2s infinite; }
-@keyframes lick { 0%, 78%, 100% { transform: rotate(0) scale(1); } 84% { transform: rotate(-14deg) scale(1.18); } 90% { transform: rotate(6deg) scale(1.05); } }
-.ctas { display: flex; flex-wrap: wrap; gap: 12px; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 20px; border-radius: 999px; font-weight: 600; text-decoration: none; border: 1.5px solid var(--cream); }
-.btn.primary { background: var(--tongue); border-color: var(--tongue); color: var(--tongue-ink); }
-.btn.primary:hover { background: #8D97FF; border-color: #8D97FF; }
-.btn.ghost:hover { background: color-mix(in srgb, var(--cream) 10%, transparent); }
-.prompt { display: flex; align-items: stretch; border: 1px solid var(--leaf); border-radius: 14px; background: var(--canopy-2); overflow: hidden; max-width: 40rem; }
-.prompt code { flex: 1; min-width: 0; padding: 14px 16px; font-size: 14px; line-height: 1.5; color: var(--cream); }
-.prompt code::before { content: "› "; color: var(--tongue); }
-.prompt button { flex: none; border: 0; border-left: 1px solid var(--leaf); background: transparent; color: var(--fog); font: 500 13px var(--font-body); padding: 0 16px; cursor: pointer; }
-.prompt button:hover { color: var(--cream); }
-.agents { font-size: 14px; color: var(--fog); }
-@media (max-width: 860px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } .hero-mark { order: -1; width: 200px; justify-self: start; } }
+/* ───────── Qué trae ───────── */
+.trae { position: relative; padding: calc(var(--sec) - 8px) 0 calc(var(--sec) + 80px); overflow: clip; }
+.trae .tex { position: absolute; inset: 0; opacity: .6; }
+.trae .wrap { position: relative; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: clamp(48px, 6vw, 86px); }
+.tcard { height: 260px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; padding: 24px; background: var(--tierra); border: 1px solid var(--line-2); transition: border-color .3s, transform .5s cubic-bezier(.2,.8,.2,1); }
+.tcard:nth-child(even) { margin-top: 80px; }
+.tcard:hover { border-color: var(--naranja-claro); }
+.tcard .n { font: 400 13px/16px var(--mono); letter-spacing: .08em; color: var(--naranja-claro); }
+.tcard h3 { margin: 0; font: 500 34px/38px var(--sans); letter-spacing: -.04em; }
+.tcard p { margin: 0; font: 400 17px/24px var(--sans); }
+.tcard.hot { background: var(--naranja); border-color: var(--naranja); }
+.tcard.hot .big { font: 300 76px/76px var(--mono); letter-spacing: -.06em; }
+.tcard.hot:hover { border-color: var(--crema); }
+@media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, 1fr); } .tcard:nth-child(even) { margin-top: 48px; } .tcard:nth-child(n+3) { margin-bottom: -48px; } .trae { padding-bottom: calc(var(--sec) + 48px); } }
+@media (max-width: 600px) { .cards { grid-template-columns: 1fr; } .tcard, .tcard:nth-child(even), .tcard:nth-child(n+3) { height: auto; min-height: 200px; gap: 24px; margin: 0; } .trae { padding-bottom: var(--sec); } .tcard.hot .big { font-size: 64px; line-height: 64px; } }
 
-/* Okapi stripes divider */
-.stripes { height: 54px; background:
-  repeating-linear-gradient(180deg, var(--cream) 0 7px, transparent 7px 18px);
-  -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-  opacity: 0.9; margin-block: 8px; }
+/* ───────── Cómo se instala: editor mock ───────── */
+.how { padding: var(--sec) 0; border-top: 1px solid var(--line); }
+.how .head { gap: 32px 48px; }
+.refs { width: min(420px, 100%); border-top: 1px solid var(--line); }
+.refs a { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); font: 400 13px/16px var(--mono); transition: padding .3s cubic-bezier(.2,.8,.2,1); }
+.refs a span:last-child { color: var(--naranja-claro); }
+.refs a:hover { padding-inline: 8px; }
+.viewer { margin-top: 48px; }
+.tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { flex-shrink: 0; padding: 14px 20px; border-right: 1px solid var(--line); font: 400 12px/16px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 60%, transparent); position: relative; transition: color .3s, background .3s; }
+.tabs button[aria-selected="true"] { background: var(--crema); color: var(--tierra); }
+.tabs button::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--naranja); transform: scaleX(0); transform-origin: left; }
+.viewer.run .tabs button[aria-selected="true"]::after { animation: tabprog var(--cycle, 4s) linear forwards; }
+@keyframes tabprog { to { transform: scaleX(1); } }
+.tabs .url { margin-left: auto; padding: 14px 20px; font: 400 12px/16px var(--mono); letter-spacing: .02em; color: color-mix(in srgb, var(--crema) 35%, transparent); white-space: nowrap; }
+.win { height: 720px; display: flex; flex-direction: column; background: #1B1411; border: 1px solid var(--line); font-size: 13px; line-height: 16px; }
+.bar { height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); }
+.bar .l, .bar .r { display: flex; align-items: center; gap: 10px; }
+.bar .sq { width: 18px; height: 18px; background: var(--naranja); }
+.bar .mut { color: color-mix(in srgb, var(--crema) 40%, transparent); }
+.bar .chip { padding: 2px 6px; border: 1px solid var(--line-2); font: 400 10px/12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 55%, transparent); }
+.devices { display: flex; border: 1px solid var(--line); }
+.devices i { width: 40px; height: 28px; display: grid; place-items: center; border-left: 1px solid var(--line); }
+.devices i:first-child { border: 0; background: color-mix(in srgb, var(--crema) 10%, transparent); }
+.devices i::before { content: ""; border: 1.5px solid color-mix(in srgb, var(--crema) 45%, transparent); }
+.devices i:nth-child(1)::before { width: 16px; height: 11px; border-color: var(--crema); }
+.devices i:nth-child(2)::before { width: 10px; height: 13px; }
+.devices i:nth-child(3)::before { width: 7px; height: 12px; }
+.bar .ghost { padding: 5px 10px; border: 1px solid var(--line); color: color-mix(in srgb, var(--crema) 75%, transparent); }
+.bar .saved { display: flex; align-items: center; gap: 6px; font: 400 11px/14px var(--mono); color: color-mix(in srgb, var(--crema) 55%, transparent); }
+.bar .saved::before { content: ""; width: 6px; height: 6px; background: #7BC47F; }
+.bar .pub { padding: 7px 14px; background: var(--naranja); font-weight: 500; }
+.panes { flex: 1; display: flex; min-height: 0; }
+.side { width: 248px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); }
+.side.right { width: 300px; border-right: 0; border-left: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); }
+.ptabs { display: flex; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); font: 400 11px/14px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.ptabs span { flex: 1; padding: 12px 14px; color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.ptabs span.on { color: var(--crema); box-shadow: inset 0 -1.5px var(--naranja); }
+.pg { display: flex; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); color: color-mix(in srgb, var(--crema) 80%, transparent); }
+.pg span:last-child { font: 400 11px/14px var(--mono); color: color-mix(in srgb, var(--crema) 40%, transparent); }
+.layers { flex: 1; padding: 8px 0; }
+.layer { display: flex; align-items: center; gap: 8px; padding: 7px 14px; line-height: 18px; color: color-mix(in srgb, var(--crema) 80%, transparent); }
+.layer.in { padding-left: 36px; }
+.layer i { font: normal 11px/14px var(--mono); width: 14px; flex-shrink: 0; color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.layer.sel { background: color-mix(in srgb, var(--naranja) 22%, transparent); box-shadow: inset 2px 0 var(--naranja); color: var(--crema); padding-left: 34px; }
+.layer.sel i { color: var(--naranja-claro); }
+.layer.sel em { margin-left: auto; font: normal 10px/12px var(--mono); color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.add { margin: 14px; padding: 10px; border: 1px dashed color-mix(in srgb, var(--crema) 25%, transparent); text-align: center; font: 400 11px/14px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 60%, transparent); }
+.stage { flex: 1; min-width: 0; display: flex; justify-content: center; padding: 36px 24px 0; overflow: hidden; background: #261D18; }
+.page { width: 640px; max-width: 100%; height: 760px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--crema); color: var(--tierra); box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
+.page .pnav { display: flex; justify-content: space-between; align-items: center; padding: 18px 28px; }
+.page .pnav b { font: 600 14px/18px var(--sans); letter-spacing: -.02em; }
+.page .pnav span { display: flex; gap: 18px; font-size: 12px; color: rgb(22 16 13 / .67); }
+.page .pbody { display: flex; flex-direction: column; gap: 34px; padding: 52px 28px 28px; }
+.page .eyebrow { font: 400 10px/12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--naranja); }
+.page .h { position: relative; padding: 6px; border: 1.5px solid var(--naranja); font: 500 46px/48px var(--sans); letter-spacing: -.04em; }
+.page .h .tag { position: absolute; left: -1.5px; top: -24px; display: flex; font: 400 10px/12px var(--mono); letter-spacing: .06em; color: var(--crema); }
+.page .h .tag span { padding: 3px 8px; background: var(--naranja); }
+.page .h .tag span + span { padding: 3px 7px; background: var(--tierra); letter-spacing: 0; }
+.caret { display: inline-block; width: 2px; height: .92em; margin-left: 2px; vertical-align: -.1em; background: var(--naranja); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.page .lead { max-width: 420px; font-size: 15px; line-height: 22px; color: rgb(22 16 13 / .7); }
+.page .cta { align-self: flex-start; padding: 11px 18px; background: var(--tierra); color: var(--crema); }
+.page .img { margin: 0 28px; height: 250px; flex-shrink: 0; position: relative; background: repeating-linear-gradient(135deg, #D6CDBD 0 2px, #E4DCCD 2px 11px); }
+.page .img div { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; justify-content: space-between; gap: 8px; font: 400 10px/12px var(--mono); }
+.page .img span:first-child { padding: 4px 8px; background: var(--tierra); color: var(--crema); letter-spacing: .04em; }
+.page .img span:last-child { padding: 4px 8px; border: 1px dashed rgb(22 16 13 / .4); color: rgb(22 16 13 / .6); }
+.props { padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); }
+.props.style { gap: 14px; }
+.props .k { font: 400 10px/12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.props .row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: color-mix(in srgb, var(--crema) 65%, transparent); }
+.props .row .acc { font: 400 10px/12px var(--mono); color: var(--naranja-claro); }
+.props .field { padding: 9px 10px; background: color-mix(in srgb, var(--crema) 5%, transparent); border: 1px solid var(--naranja); color: var(--crema); line-height: 18px; }
+.seg { display: flex; border: 1px solid var(--line); font: 400 11px/14px var(--mono); }
+.seg span { padding: 4px 9px; color: color-mix(in srgb, var(--crema) 60%, transparent); }
+.seg span.on { background: var(--crema); color: var(--tierra); }
+.sw { display: flex; gap: 6px; }
+.sw i { width: 18px; height: 18px; }
+.sw i:first-child { outline: 1.5px solid var(--naranja); outline-offset: 2px; }
+.slider { height: 14px; position: relative; display: flex; align-items: center; }
+.slider::before { content: ""; width: 100%; height: 2px; background: var(--line-2); }
+.slider::after { content: ""; position: absolute; left: 0; width: 62%; height: 2px; background: var(--naranja); }
+.slider i { position: absolute; left: 60%; width: 12px; height: 12px; background: var(--crema); z-index: 1; }
+.chat { margin-top: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid color-mix(in srgb, var(--crema) 12%, transparent); }
+.chat .sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.chat .sugg span { padding: 5px 8px; border: 1px solid color-mix(in srgb, var(--crema) 16%, transparent); font-size: 11px; line-height: 14px; color: color-mix(in srgb, var(--crema) 70%, transparent); }
+.chat .in { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: color-mix(in srgb, var(--crema) 4%, transparent); border: 1px solid color-mix(in srgb, var(--crema) 22%, transparent); font-size: 12px; color: color-mix(in srgb, var(--crema) 45%, transparent); }
+.chat .in b { font: 400 11px/14px var(--mono); color: var(--crema); }
+/* Tab focus: the zone of the active tab lights up, the rest steps back */
+[data-zone] { transition: opacity .45s, box-shadow .45s; }
+.win.focus [data-zone] { opacity: .38; }
+.win.focus [data-zone].on { opacity: 1; box-shadow: 0 0 0 1.5px var(--naranja-claro); }
+.win.focus .stage[data-zone].on { box-shadow: inset 0 0 0 1.5px var(--naranja-claro); }
+@media (max-width: 1100px) { .side.left { display: none; } }
+@media (max-width: 820px) {
+  .side.right, .devices, .bar .ghost, .bar .undo, .tabs .url { display: none; }
+  .win { height: 600px; }
+  .stage { padding: 20px 12px 0; }
+  .page .pbody { padding: 40px 18px 22px; gap: 26px; }
+  .page .pnav { padding: 16px 18px; }
+  .page .pnav span { display: none; }
+  .page .h { font-size: clamp(30px, 8vw, 46px); line-height: 1.04; }
+  .page .img { margin: 0 18px; }
+}
+@media (max-width: 480px) { .bar .chip, .bar .mut, .bar .crumb { display: none; } }
 
-/* Anatomy */
-section { padding-block: clamp(56px, 8vw, 104px); }
-.section-head { display: grid; gap: 14px; margin-bottom: 40px; max-width: 46rem; }
-.anatomy { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--leaf); }
-.part { padding: 24px 22px 26px 0; display: grid; gap: 10px; align-content: start; min-width: 0; }
-.part + .part { padding-left: 22px; border-left: 1px solid var(--leaf); }
-.part .label { color: var(--tongue); }
-.part p { color: var(--fog); font-size: 15.5px; }
-.part h3 b { font-weight: inherit; color: var(--cream); }
-@media (max-width: 900px) { .anatomy { grid-template-columns: repeat(2, minmax(0, 1fr)); } .part:nth-child(3) { padding-left: 0; border-left: 0; } .part:nth-child(n+3) { border-top: 1px solid var(--leaf); } }
-@media (max-width: 520px) { .anatomy { grid-template-columns: minmax(0, 1fr); } .part, .part + .part { padding-left: 0; border-left: 0; } .part + .part { border-top: 1px solid var(--leaf); } }
+/* ───────── Footer ───────── */
+.foot { position: relative; padding-top: 112px; overflow: clip; border-top: 1px solid var(--line); }
+.foot .cols { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 48px 120px; flex-wrap: wrap; }
+.foot .cols > * { flex: 1 1 360px; min-width: 0; }
+.foot .say { margin: 0 0 32px; font: 400 clamp(28px, 2.5vw, 36px)/1.17 var(--sans); letter-spacing: -.03em; }
+.foot .say span { display: block; color: var(--dim); }
+.foot .cmd { padding: 16px 18px; font-size: 14px; line-height: 18px; border-color: var(--line-2); }
+.foot .cmd button { padding: 6px 10px; background: var(--crema); color: var(--tierra); }
+.foot .cmd button:hover, .foot .cmd button.ok { background: var(--naranja-claro); color: var(--tierra); }
+.flinks { border-top: 1px solid var(--line); align-self: flex-start; }
+.flinks a { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); font: 400 13px/16px var(--mono); letter-spacing: .06em; text-transform: uppercase; transition: padding .3s cubic-bezier(.2,.8,.2,1), color .3s; }
+.flinks a span:last-child { color: var(--naranja-claro); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.flinks a:hover { padding-inline: 8px; color: var(--naranja-claro); }
+.flinks a:hover span:last-child { transform: translate(3px, -3px); }
+.fin { position: relative; height: clamp(300px, 36vw, 520px); margin-top: -40px; }
+.sign { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 22px var(--g); background: var(--naranja); color: var(--tierra); }
+.sign .logo { display: flex; align-items: flex-end; gap: 4px; }
+.sign .logo b { font: 700 28px/34px var(--logo); letter-spacing: -.06em; }
+.sign small { font: 400 11px/14px var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .8; text-align: right; }
+@media (max-width: 640px) { .foot { padding-top: 80px; } .sign { flex-direction: column; align-items: flex-start; } .sign small { text-align: left; } }
 
-/* Editor illustration */
-.editor { border: 1px solid var(--leaf); border-radius: 18px; overflow: hidden; background: #0A1F17; box-shadow: 0 30px 80px -30px #000c; }
-.editor-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--leaf); font: 12px var(--font-mono); color: var(--fog); }
-.editor-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--leaf); display: inline-block; }
-.editor-bar .chip { margin-left: auto; padding: 3px 10px; border-radius: 999px; background: var(--tongue); color: var(--tongue-ink); font-weight: 500; }
-.editor-body { display: grid; grid-template-columns: 170px minmax(0, 1fr) 250px; min-height: 360px; }
-.layers { border-right: 1px solid var(--leaf); padding: 14px 12px; font: 12.5px/1.9 var(--font-mono); color: var(--fog); }
-.layers .on { color: var(--tongue-ink); background: var(--tongue); border-radius: 6px; padding: 0 6px; margin-left: -6px; }
-.canvas { padding: 22px; background: var(--cream); color: var(--ink); display: grid; align-content: start; gap: 12px; min-width: 0; }
-.canvas .eyebrow { font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--chestnut); }
-.canvas .h { font: 850 28px/1.02 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; outline: 2px solid var(--tongue); outline-offset: 4px; border-radius: 3px; }
-.canvas .h s { opacity: .45; text-decoration-thickness: 2px; }
-.canvas .p { font-size: 13.5px; color: #5a3c33; max-width: 28rem; }
-.canvas .imgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
-.canvas .imgs span { aspect-ratio: 4 / 3; border-radius: 8px; background: repeating-linear-gradient(180deg, #E4D3B8 0 6px, #EADDC8 6px 12px); }
-.chat { border-left: 1px solid var(--leaf); padding: 14px; display: grid; align-content: start; gap: 10px; font-size: 13px; }
-.chat .me { justify-self: end; background: var(--tongue); color: var(--tongue-ink); padding: 8px 11px; border-radius: 12px 12px 4px 12px; max-width: 90%; }
-.chat .ai { border: 1px solid var(--leaf); padding: 8px 11px; border-radius: 12px 12px 12px 4px; color: var(--cream); }
-.chat .ok { color: #8FE3B0; font: 12px var(--font-mono); margin-top: 4px; }
-.chat .no { color: #FF9B8A; font: 12px var(--font-mono); }
-@media (max-width: 860px) { .editor-body { grid-template-columns: minmax(0, 1fr); } .layers { display: none; } .chat { border-left: 0; border-top: 1px solid var(--leaf); } }
-
-/* Feature list */
-.features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 48px; margin-top: 48px; }
-.feature { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 14px; padding: 18px 0; border-top: 1px solid var(--leaf); }
-.feature .bar { width: 22px; height: 22px; background: repeating-linear-gradient(180deg, var(--cream) 0 4px, transparent 4px 8px); opacity: .85; margin-top: 3px; }
-.feature b { display: block; font-weight: 600; margin-bottom: 2px; }
-.feature span { color: var(--fog); font-size: 15.5px; }
-@media (max-width: 760px) { .features { grid-template-columns: minmax(0, 1fr); } }
-
-/* Policy */
-.split { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
-.split .copy { display: grid; gap: 18px; }
-.code { border: 1px solid var(--leaf); border-radius: 16px; background: #091B14; overflow-x: auto; }
-.code .file { padding: 10px 16px; border-bottom: 1px solid var(--leaf); font: 12px var(--font-mono); color: var(--fog); }
-.code pre { margin: 0; padding: 18px 16px; font-size: 13.5px; line-height: 1.7; color: #D9E2D5; }
-.code .k { color: var(--tongue); } .code .s { color: #E8C79A; } .code .c { color: #6F8A79; }
-.facts { display: grid; gap: 12px; margin-top: 6px; }
-.facts div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: baseline; }
-.facts strong { font: 800 1.5rem/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--tongue); min-width: 2.6ch; }
-.facts span { color: var(--fog); }
-@media (max-width: 860px) { .split { grid-template-columns: minmax(0, 1fr); } }
-
-/* Numbers */
-.numbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--leaf); }
-.numbers div { padding: 26px 20px 24px; display: grid; gap: 8px; min-width: 0; }
-.numbers div + div { border-left: 1px solid var(--leaf); }
-.numbers strong { font: 850 clamp(2.2rem, 1.6rem + 2vw, 3.2rem)/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.numbers span { color: var(--fog); font-size: 15px; }
-@media (max-width: 760px) { .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); } .numbers div:nth-child(3) { border-left: 0; } .numbers div:nth-child(n+3) { border-top: 1px solid var(--leaf); } }
-
-/* Steps */
-.steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
-.steps li { counter-increment: s; padding: 22px; border: 1px solid var(--leaf); border-radius: 16px; display: grid; gap: 10px; align-content: start; background: var(--canopy-2); min-width: 0; }
-.steps li::before { content: counter(s); font: 850 2.4rem/1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--tongue); }
-.steps p { color: var(--fog); font-size: 15.5px; }
-.steps code { font-size: 13px; color: var(--cream); background: #0A1F17; padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
-@media (max-width: 860px) { .steps { grid-template-columns: minmax(0, 1fr); } }
-
-/* FAQ */
-.faq { display: grid; gap: 0; max-width: 52rem; }
-.faq details { border-top: 1px solid var(--leaf); padding: 18px 0; }
-.faq details:last-child { border-bottom: 1px solid var(--leaf); }
-.faq summary { cursor: pointer; font: 700 1.2rem/1.3 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; list-style: none; display: flex; gap: 12px; justify-content: space-between; }
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: "+"; color: var(--tongue); font-family: var(--font-mono); }
-.faq details[open] summary::after { content: "–"; }
-.faq p { color: var(--fog); margin-top: 10px; max-width: 44rem; }
-
-/* Footer */
-footer { border-top: 1px solid var(--leaf); padding-block: 40px 56px; }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 24px 40px; align-items: flex-start; justify-content: space-between; }
-footer .fact { max-width: 30rem; color: var(--fog); font-size: 15px; }
-footer .fact b { color: var(--cream); font-weight: 600; }
-footer nav { display: flex; gap: 18px; font-size: 15px; color: var(--fog); }
-footer nav a { text-decoration: none; }
-footer nav a:hover { color: var(--cream); }
+/* Reveal targets start hidden only when motion is on (GSAP shows them). */
+.motion [data-split], .motion [data-reveal], .motion [data-stagger] > *, .motion .hero .card, .motion .wordmark .slice, .motion .iso-wrap svg, .motion .nav > *, .motion .hero .tex { visibility: hidden; }
 </style>
 </head>
 <body>
 
-<header class="top">
-  <div class="wrap">
-    <a class="brand" href="#" aria-label="Okapi, inicio">
-      <svg viewBox="0 0 200 200" aria-hidden="true"><use href="#okapi"/></svg>
-      okapi
-    </a>
-    <nav class="links" aria-label="Secciones">
-      <a href="#anatomia">Qué es</a>
-      <a href="#editor">El editor</a>
-      <a href="#permisos">Permisos</a>
-      <a href="#instalar">Instalar</a>
-      <a href="docs/index.html">Docs</a>
-    </nav>
-    <a class="gh" href="https://github.com/seba-seb/okapi-astro">★ GitHub</a>
+<!-- ───────── Hero ───────── -->
+<header class="hero" id="top">
+  <div class="tex"><canvas data-okapi-tex="glitch" data-bg="#C2562C" data-fg="#F2EEE3" data-speed=".8" aria-hidden="true"></canvas></div>
+
+  <nav class="nav" aria-label="Principal">
+    <a class="brand" href="#top" aria-label="Okapi, inicio"><b>Okapi</b><span>v0</span></a>
+    <div class="links">
+      <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md">INSTALL.md</a>
+      <a href="docs/">Docs</a>
+      <a class="light" href="https://github.com/seba-seb/okapi-sanity">GitHub ↗</a>
+    </div>
+  </nav>
+
+  <div class="iso-wrap" aria-hidden="true">
+    <svg viewBox="-55.688 0 271.688 280.492" fill="var(--tierra)">
+      <path fill-rule="evenodd" d="M-25.519 38.75H105.116C161.231 38.75 206.721 84.358 206.721 140.619V236.666H125.438V137.708L70.279 236.666H35.445V99.872L-25.519 38.75ZM125.438 192.113H206.721V198.829H125.438ZM125.438 206.665H206.721V214.501H125.438ZM125.438 222.337H206.721V229.053H125.438ZM49.29 76.587C51.316 73.876 53.947 71.677 56.97 70.161 59.995 68.645 63.328 67.855 66.708 67.855 70.087 67.855 73.422 68.645 76.445 70.161 79.467 71.677 82.097 73.876 84.125 76.587 82.097 79.298 79.467 81.499 76.445 83.014 73.422 84.529 70.087 85.319 66.708 85.319 63.328 85.319 59.995 84.529 56.97 83.014 53.947 81.499 51.316 79.298 49.29 76.587ZM66.986 83.134C70.594 83.134 73.517 80.203 73.517 76.586 73.517 72.97 70.594 70.038 66.986 70.038 63.377 70.038 60.454 72.97 60.454 76.586 60.454 80.203 63.377 83.134 66.986 83.134Z"/>
+      <path class="ear" d="M101.321 41.661C110.305 21.159 126.573 4.741 146.961-4.405 167.349-13.549 190.4-14.767 211.633-7.818 202.649 12.685 186.38 29.102 165.993 38.248 145.605 47.392 122.553 48.61 101.321 41.661Z"/>
+      <defs><clipPath id="lidclip"><rect class="lidr" x="48" y="67.6" width="38" height="0"/></clipPath></defs>
+      <path class="lid" clip-path="url(#lidclip)" d="M49.29 76.587C51.316 73.876 53.947 71.677 56.97 70.161 59.995 68.645 63.328 67.855 66.708 67.855 70.087 67.855 73.422 68.645 76.445 70.161 79.467 71.677 82.097 73.876 84.125 76.587 82.097 79.298 79.467 81.499 76.445 83.014 73.422 84.529 70.087 85.319 66.708 85.319 63.328 85.319 59.995 84.529 56.97 83.014 53.947 81.499 51.316 79.298 49.29 76.587Z"/>
+      <path d="M88.256 17.648C88.256 13.229 84.683 9.646 80.273 9.646 75.864 9.646 72.29 13.229 72.29 17.648V36.567C72.29 40.987 75.864 44.572 80.273 44.572 84.683 44.572 88.256 40.987 88.256 36.567V17.648Z"/>
+    </svg>
   </div>
+
+  <div class="wordmark-wrap" aria-hidden="true">
+    <div class="wordmark">
+      <div class="slice"><span style="top:0">Okapi</span></div>
+      <div class="slice"><span style="top:-.25em;left:.075em">Okapi</span></div>
+      <div class="slice"><span style="top:-.5em;left:-.042em">Okapi</span></div>
+      <div class="slice"><span style="top:-.75em;left:.025em">Okapi</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="meta"><span data-scramble>Astro + Sanity</span><span data-scramble>v0.1 — open repo</span></div>
+    <h1 data-split>Tu Astro, editable.</h1>
+    <p data-split>Sanity de base, un editor visual encima.<br>Lo instala tu agente.</p>
+    <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copiar</button></div>
+    <a class="doclink" href="docs/">Cómo se usa: leé la documentación <span>→</span></a>
+  </div>
+  <div class="band"></div>
 </header>
 
-<!-- The mark, defined once and reused -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <g id="okapi">
-      <path d="M78 150 C82 172 80 188 74 200 L126 200 C120 188 118 172 122 150 Z" fill="#2B1510"/>
-      <g fill="none" stroke="#F1E4CF" stroke-width="6" stroke-linecap="round"><path d="M81 181 C93 177 107 177 119 181"/><path d="M78 194 C92 190 108 190 122 194"/></g>
-      <ellipse cx="50" cy="74" rx="36" ry="17" transform="rotate(-28 50 74)" fill="#8A3B22"/>
-      <ellipse cx="53" cy="75" rx="23" ry="8" transform="rotate(-28 53 75)" fill="#F1E4CF"/>
-      <ellipse cx="150" cy="74" rx="36" ry="17" transform="rotate(28 150 74)" fill="#8A3B22"/>
-      <ellipse cx="147" cy="75" rx="23" ry="8" transform="rotate(28 147 75)" fill="#F1E4CF"/>
-      <rect x="80" y="20" width="12" height="32" rx="6" transform="rotate(-12 86 36)" fill="#8A3B22"/>
-      <circle cx="83" cy="23" r="6" fill="#2B1510"/>
-      <rect x="108" y="20" width="12" height="32" rx="6" transform="rotate(12 114 36)" fill="#8A3B22"/>
-      <circle cx="117" cy="23" r="6" fill="#2B1510"/>
-      <path d="M100 40 C131 40 147 58 147 85 C147 107 139 125 131 143 C125 159 117 173 100 173 C83 173 75 159 69 143 C61 125 53 107 53 85 C53 58 69 40 100 40 Z" fill="#8A3B22"/>
-      <path d="M57 97 C63 121 75 141 83 159 C87 168 93 173 100 173 C107 173 113 168 117 159 C125 141 137 121 143 97 C131 107 118 111 100 111 C82 111 69 107 57 97 Z" fill="#F1E4CF"/>
-      <path d="M90 47 C94 43 106 43 110 47 C113 80 113 120 111 151 C110 163 106 169 100 169 C94 169 90 163 89 151 C87 120 87 80 90 47 Z" fill="#2B1510"/>
-      <ellipse cx="95" cy="158" rx="2.4" ry="3.6" transform="rotate(14 95 158)" fill="#F1E4CF"/>
-      <ellipse cx="105" cy="158" rx="2.4" ry="3.6" transform="rotate(-14 105 158)" fill="#F1E4CF"/>
-      <path class="tongue-path" d="M99 165 C104 170 111 172 118 171 C125 170 129 174 127 179 C125 184 118 183 115 179 C112 175 104 172 98 170 Z" fill="#7480FF"/>
-      <ellipse cx="73" cy="92" rx="6.5" ry="8" fill="#2B1510"/>
-      <circle cx="75" cy="89" r="2" fill="#FBF6EC"/>
-      <ellipse cx="127" cy="92" rx="6.5" ry="8" fill="#2B1510"/>
-      <circle cx="129" cy="89" r="2" fill="#FBF6EC"/>
-    </g>
-  </defs>
-</svg>
-
 <main>
-  <section class="hero" aria-labelledby="hero-title">
-    <div class="wrap">
-      <div class="copy">
-        <p class="label">Editor visual para Astro + Sanity · open source</p>
-        <h1 id="hero-title">Editá tu sitio Astro arriba del sitio.</h1>
-        <p class="lead">Okapi suma a cualquier proyecto Astro un editor visual sobre Sanity. Tu cliente escribe sobre la página real, arrastra bloques y le pide cambios a una IA que solo toca lo que vos le dejás.</p>
-        <div class="ctas">
-          <a class="btn primary" href="https://github.com/seba-seb/okapi-astro">Ver en GitHub</a>
-          <a class="btn ghost" href="docs/index.html">Leer la documentación</a>
-        </div>
-        <div class="prompt" role="group" aria-label="Instalar con tu agente">
-          <code id="install-prompt">Cloná seba-seb/okapi-astro en /tmp/okapi y seguí su INSTALL.md para sumar Okapi a este proyecto.</code>
-          <button type="button" data-copy="install-prompt">Copiar</button>
-        </div>
-        <p class="agents">Pegáselo a Claude Code, Codex, Cursor o el agente que uses. Sirve para un proyecto nuevo o uno que ya tenés.</p>
-      </div>
-      <div class="hero-mark">
-        <div class="halo"></div>
-        <svg viewBox="0 0 200 200" role="img" aria-label="La cara de un okapi, con la lengua azul afuera"><use href="#okapi"/></svg>
-      </div>
+<!-- ───────── Instalación ───────── -->
+<section class="install" aria-labelledby="t-install">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="title" id="t-install" data-split><span class="sl">/</span> Cloná, pedíselo a tu agente,<br><span class="dim">editá sobre la página real.</span> <span class="sl">/</span></h2>
+      <div class="ctas" data-reveal><a class="btn ghost" href="docs/">Leer la documentación</a><a class="btn" href="https://github.com/seba-seb/okapi-sanity">Ver en GitHub</a></div>
     </div>
-  </section>
-
-  <div class="wrap"><div class="stripes" aria-hidden="true"></div></div>
-
-  <section id="anatomia" aria-labelledby="anatomia-title">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="label">Anatomía de un okapi</p>
-        <h2 id="anatomia-title">Parece armado con partes de otros animales. Okapi también.</h2>
-        <p class="lead">El okapi tiene cabeza de jirafa, rayas de cebra y cuerpo de caballo. Nosotros juntamos tres herramientas que ya funcionan y les agregamos una lengua larga.</p>
-      </div>
-      <div class="anatomy">
-        <div class="part">
-          <p class="label">Cabeza de jirafa</p>
-          <h3><b>Astro</b>, el sitio</h3>
-          <p>Tu proyecto sigue siendo tuyo. Las páginas salen como HTML estático y solo las secciones con animación cargan JavaScript.</p>
+    <div class="steps" data-stagger>
+      <article class="step">
+        <div class="top label"><span data-scramble>Clonar</span><span data-scramble>// 001</span></div>
+        <svg class="ico" data-mesh="cube" viewBox="0 0 160 120" aria-hidden="true"></svg>
+        <div class="body">
+          <h3>Cloná el repo</h3>
+          <p>Ya es un Astro completo, con bloques de ejemplo.</p>
+          <div class="cmd"><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity" aria-label="Copiar comando">⧉</button></div>
         </div>
-        <div class="part">
-          <p class="label">Rayas de cebra</p>
-          <h3><b>El editor</b>, las capas</h3>
-          <p>Bloques, capas y estilos con los tokens de tu diseño. Se edita sobre la página real, con sus animaciones y breakpoints.</p>
+      </article>
+      <article class="step">
+        <div class="top label"><span data-scramble>Instalar</span><span data-scramble>// 002</span></div>
+        <svg class="ico" data-mesh="pyramid" viewBox="0 0 160 120" aria-hidden="true"></svg>
+        <div class="body">
+          <h3>Pedíselo a tu agente</h3>
+          <p>Claude Code, Codex o Cursor. Sigue INSTALL.md solo.</p>
+          <div class="cmd"><code>&gt; Seguí INSTALL.md y sumá Okapi</code><button data-copy="Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su INSTALL.md para sumar Okapi a este proyecto." aria-label="Copiar pedido">⧉</button></div>
         </div>
-        <div class="part">
-          <p class="label">Cuerpo de caballo</p>
-          <h3><b>Sanity</b>, la base</h3>
-          <p>Login, roles, borradores, historial e imágenes en CDN. Lo mantiene Sanity, no vos.</p>
+      </article>
+      <article class="step">
+        <div class="top label"><span data-scramble>Editar</span><span data-scramble>// 003</span></div>
+        <svg class="ico" data-mesh="globe" viewBox="0 0 160 120" aria-hidden="true"></svg>
+        <div class="body">
+          <h3>Editá en la página</h3>
+          <p>Clic, escribís, publicás. Sanity guarda todo.</p>
+          <div class="cmd"><code>$ npm run dev → /studio#/editor</code><button data-copy="npm run dev" aria-label="Copiar comando">⧉</button></div>
         </div>
-        <div class="part">
-          <p class="label">Lengua de 35 cm</p>
-          <h3><b>La IA</b>, que llega lejos</h3>
-          <p>Un chat que hace cambios en la página. Llega a todos lados, pero solo donde el rol de la persona lo permite.</p>
-        </div>
-      </div>
+      </article>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section id="editor" aria-labelledby="editor-title">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="label">El editor</p>
-        <h2 id="editor-title">Como Webflow, pero adentro de tu proyecto.</h2>
-        <p class="lead">Una pestaña del Studio de Sanity: capas a la izquierda, tu sitio real en el medio, propiedades y chat a la derecha.</p>
+<!-- ───────── Qué trae ───────── -->
+<section class="trae" aria-labelledby="t-trae">
+  <div class="tex"><canvas data-okapi-tex="puntos" data-bg="#16100D" data-fg="#C2562C" aria-hidden="true"></canvas></div>
+  <div class="wrap">
+    <h2 class="title" id="t-trae" data-split><span class="sl">/</span> Base de datos, editor visual,<br><span class="dim">HTML estático y un chat con IA.</span> <span class="sl">/</span></h2>
+    <div class="cards" data-stagger>
+      <article class="tcard"><span class="n">01</span><h3>Sanity</h3><p>Base de datos, login, roles, borradores e historial.</p></article>
+      <article class="tcard"><span class="n">02</span><h3>Editor visual</h3><p>Bloques, estilos, componentes y deshacer. Sobre la página real.</p></article>
+      <article class="tcard hot"><span class="big" data-scramble>~1 KB</span><p>de JS por página. El resto es HTML estático.</p></article>
+      <article class="tcard"><span class="n">04</span><h3>Chat con IA</h3><p>Con tu propia key. Respeta lo que cada rol puede tocar.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── Cómo se instala ───────── -->
+<section class="how" aria-labelledby="t-how">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="title" id="t-how" data-split><span class="sl">/</span> Lo instala tu agente,<br><span class="dim">vos lo editás así.</span> <span class="sl">/</span></h2>
+      <nav class="refs" data-stagger aria-label="Referencias">
+        <a href="docs/"><span>Documentación</span><span>docs →</span></a>
+        <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md"><span>Guía</span><span>INSTALL.md</span></a>
+        <a href="https://github.com/seba-seb/okapi-sanity/blob/main/AGENTS.md"><span>Reglas del código</span><span>AGENTS.md</span></a>
+        <a href="https://github.com/seba-seb/okapi-sanity/tree/main/skills/okapi-astro"><span>Atajo Claude Code</span><span>skills/okapi-astro</span></a>
+      </nav>
+    </div>
+
+    <div class="viewer" data-reveal>
+      <div class="tabs" role="tablist" aria-label="Partes del editor">
+        <button role="tab" data-tab="editor" aria-selected="true">01 Editor</button>
+        <button role="tab" data-tab="layers" aria-selected="false">02 Capas</button>
+        <button role="tab" data-tab="style" aria-selected="false">03 Estilos</button>
+        <button role="tab" data-tab="chat" aria-selected="false">04 Chat ✦</button>
+        <button role="tab" data-tab="publish" aria-selected="false">05 Publicar</button>
+        <span class="url">localhost:4321/studio#/editor</span>
       </div>
-      <div class="editor" role="img" aria-label="Ilustración del editor: capas, la página con un título seleccionado y el chat que lo acortó">
-        <div class="editor-bar"><i></i><i></i><i></i><span>/studio#/editor · Home</span><span class="chip">✦ Chat</span></div>
-        <div class="editor-body">
-          <div class="layers">
-            Section · Hero<br>
-            &nbsp;&nbsp;Eyebrow<br>
-            &nbsp;&nbsp;<span class="on">Heading</span><br>
-            &nbsp;&nbsp;Paragraph<br>
-            &nbsp;&nbsp;Grid<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;Image ×3<br>
-            Section · Servicios<br>
-            ◆ Footer CTA
+      <div class="win" aria-hidden="true">
+        <div class="bar">
+          <div class="l"><i class="sq"></i><span>Okapi Editor</span><span class="mut">/</span><span class="crumb">Home</span><span class="chip">Borrador</span></div>
+          <div class="devices"><i></i><i></i><i></i></div>
+          <div class="r"><span class="ghost">Ver como: Admin ▾</span><span class="undo mut">↶ ↷</span><span class="saved">Guardado</span><span class="pub" data-zone="publish">Publicar</span></div>
+        </div>
+        <div class="panes">
+          <div class="side left" data-zone="layers">
+            <div class="ptabs"><span>Páginas</span><span class="on">Capas</span></div>
+            <div class="pg"><span>Home</span><span>/ ▾</span></div>
+            <div class="layers">
+              <div class="layer"><i>▾</i><span>Hero</span></div>
+              <div class="layer sel"><i>T</i><span>Heading</span><em>⠿</em></div>
+              <div class="layer in"><i>¶</i><span>Texto</span></div>
+              <div class="layer in"><i>▭</i><span>Botón</span></div>
+              <div class="layer in"><i>◩</i><span>Imagen</span></div>
+              <div class="layer"><i>▸</i><span>Grilla de servicios</span></div>
+              <div class="layer"><i style="color:var(--naranja-claro)">◆</i><span>Testimonios</span></div>
+              <div class="layer"><i>▸</i><span>Marquee</span></div>
+            </div>
+            <div class="add">+ Agregar bloque</div>
           </div>
-          <div class="canvas">
-            <span class="eyebrow">Estudio de diseño</span>
-            <div class="h">Hacemos marcas que se mueven.</div>
-            <p class="p">Identidad, sitios y campañas para equipos que quieren verse distintos.</p>
-            <div class="imgs"><span></span><span></span><span></span></div>
+          <div class="stage" data-zone="editor">
+            <div class="page">
+              <div class="pnav"><b>Estudio Norte</b><span><span>Servicios</span><span>Proyectos</span><span>Contacto</span></span></div>
+              <div class="pbody">
+                <div class="eyebrow">Arquitectura · Rosario</div>
+                <div class="h"><div class="tag"><span>Heading · H1</span><span>⠿</span></div><span class="typed">Espacios que se editan solos.</span><i class="caret"></i></div>
+                <div class="lead">Proyectos residenciales y comerciales en el litoral. Del boceto a la obra, con el mismo equipo.</div>
+                <div class="cta">Ver proyectos →</div>
+              </div>
+              <div class="img"><div><span>casa-del-rio.jpg · 2400×1600</span><span>Soltá una imagen</span></div></div>
+            </div>
           </div>
-          <div class="chat">
-            <div class="me">Acortá este título y hacelo más directo</div>
-            <div class="ai">Listo: “Hacemos marcas que se mueven.”<div class="ok">✓ Heading · Text</div></div>
-            <div class="me">Cambiá el fondo de la sección a oscuro</div>
-            <div class="ai">Tu rol no puede cambiar estilos.<div class="no">✕ style · role: Client</div></div>
+          <div class="side right">
+            <div class="ptabs"><span class="on">Propiedades</span><span>✦ Chat</span></div>
+            <div class="props">
+              <div class="k">Contenido</div>
+              <div class="field typed-mirror">Espacios que se editan solos.</div>
+              <div class="row"><span>Nivel</span><span class="seg"><span class="on">H1</span><span>H2</span><span>H3</span></span></div>
+            </div>
+            <div class="props style" data-zone="style">
+              <div class="row"><span class="k">Estilo</span><span class="acc">Todas las pantallas ▾</span></div>
+              <div class="row"><span>Tamaño</span><span class="seg"><span>S</span><span>M</span><span>L</span><span class="on">XL</span></span></div>
+              <div class="row"><span>Color</span><span class="sw"><i style="background:#16100D"></i><i style="background:#F2EEE3"></i><i style="background:#C2562C"></i><i style="background:#F29B6B"></i><i style="background:#6E625B"></i></span></div>
+              <div class="row"><span>Margen abajo</span><span class="mono" style="color:var(--crema);font-size:11px">lg</span></div>
+              <div class="slider"><i></i></div>
+              <div class="row"><span>Alinear</span><span class="seg"><span class="on">≡</span><span>≣</span><span>☰</span></span></div>
+            </div>
+            <div class="chat" data-zone="chat">
+              <div class="sugg"><span>Hacelo más corto</span><span>Traducilo al inglés</span></div>
+              <div class="in"><span>✦ Pedile algo al chat…</span><b>↑</b></div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="features">
-        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Texto sobre la página</b><span>Doble clic y escribís. Negrita, itálica y links con una barrita flotante.</span></div></div>
-        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Capas y arrastre</b><span>Reordenás en el árbol o directo en el canvas. Cada movimiento se valida contra lo que cada bloque acepta.</span></div></div>
-        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Estilos con tus tokens</b><span>Espaciado, color, radio y ancho por breakpoint. Sin CSS libre: la marca no se rompe.</span></div></div>
-        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Componentes</b><span>Guardás una sección, la reusás en todo el sitio y cambiás textos o imágenes por instancia.</span></div></div>
-        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Chat con el modelo que elijas</b><span>Claude, GPT o cualquiera vía OpenRouter. Le pasás una imagen y la pone donde le digas.</span></div></div>
-        <div class="feature"><span class="bar" aria-hidden="true"></span><div><b>Borradores y ⌘Z</b><span>Todo queda como borrador hasta que alguien publica. Lo que hace la IA se deshace en un paso.</span></div></div>
-      </div>
     </div>
-  </section>
-
-  <div class="wrap"><div class="stripes" aria-hidden="true"></div></div>
-
-  <section id="permisos" aria-labelledby="permisos-title">
-    <div class="wrap split">
-      <div class="copy">
-        <p class="label">Permisos</p>
-        <h2 id="permisos-title">La lengua llega lejos. Vos decidís hasta dónde.</h2>
-        <p class="lead">Un archivo en tu proyecto define qué puede hacer cada rol de Sanity. El editor y el chat lo respetan: la IA nunca puede más que la persona que la usa.</p>
-        <div class="facts">
-          <div><strong>9</strong><span>permisos: textos, imágenes, estilos, ajustes, reordenar, estructura, componentes, publicar y chat.</span></div>
-          <div><strong>0</strong><span>claves de IA en el navegador. Viven en el hosting de cada proyecto.</span></div>
-          <div><strong>1</strong><span>paso para deshacer todo lo que hizo el chat.</span></div>
-        </div>
-      </div>
-      <div class="code" role="region" aria-label="Ejemplo de okapi.policy.ts">
-        <div class="file">src/okapi.policy.ts</div>
-<pre><span class="k">export const</span> POLICY = {
-  administrator: {
-    label: <span class="s">"Agencia"</span>,
-    can: [<span class="s">"text"</span>, <span class="s">"images"</span>, <span class="s">"style"</span>, <span class="s">"settings"</span>,
-          <span class="s">"structure"</span>, <span class="s">"components"</span>, <span class="s">"publish"</span>, <span class="s">"chat"</span>],
-  },
-  editor: {
-    label: <span class="s">"Cliente"</span>,
-    can: [<span class="s">"text"</span>, <span class="s">"images"</span>, <span class="s">"reorder"</span>, <span class="s">"publish"</span>, <span class="s">"chat"</span>],
-  },
-  contributor: {
-    label: <span class="s">"Cliente, solo borradores"</span>,
-    can: [<span class="s">"text"</span>, <span class="s">"chat"</span>],
-  },
-  <span class="c">// cualquier otro rol: solo mirar</span>
-  default: { label: <span class="s">"Lectura"</span>, can: [] },
-};</pre>
-      </div>
-    </div>
-  </section>
-
-  <section aria-label="Okapi en números" style="padding-block: 0 clamp(56px, 8vw, 104px)">
-    <div class="wrap">
-      <div class="numbers">
-        <div><strong>≈1 KB</strong><span>de JavaScript en una página sin animaciones</span></div>
-        <div><strong>0 KB</strong><span>del editor llegan al sitio público</span></div>
-        <div><strong>3</strong><span>hostings sin configurar nada: Vercel, Netlify y Cloudflare</span></div>
-        <div><strong>1</strong><span>repo: le das la carpeta y funciona</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="instalar" aria-labelledby="instalar-title">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="label">Instalar</p>
-        <h2 id="instalar-title">Se lo pedís a tu agente.</h2>
-        <p class="lead">La instalación está escrita para que la siga cualquier agente de código, paso a paso, sin pisar tus archivos.</p>
-      </div>
-      <ol class="steps">
-        <li><h3>Pedíselo</h3><p>Pegá el prompt de arriba. El agente detecta si el proyecto es nuevo o existente y te pregunta lo que falta.</p></li>
-        <li><h3>Conectá Sanity</h3><p>Creás el proyecto, iniciás sesión una vez y el editor queda en <code>/studio#/editor</code>.</p></li>
-        <li><h3>Dale una lengua</h3><p>Cargás la clave de IA en el hosting (<code>ANTHROPIC_API_KEY</code> u otra) y el chat aparece para quien tenga permiso.</p></li>
-      </ol>
-    </div>
-  </section>
-
-  <section aria-labelledby="faq-title" style="padding-top: 0">
-    <div class="wrap">
-      <div class="section-head"><h2 id="faq-title">Preguntas</h2></div>
-      <div class="faq">
-        <details>
-          <summary>¿Funciona con un proyecto Astro que ya tengo?</summary>
-          <p>Sí. Tus páginas, tu layout y tu configuración quedan como están. Okapi suma sus carpetas y sirve las páginas del editor en las rutas que elijas. Lo probamos sobre el template de blog oficial de Astro sin tocar una línea del blog.</p>
-        </details>
-        <details>
-          <summary>¿Quién paga la IA?</summary>
-          <p>Cada proyecto usa su propia clave, guardada en las variables de entorno del hosting. Nunca llega al navegador. La agencia puede limitar qué modelos aparecen en el chat.</p>
-        </details>
-        <details>
-          <summary>¿Es un Webflow?</summary>
-          <p>Se le parece en la forma de editar, pero no hay CSS libre: todo se estila con los tokens de tu diseño. Los bloques nuevos se escriben en código y el editor los compone. Así el cliente no puede romper la marca.</p>
-        </details>
-        <details>
-          <summary>¿Necesito saber Sanity?</summary>
-          <p>No para usarlo. Sanity guarda el contenido y maneja los usuarios; el día a día pasa en el editor. Para extenderlo, las reglas están en <code>AGENTS.md</code> y tu agente las lee solo.</p>
-        </details>
-        <details>
-          <summary>¿Por qué un okapi?</summary>
-          <p>Porque parece armado con partes de otros animales, como este proyecto. Y porque tiene una lengua de 35 centímetros con la que se limpia las orejas, que nos pareció la mejor metáfora posible para una IA con permisos.</p>
-        </details>
-      </div>
-    </div>
-  </section>
+  </div>
+</section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <a class="brand" href="#" aria-label="Okapi, volver arriba">
-      <svg viewBox="0 0 200 200" aria-hidden="true"><use href="#okapi"/></svg>
-      okapi
-    </a>
-    <p class="fact"><b>Dato okapi:</b> la ciencia occidental lo describió recién en 1901. Vive en la selva de Ituri, en el Congo, y es tan tímido que casi nadie lo vio en estado salvaje.</p>
-    <nav aria-label="Enlaces">
-      <a href="https://github.com/seba-seb/okapi-astro">GitHub</a>
-      <a href="docs/index.html">Docs</a>
-      <a href="https://github.com/seba-seb/okapi-astro/blob/main/INSTALL.md">INSTALL.md</a>
+<!-- ───────── Footer ───────── -->
+<footer class="foot">
+  <div class="wrap cols">
+    <div>
+      <p class="say" data-split>Es un repo. Copialo. <span>Lo demás lo hace tu agente.</span></p>
+      <div class="cmd" data-reveal><code>$ gh repo clone seba-seb/okapi-sanity</code><button data-copy="gh repo clone seba-seb/okapi-sanity">Copiar</button></div>
+    </div>
+    <nav class="flinks" data-stagger aria-label="Enlaces">
+      <a href="https://github.com/seba-seb/okapi-sanity"><span>GitHub</span><span>↗</span></a>
+      <a href="https://github.com/seba-seb/okapi-sanity/blob/main/INSTALL.md"><span>INSTALL.md</span><span>↗</span></a>
+      <a href="docs/index.html"><span>Docs</span><span>↗</span></a>
     </nav>
+  </div>
+  <div class="fin"><canvas data-okapi-tex="fin" data-bg="#16100D" data-fg="#C2562C" aria-hidden="true"></canvas></div>
+  <div class="sign">
+    <div class="logo">
+      <svg width="36" height="38" viewBox="-55.688 263.265 12.542 13.241" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M-55.492 266.324H-48.839C-45.981 266.324-43.665 268.633-43.665 271.481V276.343H-47.804V271.334L-50.613 276.343H-52.387V269.418L-55.492 266.324ZM-47.804 274.088H-43.665V274.428H-47.804ZM-47.804 274.825H-43.665V275.221H-47.804ZM-47.804 275.618H-43.665V275.959H-47.804ZM-51.682 268.239C-51.579 268.102-51.445 267.991-51.291 267.914-51.138 267.837-50.967 267.797-50.796 267.797-50.623 267.797-50.454 267.837-50.299 267.914-50.145 267.991-50.012 268.102-49.909 268.239-50.012 268.376-50.145 268.488-50.299 268.565-50.454 268.642-50.623 268.682-50.796 268.682-50.967 268.682-51.138 268.642-51.291 268.565-51.445 268.488-51.579 268.376-51.682 268.239ZM-50.781 268.57C-50.598 268.57-50.449 268.422-50.449 268.239-50.449 268.056-50.598 267.907-50.781 267.907-50.965 267.907-51.114 268.056-51.114 268.239-51.114 268.422-50.965 268.57-50.781 268.57Z"/><path d="M-49.032 266.471C-48.575 265.433-47.747 264.602-46.709 264.139-45.67 263.676-44.496 263.615-43.415 263.967-43.872 265.004-44.701 265.836-45.739 266.298-46.777 266.761-47.952 266.823-49.032 266.471Z"/><path d="M-49.698 265.255C-49.698 265.032-49.88 264.85-50.104 264.85-50.329 264.85-50.511 265.032-50.511 265.255V266.213C-50.511 266.437-50.329 266.619-50.104 266.619-49.88 266.619-49.698 266.437-49.698 266.213V265.255Z"/></svg>
+      <b>Okapi</b>
+    </div>
+    <small>Hecho por Paisanos · Ituri 1°30′N 28°30′E · ©2026</small>
   </div>
 </footer>
 
+<script src="okapi-textures.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrambleTextPlugin.min.js"></script>
 <script>
-  document.querySelectorAll("[data-copy]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var el = document.getElementById(btn.getAttribute("data-copy"));
-      var done = function () { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar"; }, 1600); };
-      var fallback = function () { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Seleccionado"; };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.innerText).then(done, fallback);
-      else fallback();
-    });
+/* ───────── Copy buttons ───────── */
+document.querySelectorAll("[data-copy]").forEach((b) => {
+  const label = b.textContent;
+  b.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy); } catch { return; }
+    b.classList.add("ok"); b.textContent = label === "⧉" ? "✓" : "Copiado";
+    setTimeout(() => { b.classList.remove("ok"); b.textContent = label; }, 1600);
   });
+});
+
+/* ───────── 3D wireframe icons (same meshes as iconos-3d.py, spinning live) ───────── */
+const Mesh = (() => {
+  const spinTilt = ([x, y, z], spin, tilt) => {           // spin around Y, then tilt toward the viewer
+    let c = Math.cos(spin), s = Math.sin(spin);
+    [x, z] = [x * c + z * s, -x * s + z * c];
+    c = Math.cos(tilt); s = Math.sin(tilt);
+    return [x, y * c - z * s, y * s + z * c];
+  };
+  const P = (p, cx, cy, k) => `${(cx + p[0] * k).toFixed(1)} ${(cy - p[1] * k).toFixed(1)}`;
+  const seg = (a, b, cx, cy, k) => `M${P(a, cx, cy, k)}L${P(b, cx, cy, k)}`;
+  const lerp = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+
+  // Cube: a 5×5 grid on each face that faces the viewer
+  const FACES = [[[1,0,0],[0,1,0],[0,0,1]], [[-1,0,0],[0,0,1],[0,1,0]], [[0,1,0],[0,0,1],[1,0,0]],
+                 [[0,-1,0],[1,0,0],[0,0,1]], [[0,0,1],[1,0,0],[0,1,0]], [[0,0,-1],[0,1,0],[1,0,0]]];
+  function cube(t, n = 5) {
+    const spin = t * .45 + .6, tilt = .42, k = 30, out = [];
+    for (const [nrm, a, b] of FACES) {
+      if (spinTilt(nrm, spin, tilt)[2] <= 0) continue;
+      const q = (i, j) => spinTilt(nrm.map((v, d) => v + (2 * i / n - 1) * a[d] + (2 * j / n - 1) * b[d]), spin, tilt);
+      for (let i = 0; i <= n; i++) out.push(seg(q(i, 0), q(i, n), 80, 60, k), seg(q(0, i), q(n, i), 80, 60, k));
+    }
+    return [out.join("")];
+  }
+
+  // Pyramid: regular tetrahedron on its base; grid on front faces, back edges faint
+  const R = 0.943, TET = [[0, 1, 0], ...[90, 210, 330].map((a) => [R * Math.cos(a * Math.PI / 180), -1 / 3, R * Math.sin(a * Math.PI / 180)])];
+  function pyramid(t, n = 5) {
+    const spin = t * .5 + .14, tilt = .45, k = 58, cy = 70, front = [], back = [];
+    const V = TET.map((v) => spinTilt(v, spin, tilt));
+    for (let o = 0; o < 4; o++) {
+      const [a, b, c] = V.filter((_, i) => i !== o);
+      const visible = spinTilt(TET[o].map((x) => -x), spin, tilt)[2] > 0;
+      const dst = visible ? front : back;
+      dst.push(seg(a, b, 80, cy, k), seg(b, c, 80, cy, k), seg(c, a, 80, cy, k));
+      if (visible) for (const [p0, p1, p2] of [[a, b, c], [b, c, a], [c, a, b]])
+        for (let i = 1; i < n; i++) front.push(seg(lerp(p0, p1, i / n), lerp(p0, p2, i / n), 80, cy, k));
+    }
+    return [front.join(""), back.join("")];
+  }
+
+  // Globe: lat/long mesh; the spin shifts the meridians, the axis stays tilted
+  function globe(t, nu = 22, nv = 14) {
+    const k = 46, tilt = -.38, sp = t * .35;
+    const pts = [];
+    for (let i = 0; i < nu; i++) {
+      pts.push([]);
+      for (let j = 0; j <= nv; j++) {
+        const th = (i / nu) * 2 * Math.PI + sp, ph = (j / nv) * Math.PI;
+        pts[i].push(spinTilt([Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th)], 0, tilt));
+      }
+    }
+    const g = (i) => pts[(i + nu) % nu];
+    const facing = (i, j) => {
+      if (j < 0 || j >= nv) return false;
+      const a = g(i)[j], b = g(i + 1)[j], c = g(i + 1)[j + 1], d = g(i)[j + 1];
+      return (c[0] - a[0]) * (d[1] - b[1]) - (c[1] - a[1]) * (d[0] - b[0]) < 0;
+    };
+    const out = [];
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+      if (facing(i, j) || facing(i - 1, j)) out.push(seg(g(i)[j], g(i)[j + 1], 80, 60, k));
+      if (facing(i, j) || facing(i, j - 1)) out.push(seg(g(i)[j], g(i + 1)[j], 80, 60, k));
+    }
+    for (let i = 0; i < nu; i++) if (facing(i, nv - 1)) out.push(seg(g(i)[nv], g(i + 1)[nv], 80, 60, k));
+    return [out.join("")];
+  }
+  return { cube, pyramid, globe };
+})();
+
+const icons = [...document.querySelectorAll("[data-mesh]")].map((svg) => {
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = (op, w) => { const p = document.createElementNS(NS, "path"); p.setAttribute("fill", "none"); p.setAttribute("stroke", "#F2EEE3"); p.setAttribute("stroke-opacity", op); p.setAttribute("stroke-width", w); p.setAttribute("stroke-linecap", "round"); svg.appendChild(p); return p; };
+  const back = mk(.22, .6), front = mk(1, .75);
+  const icon = { svg, t: 0, speed: 1, visible: false, draw() { const [f, b = ""] = Mesh[svg.dataset.mesh](icon.t); front.setAttribute("d", f); back.setAttribute("d", b); } };
+  icon.draw();
+  new IntersectionObserver(([e]) => { icon.visible = e.isIntersecting; }).observe(svg);
+  svg.closest(".step").addEventListener("pointerenter", () => window.gsap && gsap.to(icon, { speed: 4, duration: .6, ease: "power2.out" }));
+  svg.closest(".step").addEventListener("pointerleave", () => window.gsap && gsap.to(icon, { speed: 1, duration: 1.2, ease: "power2.out" }));
+  return icon;
+});
+if (document.documentElement.classList.contains("motion")) {
+  let last = performance.now();
+  const tick = (now) => {
+    const dt = Math.min((now - last) / 1000, .05); last = now;
+    for (const i of icons) if (i.visible) { i.t += dt * i.speed; i.draw(); }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ───────── Editor viewer: tabs focus a zone, auto-cycling while in view ───────── */
+(() => {
+  const viewer = document.querySelector(".viewer"), win = viewer.querySelector(".win");
+  const tabs = [...viewer.querySelectorAll("[data-tab]")], CYCLE = 4000;
+  viewer.style.setProperty("--cycle", CYCLE + "ms");
+  let idx = 0, timer = null, inView = false, manual = false;
+  const select = (i) => {
+    idx = i;
+    tabs.forEach((t, j) => t.setAttribute("aria-selected", String(j === i)));
+    const zone = tabs[i].dataset.tab, el = win.querySelector(`[data-zone="${zone}"]`);
+    win.querySelectorAll("[data-zone]").forEach((z) => z.classList.toggle("on", z === el));
+    // a zone hidden at this width (side panels on mobile) → no dimming, just the tab
+    win.classList.toggle("focus", !!el && el.offsetParent !== null);   // zone hidden at this width → no dimming
+  };
+  const loop = () => {
+    clearTimeout(timer);
+    viewer.classList.toggle("run", inView && !manual);
+    // auto-cycle only through zones visible at this width (side panels hide on small screens)
+    const next = () => { for (let k = 1; k <= tabs.length; k++) { const j = (idx + k) % tabs.length, z = win.querySelector(`[data-zone="${tabs[j].dataset.tab}"]`); if (z && z.offsetParent !== null) return j; } return idx; };
+    if (inView && !manual) timer = setTimeout(() => { select(next()); loop(); }, CYCLE);
+  };
+  tabs.forEach((t, i) => t.addEventListener("click", () => { manual = true; select(i); loop(); }));
+  new IntersectionObserver(([e]) => { inView = e.isIntersecting; loop(); }, { threshold: .35 }).observe(viewer);
+  if (!document.documentElement.classList.contains("motion")) manual = true;
+  select(0);
+})();
+
+/* ───────── GSAP motion ───────── */
+(() => {
+  const root = document.documentElement;
+  if (!window.gsap || !window.ScrollTrigger || !window.SplitText || !root.classList.contains("motion")) { root.classList.remove("motion"); return; }
+  gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin);
+  gsap.defaults({ ease: "expo.out", duration: 1.1 });
+  const EASE_IO = "expo.inOut", CHARS = "01/<>_#*+=";
+
+  // Lines rise out of a mask. Returns a paused timeline; the caller decides when it plays.
+  const splitReveal = (el) => {
+    const tl = gsap.timeline({ paused: true });
+    SplitText.create(el, {
+      type: "lines", mask: "lines", autoSplit: true,
+      onSplit(self) {
+        gsap.set(el, { visibility: "visible" });
+        const tw = gsap.from(self.lines, { yPercent: 115, rotate: 2, transformOrigin: "0 100%", stagger: .09, duration: 1.15 });
+        tl.add(tw, 0);
+        return tw;
+      },
+    });
+    return tl;
+  };
+  // Mono labels decode like a terminal
+  const scramble = (el) => {
+    const text = el.textContent;
+    gsap.set(el, { visibility: "visible" });
+    el.textContent = "";
+    return gsap.to(el, { scrambleText: { text, chars: CHARS, speed: .7, revealDelay: .15 }, duration: .9, ease: "none", paused: true });
+  };
+  const onEnter = (el, anim, start = "top 85%") => ScrollTrigger.create({ trigger: el, start, once: true, onEnter: () => anim.play() });
+
+  document.fonts.ready.then(() => {
+    const hero = document.querySelector(".hero");
+    const card = hero.querySelector(".card");
+
+    /* Hero intro */
+    const slices = hero.querySelectorAll(".wordmark .slice span");
+    const cardLabels = [...card.querySelectorAll("[data-scramble]")].map(scramble);
+    const intro = gsap.timeline({ delay: .15 });
+    intro
+      .from(hero.querySelector(".tex"), { autoAlpha: 0, scale: 1.06, duration: 1.6, ease: "power2.out" }, 0)
+      .fromTo(hero.querySelectorAll(".nav > *"), { autoAlpha: 0, y: -16 }, { autoAlpha: 1, y: 0, stagger: .08, duration: .9 }, .2)
+      .fromTo(card, { autoAlpha: 1, clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 1.1, ease: EASE_IO }, .25)
+      .add(splitReveal(card.querySelector("h1")).play(), .8)
+      .add(splitReveal(card.querySelector("p")).play(), .95)
+      .add(() => cardLabels.forEach((a) => a.play()), .75)
+      .fromTo(card.querySelector(".cmd"), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .8 }, 1.15)
+      .fromTo(hero.querySelector(".iso-wrap svg"), { autoAlpha: 0, yPercent: 14 }, { autoAlpha: 1, yPercent: 0, duration: 1.6 }, .35)
+      .fromTo(hero.querySelectorAll(".wordmark .slice"), { autoAlpha: 0 }, { autoAlpha: 1, duration: .01, stagger: .07 }, .55)
+      .from(slices, { x: () => gsap.utils.random([-1, 1]) * gsap.utils.random(120, 420), duration: .9, ease: "power4.out", stagger: .07 }, .55);
+
+    // Idle glitch: the wordmark slices jump and snap back every few seconds
+    gsap.timeline({ repeat: -1, repeatDelay: 3.2, delay: 3.2, repeatRefresh: true })
+      .to(slices, { x: () => gsap.utils.random(-28, 28), duration: .06, ease: "steps(1)", stagger: { each: .04, from: "random" } })
+      .to(slices, { x: () => gsap.utils.random(-12, 12), duration: .06, ease: "steps(1)", stagger: { each: .03, from: "random" } }, "+=.06")
+      .to(slices, { x: 0, duration: .08, ease: "steps(1)" }, "+=.08");
+
+    // The okapi blinks: the lid drops over the eye and lifts, now and then a double blink
+    const lid = hero.querySelector(".lidr");   // the clip rect drops over the eye like a lid
+    const blink = () => {
+      const tl = gsap.timeline({ onComplete: () => gsap.delayedCall(gsap.utils.random(2.2, 5.5), blink) });
+      const once = () => tl.to(lid, { attr: { height: 18 }, duration: .07, ease: "power2.in" }).to(lid, { attr: { height: 0 }, duration: .16, ease: "power2.out" }, "+=.04");
+      once();
+      if (Math.random() < .25) { tl.to({}, { duration: .1 }); once(); }
+    };
+    gsap.delayedCall(2.4, blink);
+
+    // Scroll parallax on the wrappers (the intro animates the children)
+    const scrub = { trigger: hero, start: "top top", end: "bottom top", scrub: .6 };
+    gsap.to(hero.querySelector(".iso-wrap"), { yPercent: -10, ease: "none", scrollTrigger: scrub });
+    gsap.to(hero.querySelector(".wordmark-wrap"), { xPercent: -6, ease: "none", scrollTrigger: scrub });
+    gsap.to(card, { y: -60, ease: "none", scrollTrigger: scrub });
+
+    /* Sections: titles, labels, single reveals */
+    document.querySelectorAll("main [data-split], footer [data-split]").forEach((el) => onEnter(el, splitReveal(el)));
+    document.querySelectorAll("main [data-scramble]").forEach((el) => onEnter(el, scramble(el), "top 90%"));
+    document.querySelectorAll("[data-reveal]").forEach((el) =>
+      onEnter(el, gsap.fromTo(el, { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, paused: true, delay: .15 })));
+
+    /* Staggered groups: install steps, feature cards, link lists */
+    document.querySelectorAll("[data-stagger]").forEach((group) => {
+      const items = group.children;
+      gsap.set(items, { autoAlpha: 0, y: 56 });
+      ScrollTrigger.batch(items, {
+        start: "top 88%", once: true,
+        onEnter: (batch) => gsap.to(batch, { autoAlpha: 1, y: 0, stagger: .12, duration: 1.2, overwrite: "auto" }),
+      });
+    });
+
+    // Feature cards keep drifting at different rates while you scroll (desktop only)
+    gsap.matchMedia().add("(min-width: 1101px)", () => {
+      document.querySelectorAll(".tcard").forEach((c, i) =>
+        gsap.to(c, { yPercent: [-6, 10, -12, 6][i], ease: "none", scrollTrigger: { trigger: ".trae", start: "top bottom", end: "bottom top", scrub: .8 } }));
+    });
+
+    /* Editor window opens like a shutter, then its panels settle in */
+    const win = document.querySelector(".win");
+    const opener = gsap.timeline({ paused: true })
+      .fromTo(win, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 1.3, ease: EASE_IO })
+      .from(win.querySelectorAll(".bar > *, .side, .page"), { autoAlpha: 0, y: 16, stagger: .07, duration: .9, clearProps: "opacity,visibility,transform" }, .6)
+      .from(win.querySelectorAll(".layer, .props, .chat"), { autoAlpha: 0, x: -10, stagger: .035, duration: .6, clearProps: "opacity,visibility,transform" }, .9);
+    onEnter(win, opener, "top 80%");
+
+    // The heading in the mock re-types itself now and then (the inline editor at work)
+    const typed = win.querySelector(".typed"), mirror = win.querySelector(".typed-mirror");
+    const lines = ["Espacios que se editan solos.", "Tu sitio, editable en vivo.", "Espacios que se editan solos."];
+    const caret = { n: lines[0].length }; let li = 0;
+    const show = () => { typed.textContent = lines[li].slice(0, Math.round(caret.n)); mirror.textContent = typed.textContent; };
+    gsap.timeline({ repeat: -1, repeatDelay: 3, delay: 5, scrollTrigger: { trigger: win, start: "top 80%", toggleActions: "play pause resume pause" } })
+      .to(caret, { n: 0, duration: .8, ease: "none", onUpdate: show })
+      .add(() => { li = (li + 1) % lines.length; })
+      .to(caret, { n: () => lines[li].length, duration: 1.4, ease: "none", onUpdate: show }, "+=.35");
+
+    /* Footer */
+    gsap.from(".sign > *", { autoAlpha: 0, y: 20, stagger: .1, scrollTrigger: { trigger: ".sign", start: "top 98%", once: true } });
+
+    ScrollTrigger.refresh();
+  });
+})();
 </script>
 </body>
 </html>
