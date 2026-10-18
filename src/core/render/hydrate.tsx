@@ -6,7 +6,6 @@
 import { hydrateRoot } from "react-dom/client";
 
 import { RoutesContext } from "@/core/lib/routes";
-import { watchScrollRefresh } from "@/core/motion/ScrollRefresh";
 import { ComponentsContext } from "./components";
 import { TopLevel, type IslandProps } from "./PageBuilder";
 
@@ -24,4 +23,3 @@ for (const el of document.querySelectorAll<HTMLElement>("[data-island]")) {
   );
 }
 
-watchScrollRefresh();

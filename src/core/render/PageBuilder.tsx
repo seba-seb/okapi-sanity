@@ -2,7 +2,6 @@ import { keyed } from "@/core/sanity/dataAttr";
 import { dedupeByKey } from "@/core/lib/dedupe";
 import type { Page, SectionData } from "@/core/lib/types";
 import { RoutesContext, type Routes } from "@/core/lib/routes";
-import { ScrollRefresh } from "@/core/motion/ScrollRefresh";
 import { stylesheet } from "@/core/style/stylesheet";
 
 import { Section } from "@/blocks/section/Section";
@@ -59,7 +58,6 @@ export function PageBuilder({
   return (
     <RoutesContext.Provider value={routes}>
       <ComponentsContext.Provider value={components}>
-        {islands ? null : <ScrollRefresh />}
         {css ? <style>{css}</style> : null}
         <main>
           {dedupeByKey(sections).map((section) => {

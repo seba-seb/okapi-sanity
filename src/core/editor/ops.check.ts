@@ -82,8 +82,7 @@ assert.throws(() => moveNextTo(doc, H1, C1, "before")); // a heading can't go in
 // Islands: a section needs JS only if some block in its tree does
 assert.equal(needsJs(doc.sections[0]), false);
 assert.equal(needsJs({ _type: "section", content: [{ _type: "grid", items: [{ _type: "logo3d" }] }] }), true);
-assert.equal(needsJs([{ _type: "heading", animation: "none" }]), false);
-assert.equal(needsJs([{ _type: "heading", animation: "words" }]), true);
+assert.equal(needsJs([{ _type: "heading" }]), false);
 
 // Helpers
 assert.equal(parentBlock(C1), G1);

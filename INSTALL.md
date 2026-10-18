@@ -8,7 +8,7 @@ seguila paso a paso, en orden. Al terminar, el proyecto tiene:
 - **El Okapi Editor** en `/studio#/editor`: edición visual sobre la
   página real, con bloques, estilos por tokens y componentes.
 - **Páginas armadas en el editor**, servidas como HTML estático. Solo
-  hidratan las secciones con motion.
+  hidratan las secciones que necesitan JS (slider, 3D).
 
 Hay dos caminos: **A** para un proyecto nuevo y **B** para un proyecto Astro
 que ya existe. Los dos terminan en los pasos comunes.
@@ -104,7 +104,7 @@ cp -n  $R/public/placeholder.svg public/
 
 | Copiar | Qué es | Obligatorio |
 |---|---|---|
-| `src/core/` | El producto: editor, render, estilos, motion, Sanity | Sí |
+| `src/core/` | El producto: editor, render, estilos, Sanity | Sí |
 | `src/blocks/` | Registro de bloques y bloques base. Después se borran o se agregan bloques | Sí |
 | `src/documents/`, `src/schema.ts` | Documentos de Sanity: page, component, settings, navigation | Sí |
 | `src/theme/` | `tokens.css` (los nombres que usa el editor) + CSS de los bloques | Sí |
@@ -122,9 +122,6 @@ cp -n  $R/public/placeholder.svg public/
 | `AGENTS.md` | Reglas para agentes | Sí (ver B5) |
 | `INSTALL.md`, `docs/` | Esta guía y la documentación | Opcional |
 
-No copies `src/lab/` ni `src/pages/lab/`. Son el banco de pruebas de motion
-del repo de Okapi.
-
 ### B3. Configuración
 
 **`package.json`**: sumá sin bajar versiones que el proyecto ya tenga
@@ -138,8 +135,8 @@ del repo de Okapi.
   "react": "^19.2.0", "react-dom": "^19.2.0", "react-is": "^19.2.0",
   "sanity": "6.3.0", "styled-components": "^6.4.3",
   "tailwindcss": "^4.3.3", "@tailwindcss/vite": "^4.3.3",
-  // bloques de motion (si se quedan): gsap, slider, 3D
-  "gsap": "^3.15.0", "@gsap/react": "^2.1.2", "embla-carousel-react": "^8.6.0", "three": "^0.160.0"
+  // bloques de ejemplo (si se quedan): slider, 3D
+  "embla-carousel-react": "^8.6.0", "three": "^0.160.0"
 },
 "devDependencies": { "patch-package": "^8.0.1", "vite": "*", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
 "overrides": { "sanity": "6.3.0" },
@@ -334,8 +331,8 @@ del editor:
    - Nunca hace fetch.
    - Si era `.astro`, pasalo a `.tsx`.
 3. Registrá el bloque en `src/blocks/meta.ts`, `schemas.ts` y `components.tsx`.
-   - Usá `js: true` si corre algo en el navegador: hooks, efectos, GSAP,
-     carruseles.
+   - Usá `js: true` si corre algo en el navegador: hooks, efectos,
+     animaciones, carruseles.
 4. Opcional:
    - contenido inicial en `defaults.ts`;
    - texto editable sobre la página en `TEXT_TARGETS`
@@ -345,7 +342,7 @@ del editor:
      Mencionalo.
 5. `npm run verify` falla si un campo no tiene control en el editor.
 
-Reglas completas para bloques, motion y estilos: `AGENTS.md`.
+Reglas completas para bloques, animaciones y estilos: `AGENTS.md`.
 
 ## Problemas conocidos
 

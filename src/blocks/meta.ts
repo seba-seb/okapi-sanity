@@ -19,7 +19,7 @@ export type BlockMeta = {
   /** Draggable bottom margin on the canvas (BlockMarginResizer). */
   margin?: boolean;
   /**
-   * Needs JS in the browser (motion, carousels, WebGL). The public site ships
+   * Needs JS in the browser (carousels, WebGL). The public site ships
    * plain HTML and only hydrates the top-level sections holding such a block.
    */
   js?: true | ((block: Record<string, unknown>) => boolean);
@@ -29,7 +29,7 @@ export const BLOCKS = {
   section: { title: "Section", slot: { field: "content" }, topLevel: true },
   componentRef: { title: "Component", topLevel: true },
   eyebrow: { title: "Eyebrow", margin: true },
-  heading: { title: "Heading", margin: true, js: (b) => !!b.animation && b.animation !== "none" },
+  heading: { title: "Heading", margin: true },
   paragraph: { title: "Paragraph", margin: true },
   buttonWrapper: { title: "Button Group", slot: { field: "buttons", accepts: ["button"] } },
   button: { title: "Button" },
@@ -47,17 +47,6 @@ export const BLOCKS = {
   },
   logo3d: { title: "3D Logo", js: true },
   box: { title: "Box", slot: { field: "items" } },
-  // Creative / motion blocks
-  horizontalScroll: {
-    title: "Horizontal Scroll",
-    slot: { field: "items", accepts: ["card", "imageBlock", "contentWrapper"] },
-    js: true,
-  },
-  stackCards: { title: "Stacked Cards", slot: { field: "items", accepts: ["card"] }, js: true },
-  marquee: { title: "Marquee", js: true },
-  textScrub: { title: "Scroll Text", js: true },
-  bigType: { title: "Big Type", js: true },
-  parallaxMedia: { title: "Parallax Media", js: true },
 } as const satisfies Record<string, BlockMeta>;
 
 export type BlockType = keyof typeof BLOCKS;

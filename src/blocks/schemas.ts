@@ -18,12 +18,6 @@ import { slider } from "./slider/schema";
 import { grid } from "./grid/schema";
 import { logo3d } from "./logo3d/schema";
 import { box } from "./box/schema";
-import { horizontalScroll } from "./horizontalScroll/schema";
-import { stackCards } from "./stackCards/schema";
-import { marquee } from "./marquee/schema";
-import { textScrub } from "./textScrub/schema";
-import { bigType } from "./bigType/schema";
-import { parallaxMedia } from "./parallaxMedia/schema";
 
 /** Studio side of the registry. Missing a type from meta.ts = type error. */
 export const BLOCK_SCHEMAS: Record<BlockType, SchemaTypeDefinition> = {
@@ -42,12 +36,6 @@ export const BLOCK_SCHEMAS: Record<BlockType, SchemaTypeDefinition> = {
   grid,
   logo3d,
   box,
-  horizontalScroll,
-  stackCards,
-  marquee,
-  textScrub,
-  bigType,
-  parallaxMedia,
 };
 
 // Every block: a CubeIcon fallback, and the shared `design` field (tokens +

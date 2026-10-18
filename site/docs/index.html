@@ -381,7 +381,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <li><a href="#estilos">Estilos y tokens</a></li>
       <li><a href="#componentes">Componentes</a></li>
       <li><a href="#bloques">Bloques</a></li>
-      <li><a href="#motion">Motion</a></li>
     </ol>
     <h2 data-only="tech">Integración</h2>
     <ol data-only="tech">
@@ -419,11 +418,10 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <li><b>Sanity</b> 6.3.0 · fijo</li>
         <li><b>React</b> 19</li>
         <li><b>Tailwind</b> 4 sobre tokens</li>
-        <li><b>GSAP</b> 3.15</li>
       </ul>
       <div class="figures">
-        <div><strong>≈1 KB</strong><span>de JS en una página sin bloques animados</span></div>
-        <div><strong>138 KB</strong><span>de JS (gzip) en una página con motion</span></div>
+        <div><strong>≈1 KB</strong><span>de JS en una página sin bloques con JS</span></div>
+        <div><strong>91 KB</strong><span>de JS (gzip) en una página con slider o 3D</span></div>
         <div><strong>0 KB</strong><span>del editor en el sitio público, controlado en cada build</span></div>
         <div><strong>2</strong><span>caminos: proyecto nuevo o proyecto Astro existente</span></div>
       </div>
@@ -554,14 +552,9 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <div class="prompt-meta"><div><b>El agente</b>Schema, componente, registro, contenido inicial y texto editable en el canvas. Corre verify.</div><div><b>Vos revisás</b>+ Add → Testimonios, y escribir la cita sobre la página.</div></div>
         </article>
         <article class="prompt">
-          <div class="prompt-head"><h3>Que un bloque se anime</h3><button class="copy" type="button">Copiar</button></div>
-          <blockquote>El bloque Testimonios tiene que entrar con una animación al scrollear.</blockquote>
-          <div class="prompt-meta"><div><b>El agente</b>Agrega la animación con las reglas de motion y marca el bloque para que cargue su JavaScript.</div><div><b>Vos revisás</b>Verlo en el sitio. En el editor las animaciones decorativas quedan quietas: usá ▶ Play.</div></div>
-        </article>
-        <article class="prompt">
           <div class="prompt-head"><h3>Sacar los bloques de ejemplo</h3><button class="copy" type="button">Copiar</button></div>
           <blockquote>Borrá los bloques de ejemplo de Okapi que no usamos en este proyecto.</blockquote>
-          <div class="prompt-meta"><div><b>El agente</b>Borra carpetas y registros y corre verify. Menos bloques con animación = páginas más livianas.</div><div><b>Vos revisás</b>Que ya no aparezcan en + Add.</div></div>
+          <div class="prompt-meta"><div><b>El agente</b>Borra carpetas y registros y corre verify. Menos bloques con JS = páginas más livianas.</div><div><b>Vos revisás</b>Que ya no aparezcan en + Add.</div></div>
         </article>
       </div>
       <p class="prompt-group">Publicar y mantener</p>
@@ -601,7 +594,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <thead><tr><th>Se hace en el editor</th><th>Se le pide al agente</th></tr></thead>
           <tbody>
             <tr><td>Textos, links e imágenes</td><td>Bloques nuevos o hacer editable algo que ya existe</td></tr>
-            <tr><td>Agregar, ordenar y duplicar secciones y bloques</td><td>Cómo se ve un bloque y sus animaciones</td></tr>
+            <tr><td>Agregar, ordenar y duplicar secciones y bloques</td><td>Cómo se ve un bloque</td></tr>
             <tr><td>Estilo de un bloque dentro de los tokens</td><td>Los valores de los tokens (tu diseño)</td></tr>
             <tr><td>Armar y reusar componentes</td><td>Rutas, layout, header y footer de las páginas del editor</td></tr>
             <tr><td>Publicar</td><td>Conectar publicar con el deploy</td></tr>
@@ -674,7 +667,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <ul>
           <li><strong>CSS aislado:</strong> el CSS del sitio no se mezcla con el del Studio.</li>
           <li><strong>Breakpoints reales:</strong> desktop, tablet y mobile cambian el ancho del iframe.</li>
-          <li><strong>Motion con la misma política que el sitio</strong> (ver <a href="#motion">Motion</a>).</li>
           <li><strong>Sin borradores expuestos:</strong> la ruta es pública pero no tiene datos propios. Solo dibuja lo que le manda, por <code>postMessage</code> del mismo origen, un editor ya autenticado.</li>
         </ul>
         <h3>Rutas de un bloque</h3>
@@ -705,7 +697,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <thead><tr><th>Quién descarga qué</th><th class="num">JS (gzip)</th><th>Cuándo</th></tr></thead>
           <tbody>
             <tr><td>Página sin bloques con <code>js</code></td><td class="num">≈1 KB</td><td>Siempre (solo el script que busca islas)</td></tr>
-            <tr><td>Página con motion: React DOM, bloques, GSAP, Portable Text</td><td class="num">138 KB</td><td>Si hay al menos una isla</td></tr>
+            <tr><td>Página con islas: React DOM, bloques, Portable Text</td><td class="num">91 KB</td><td>Si hay al menos una isla</td></tr>
             <tr><td>three.js del bloque 3D Logo</td><td class="num">140 KB</td><td>Solo si la página tiene ese bloque</td></tr>
             <tr><td>Studio + Okapi Editor</td><td class="num">≈1.650 KB</td><td>Solo quien entra a <code>/studio</code></td></tr>
             <tr><td>Canvas del editor</td><td class="num">144 KB</td><td>Solo dentro del editor</td></tr>
@@ -728,16 +720,15 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>Okapi Editor</h2>
-        <p>Es la primera pestaña del Studio. Tiene tres columnas: <strong>páginas y capas</strong>, <strong>canvas</strong> y <strong>propiedades</strong>. Arriba están deshacer y rehacer, <strong>+ Add</strong>, el selector de dispositivo, <strong>▶ Play</strong> y <strong>Publish</strong>.</p>
+        <p>Es la primera pestaña del Studio. Tiene tres columnas: <strong>páginas y capas</strong>, <strong>canvas</strong> y <strong>propiedades</strong>. Arriba están deshacer y rehacer, <strong>+ Add</strong>, el selector de dispositivo y <strong>Publish</strong>.</p>
         <h3>Qué se puede hacer</h3>
         <ul>
-          <li><strong>Texto en el lugar.</strong> Doble clic en headings, párrafos, eyebrows, botones, título y cuerpo de cards, Big Type y Scroll Text. El rich text tiene una barra flotante con negrita, itálica, link y quitar link.</li>
+          <li><strong>Texto en el lugar.</strong> Doble clic en headings, párrafos, eyebrows, botones, y título y cuerpo de cards. El rich text tiene una barra flotante con negrita, itálica, link y quitar link.</li>
           <li><strong>Capas.</strong> Árbol con arrastre (antes, después o adentro), insertar, duplicar, borrar, mover, y copiar y pegar entre páginas.</li>
           <li><strong>Arrastre en el canvas.</strong> El bloque seleccionado muestra un agarre ⠿. Una línea azul indica dónde cae, y se valida con las mismas reglas que las capas.</li>
           <li><strong>Selección múltiple.</strong> Con ⇧ o ⌘ + clic en el canvas o en capas. Borrar, duplicar, copiar y mover aplican a todos.</li>
-          <li><strong>Imágenes.</strong> Se arrastra un archivo sobre una imagen, card, parallax o fondo de sección, o se sube desde el panel.</li>
+          <li><strong>Imágenes.</strong> Se arrastra un archivo sobre una imagen, card o fondo de sección, o se sube desde el panel.</li>
           <li><strong>Propiedades generadas del schema.</strong> Cada campo de cada bloque tiene su control; verify falla si alguno queda sin control.</li>
-          <li><strong>▶ Play.</strong> Reproduce las animaciones decorativas una vez. Mientras editás quedan quietas.</li>
         </ul>
         <h3>Atajos</h3>
       </div>
@@ -773,7 +764,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <tbody>
             <tr><td>Editor → canvas</td><td><code>render</code></td><td>Documento, rutas y componentes a dibujar</td></tr>
             <tr><td>Editor → canvas</td><td><code>select</code></td><td>Resaltar la selección, con scroll opcional</td></tr>
-            <tr><td>Editor → canvas</td><td><code>replay</code></td><td>▶ Play: remontar con motion decorativo</td></tr>
             <tr><td>Canvas → editor</td><td><code>ready</code></td><td>El iframe cargó</td></tr>
             <tr><td>Canvas → editor</td><td><code>select</code></td><td>Clic en un bloque (con <code>add</code> para multi-selección)</td></tr>
             <tr><td>Canvas → editor</td><td><code>text</code></td><td>Texto editado (string o Portable Text)</td></tr>
@@ -855,7 +845,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td><strong>Section</strong></td><td>Cualquier bloque</td><td><span class="pill no">No</span></td><td>Tema, espaciado, fondo (soltar imagen)</td></tr>
             <tr><td><strong>Component</strong> <code>componentRef</code></td><td>Una instancia de la librería</td><td>Según contenido</td><td>Overrides de texto e imagen</td></tr>
             <tr><td><strong>Eyebrow</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Texto en el lugar</td></tr>
-            <tr><td><strong>Heading</strong></td><td>—</td><td><span class="pill js">Si tiene animación</span></td><td>Rich text en el lugar</td></tr>
+            <tr><td><strong>Heading</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Rich text en el lugar</td></tr>
             <tr><td><strong>Paragraph</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Rich text en el lugar</td></tr>
             <tr><td><strong>Button Group</strong></td><td>Button</td><td><span class="pill no">No</span></td><td>—</td></tr>
             <tr><td><strong>Button</strong></td><td>—</td><td><span class="pill no">No</span></td><td>Label en el lugar</td></tr>
@@ -867,45 +857,10 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td><strong>Box</strong></td><td>Cualquier bloque</td><td><span class="pill no">No</span></td><td>—</td></tr>
             <tr><td><strong>Slider</strong></td><td>Card, Image</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
             <tr><td><strong>3D Logo</strong></td><td>—</td><td><span class="pill js">Sí · three.js aparte</span></td><td>—</td></tr>
-            <tr><td><strong>Horizontal Scroll</strong></td><td>Card, Image, Content</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
-            <tr><td><strong>Stacked Cards</strong></td><td>Card</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
-            <tr><td><strong>Marquee</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>—</td></tr>
-            <tr><td><strong>Scroll Text</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Texto en el lugar</td></tr>
-            <tr><td><strong>Big Type</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Texto en el lugar</td></tr>
-            <tr><td><strong>Parallax Media</strong></td><td>—</td><td><span class="pill js">Sí</span></td><td>Soltar imagen</td></tr>
           </tbody>
         </table>
       </div>
       <p class="prose small muted">Todos los bloques tienen además el panel de estilo. "JS" indica si hacen que su sección se hidrate en el sitio público.</p>
-    </section>
-
-    <!-- ───────────────────────── Motion ───────────────────────── -->
-    <section id="motion" data-only="tech">
-      <div class="prose">
-        <p class="eyebrow">Producto</p>
-        <h2>Motion</h2>
-        <p>GSAP se importa en un solo lugar, <code>core/motion/gsap.ts</code>, que además define cuándo corre cada tipo de animación. La regla es distinguir el movimiento que hace falta para llegar al contenido del que es decorativo:</p>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Tipo</th><th>Ejemplos</th><th>Sitio</th><th>Canvas del editor</th><th>Reduced motion</th></tr></thead>
-          <tbody>
-            <tr><td><strong>Layout</strong></td><td>Pin, scroll horizontal, sticky con scrub, parallax</td><td><span class="pill ok">Corre</span></td><td><span class="pill ok">Corre</span></td><td>Alternativa nativa</td></tr>
-            <tr><td><strong>Decorativo</strong></td><td>Splits de texto, entradas, loop del marquee, reveals</td><td><span class="pill ok">Corre</span></td><td><span class="pill no">Quieto</span> · ▶ Play</td><td><span class="pill no">No corre</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="prose">
-        <h3>Reglas para bloques animados</h3>
-        <ul>
-          <li><code>useGSAP</code> con <code>scope</code>, dentro del componente React. Nunca un <code>&lt;script&gt;</code> de Astro con <code>querySelector</code>: el editor re-renderiza bloques y el script no ve los nodos nuevos.</li>
-          <li>Si el bloque tiene hijos: <code>dependencies: [claves]</code> y <code>revertOnUpdate: true</code>, para que insertar o borrar reconstruya la animación.</li>
-          <li>Pinear un elemento <em>interno</em>, nunca el que lleva <code>data-sanity-path</code>. React es dueño del nodo exterior y el pin-spacer de GSAP va en el medio.</li>
-          <li>El texto se divide en un wrapper con <code>key</code> por texto. <code>SplitReveal</code> y <code>useSplit</code> ya lo hacen; reusarlos.</li>
-          <li>Lo que está en pantalla al cargar entra por tiempo, no por scrub, porque arrancaría a mitad de camino.</li>
-          <li>Declarar <code>js</code> en <code>meta.ts</code>. Si no, en el sitio público el bloque se ve pero no se mueve.</li>
-        </ul>
-      </div>
     </section>
 
     <!-- ───────────────────────── Instalación ───────────────────────── -->
@@ -923,7 +878,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <table>
           <thead><tr><th>Se copia</th><th>Qué es</th></tr></thead>
           <tbody>
-            <tr><td><code>src/core/</code></td><td>El producto: editor, render, estilos, motion, Sanity. No se modifica por proyecto</td></tr>
+            <tr><td><code>src/core/</code></td><td>El producto: editor, render, estilos, Sanity. No se modifica por proyecto</td></tr>
             <tr><td><code>src/blocks/</code></td><td>Registro y bloques de ejemplo. Se borran o se suman bloques</td></tr>
             <tr><td><code>src/documents/</code>, <code>src/schema.ts</code></td><td>page, component, settings, navigation</td></tr>
             <tr><td><code>src/theme/</code></td><td>Tokens (nombres que usa el editor) y CSS de los bloques. Solo lo cargan las páginas del editor</td></tr>
@@ -940,7 +895,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <p class="small muted">Probado sobre el template de blog oficial de Astro: build y verify en verde, el blog intacto y <code>src/core</code> sin cambios.</p>
         <h3>Configuración que se integra</h3>
         <ul>
-          <li><strong><code>package.json</code>:</strong> dependencias de Sanity, React 19 y Tailwind 4 (más GSAP, Embla y three si quedan los bloques de motion), <code>overrides: { sanity: "6.3.0" }</code> y <code>postinstall: patch-package --error-on-fail</code>.</li>
+          <li><strong><code>package.json</code>:</strong> dependencias de Sanity, React 19 y Tailwind 4 (más Embla y three si quedan el slider y el 3D), <code>overrides: { sanity: "6.3.0" }</code> y <code>postinstall: patch-package --error-on-fail</code>.</li>
           <li><strong><code>astro.config</code>:</strong> la integración <code>sanity()</code> con <code>studioBasePath: "/studio"</code> y hash routing, <code>react()</code>, el plugin de Tailwind y <code>optimizeDeps</code> completo. Sin eso último, el Studio queda en blanco en dev. El <code>output</code> y el <code>site</code> del proyecto se respetan.</li>
           <li><strong><code>tsconfig</code>:</strong> JSX de React y el alias <code>@/*</code> → <code>./src/*</code>.</li>
         </ul>
@@ -964,7 +919,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td>Cada layout que renderiza <code>&lt;PageBuilder islands /&gt;</code> incluye <code>&lt;Islands /&gt;</code></td><td>Es el que hidrata las secciones animadas, y en dev instala el preámbulo de React</td></tr>
             <tr><td>Los nombres de <code>tokens.css</code> no cambian; los valores sí</td><td>El panel de estilo ofrece esos nombres</td></tr>
             <tr><td>Links con <code>resolveLink()</code> y <code>pageHref()</code></td><td>Una sola fuente de URLs: links, sitemap, canonical, futuros idiomas</td></tr>
-            <tr><td>GSAP desde <code>@/core/motion/gsap</code>, con <code>useGSAP</code> y <code>scope</code></td><td>Ahí vive la política de motion del editor y del sitio</td></tr>
+            <tr><td>Okapi no trae librería de animación</td><td>Si el proyecto ya anima (GSAP, Motion, CSS), sigue con lo suyo y bajo su licencia</td></tr>
             <tr><td><code>sanity</code> en 6.3.0</td><td><code>patches/</code> solo encaja en esa versión</td></tr>
           </tbody>
         </table>
@@ -984,7 +939,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
   <span class="d">editor/</span>         <span class="c">EditorTool, CanvasApp, FieldControls, ops, paths, protocol, richtext</span>
   <span class="d">render/</span>         <span class="c">PageBuilder, BlockRenderer, instancias, overrides, Islands.astro + hydrate</span>
   <span class="d">style/</span>          <span class="c">tokens del panel, stylesheet por página, schema del campo design</span>
-  <span class="d">motion/</span>         <span class="c">gsap.ts (política), ScrollRefresh, useSplit, SplitReveal</span>
   <span class="d">sanity/</span>         <span class="c">client + loadQuery, site loader, queries, editable(), env</span>
   <span class="d">studio/</span>         <span class="c">inputs propios del Studio (sliders, enums, responsive)</span>
   <span class="d">lib/</span>            <span class="c">routes (pageHref/resolveLink), clean, staleChunkReload, types</span>
@@ -992,7 +946,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
 <span class="d">src/theme/</span>         <span class="c">tokens.css (lo primero que se cambia) + globals.css</span>
 <span class="d">src/chrome/</span>        <span class="c">header y footer del proyecto</span>
 <span class="d">src/documents/</span>     <span class="c">page, component, settings, navigation</span>
-<span class="d">src/pages/</span>         <span class="c">[slug] = páginas del editor · /edit-canvas = canvas · /lab = banco de motion (solo este repo)</span>
+<span class="d">src/pages/</span>         <span class="c">[slug] = páginas del editor · /edit-canvas = canvas</span>
 <span class="d">patches/</span>           <span class="c">ajustes a sanity@6.3.0 (ver su README)</span>
 <span class="d">scripts/</span>           <span class="c">verify, check-editor-schema, seeds</span>
 <span class="d">skills/</span>            <span class="c">skill okapi-astro (Claude Code): sigue INSTALL.md</span>
@@ -1099,17 +1053,6 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <li>La home tiene contenido real, canonical absoluto, sitemap y robots.</li>
           <li>Con una URL (<code>npm run verify -- https://dominio</code>), además responden <code>/</code>, <code>/studio</code> y <code>/edit-canvas</code>.</li>
         </ul>
-        <h3>Banco de motion</h3>
-        <p><code>/lab/&lt;slug&gt;</code>, solo en dev, repite sobre el PageBuilder real lo que hace el editor. Escribe en cada texto, inserta y borra dentro de bandas pineadas, invierte y duplica secciones, cicla animaciones y temas, y hace 25 ediciones rápidas, la mitad scrolleado dentro de un pin. Después de cada paso verifica:</p>
-        <ul>
-          <li>sin errores de React;</li>
-          <li>un pin-spacer por banda;</li>
-          <li>el recorrido del pin coincide con el del track;</li>
-          <li>sin ScrollTriggers colgados;</li>
-          <li>sin splits trabados;</li>
-          <li>sin overflow horizontal.</li>
-        </ul>
-        <p>Las páginas de prueba son <code>/lab-noir</code>, <code>/lab-kinetic</code> y <code>/lab-stack</code>.</p>
         <h3>Smoke test logueado</h3>
         <p>Los flujos que necesitan login no se pueden automatizar sin credenciales. Se prueban a mano, en una página descartable, antes de entregar un sitio:</p>
         <ol class="check">
@@ -1250,6 +1193,14 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <li>Instalable en proyectos Astro existentes, con <code>INSTALL.md</code> y <code>AGENTS.md</code> para cualquier agente. Esta documentación.</li>
           </ul>
         </li>
+        <li>
+          <time datetime="2026-10-18">18 oct 2026</time>
+          <h3>Sin GSAP</h3>
+          <ul>
+            <li>Okapi ya no trae GSAP ni bloques animados (Horizontal Scroll, Stacked Cards, Marquee, Scroll Text, Big Type, Parallax Media, la animación del Heading) ni el botón ▶ Play. Si un proyecto ya anima, sigue con lo suyo.</li>
+            <li>El JS de una página con islas baja de 139 KB a 91 KB.</li>
+          </ul>
+        </li>
       </ol>
     </section>
 
@@ -1339,7 +1290,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td><strong>Componentes de cualquier tamaño</strong></td><td>Guardar una card o un botón como componente e insertarlo dentro de secciones, grids o boxes.</td><td><span class="pill warn">Medio</span></td></tr>
             <tr><td><strong>Insertar como copia o enlazado</strong></td><td>Elegirlo al insertar desde la librería.</td><td><span class="pill ok">Chico</span></td></tr>
             <tr><td><strong>UI propia del Studio</strong></td><td>Reemplazar la barra y el marco de Sanity con la API oficial (<code>studio.components</code>) para que el editor sea la app entera.</td><td><span class="pill warn">Medio</span></td></tr>
-            <tr><td><strong>JS por bloque</strong></td><td>Que una sección con solo un marquee no cargue todos los bloques. Baja los 138 KB en páginas con poco motion.</td><td><span class="pill warn">Medio</span></td></tr>
+            <tr><td><strong>JS por bloque</strong></td><td>Que una sección con solo un slider no cargue todos los bloques. Baja los 91 KB en páginas con poco JS.</td><td><span class="pill warn">Medio</span></td></tr>
             <tr><td><strong>Paquete npm privado</strong></td><td>Instalar y actualizar con <code>npm</code> en vez de copiar <code>src/core</code>. Cuando haya 3 o más sitios en producción.</td><td><span class="pill warn">Medio</span></td></tr>
             <tr><td><strong>Idiomas</strong></td><td>Cuando un cliente lo pida. La base está en <code>pageHref</code> y <code>resolveLink</code>.</td><td><span class="pill warn">Medio</span></td></tr>
             <tr><td><strong>Gizmo 3D en el canvas</strong></td><td>Rotar el 3D Logo directamente en el canvas. Postergado.</td><td><span class="pill no">Pausado</span></td></tr>

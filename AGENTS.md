@@ -5,7 +5,7 @@ editor (a Studio tool at `/studio#/editor`), added to an Astro project. Edit
 text on the page, drag layers, add/duplicate/delete blocks, style with tokens,
 reusable components, drop images, undo. Sanity provides auth, roles, drafts,
 history, images and CDN. Pages it renders are **static HTML**; only sections
-with motion hydrate.
+that need JS (slider, 3D) hydrate.
 
 This file is for any coding agent (Claude Code reads it through `CLAUDE.md`).
 Installing Okapi into a project: **`INSTALL.md`**. Team docs: `site/docs/index.html`.
@@ -21,8 +21,6 @@ src/core/       The product. Same in every project — don't fork it per project
                 (settings/menus/routes), link type schema, structure
   studio/       custom Studio inputs (segmented enums, sliders, responsive numbers)
   render/       PageBuilder, BlockRenderer, Islands.astro + hydrate (public islands), Welcome
-  motion/       gsap.ts (the ONE place GSAP is imported + the motion policy),
-                ScrollRefresh, useSplit, SplitReveal
   lib/          clean, routes (pageHref/resolveLink), staleChunkReload, types
 src/blocks/     The project's blocks. One folder per type: schema.ts + Component.tsx
   meta.ts       THE registry: type names, titles, container slots, canvas flags
@@ -34,8 +32,6 @@ src/theme/      Per project. tokens.css = the design tokens (edit this first);
 src/chrome/     Header/footer. Per project — restyle or replace.
 src/documents/  Document types: page, settings (singleton), navigation (singleton)
 src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
-                /lab/[slug] = dev-only stress harness (not built in production).
-src/lab/        LabHarness: replays editor mutations + checks (see "Testing motion").
 patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
 skills/         okapi-astro: the Claude Code skill that starts a new project
 site/           the public site: index.html (landing) + docs/ (keep docs in sync with this file)
@@ -54,11 +50,14 @@ brand/          the Okapi mark (SVG) and brand notes
 - **Blocks get their data as props and stamp `editable(...)` on their root.**
   Never fetch inside a block: the editor canvas renders the same components
   from the document it is sent, and selects blocks by `data-sanity-path`.
-- **Animations live inside the React component** (`useGSAP` with a `scope`),
-  never in an Astro `<script>` with querySelector: the editor re-renders blocks
-  and a script won't see the new nodes. Split text inside a wrapper `key`ed by
-  the text, never on the element that carries `data-sanity-path`.
-  `core/motion/SplitReveal` already does this — reuse it.
+- **Okapi ships no animation library.** If the project already animates (GSAP,
+  Motion, CSS…), it keeps doing so under its own licence; Okapi adds no
+  animation fields or editor controls. Animate inside the React component
+  (effect with cleanup, declare `js` in `meta.ts`), never in an Astro
+  `<script>` with querySelector: the editor re-renders blocks and a script
+  won't see the new nodes. Never rewrite the DOM of the element that carries
+  `data-sanity-path` (split text inside an inner wrapper keyed by the text).
+  The editor canvas doesn't need to play animations.
 - **Styling: Tailwind 4 utilities built from the tokens** — `bg-bg text-fg
   bg-surface text-muted border-border bg-brand text-brand-contrast`,
   `rounded-main`, `gap-md p-lg` (the t-shirt spacing), `text-h-xl`,
@@ -68,8 +67,8 @@ brand/          the Okapi mark (SVG) and brand notes
   + the `@theme inline` map. No preflight, so the starter's base CSS is
   untouched; it lives in `@layer components`, so utilities override it.
 - **Public pages are plain HTML; only sections that need JS hydrate.** A block
-  with `js` in `meta.ts` (motion, slider, WebGL — or a predicate, e.g. Heading
-  only when `animation` is set) turns its top-level section into an island
+  with `js` in `meta.ts` (slider, WebGL, a project's own animations — or a
+  predicate on the block's fields) turns its top-level section into an island
   (`PageBuilder islands` → `[data-island]` → `core/render/hydrate.tsx`, loaded
   by `<Islands />` — put it in every layout that renders PageBuilder). A page without such blocks ships
   ~1 KB of JS. **A block with hooks/effects/handlers MUST declare `js`**, or it
@@ -99,11 +98,11 @@ Studio tool at `/studio#/editor` (the Studio's landing tool):
   validated against `meta.ts`); `ops.check.ts` runs in verify.
 
 What it does: double-click text to edit it in place (headings, paragraphs,
-eyebrows, button labels, card title/body, Big Type, Scroll Text — the canvas
+eyebrows, button labels, card title/body — the canvas
 holds incoming renders while you type and restores React's exact DOM after, so
 no caret jumps); layers tree with drag (before/after/inside); + Add, duplicate,
 delete, move, copy/paste between pages; undo/redo (typing coalesced); drop an
-image file on any image block/card/parallax/section or upload from the panel;
+image file on any image block/card/section or upload from the panel;
 device widths. Client view: content fields + reorder only.
 Rich text edits in place too: a floating bar (B, I, Link, Unlink; ⌘B ⌘I ⌘K) —
 `core/editor/richtext.ts` maps PT ⇄ editable HTML, keeping existing link
@@ -113,8 +112,6 @@ copy/paste and ▲▼ apply to all of them.
 **Drag on the canvas**: the selected block shows a ⠿ grip — drag it; a blue
 line shows where it lands (before/after the block under the pointer,
 horizontal inside rows/grids). Validated like any move (`moveNextTo`).
-**▶ Play** remounts the canvas once with decorative motion on (the canvas
-keeps it still while you edit); a block you edit afterwards goes still again.
 
 ### Permissions and the AI chat
 
@@ -178,44 +175,6 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   (`core/render/overrides.ts`); the master is untouched. The panel lists them
   with Reset. Inner blocks carry synthetic paths (`….__component.…`) — that
   marker is what routes an edit to an override.
-
-## Motion blocks
-
-Horizontal Scroll (pinned), Stacked Cards (sticky + scrub), Marquee (loop +
-scroll velocity), Scroll Text (words light up), Big Type (chars), Parallax
-Media, plus the Heading `animation` field. Policy (`core/motion/gsap.ts`):
-
-| Kind | Examples | Public | Editor canvas | Reduced motion |
-|---|---|---|---|---|
-| Layout | pin, horizontal scroll, sticky scrub, parallax | ✓ | ✓ (you must reach the content) | native fallback |
-| Decorative | text splits, entrances, marquee loop, clip reveals | ✓ | ✗ (would replay / re-split per keystroke) | ✗ |
-
-Rules for new motion blocks:
-- Import GSAP from `@/core/motion/gsap`, never from `"gsap"`.
-- `useGSAP` with `scope`; if the block has children, pass
-  `dependencies: [childKeys], revertOnUpdate: true` so inserts/removes rebuild it.
-- Pin an INNER element, never the one with `data-sanity-path` (React owns the
-  outer node; GSAP's pin-spacer goes between them).
-- Anything whose size can change without the page height changing (a track's
-  width) needs its own ResizeObserver → `ScrollTrigger.refresh()`.
-  `ScrollRefresh` covers page-height changes.
-- Full-bleed: `.section__container > .your-block { margin-inline: calc(50% - 50vw); width: 100vw }`
-  (the container resets child margins; match its specificity + 1).
-- On-screen-at-load elements get a time-based entrance, not a scrub (it would
-  start half-played).
-
-## Testing motion
-
-`npm run dev`, then open `/lab/<slug>` (append `?as-preview` for the editor's
-motion policy). The panel replays editor mutations on the real PageBuilder —
-typing into every text, inserting/removing items inside pinned bands,
-reversing/duplicating/deleting pinned sections, cycling animations and
-themes, 25 rapid edits — half of them while scrolled INTO a pin, and checks
-after each: React errors, one pin-spacer per band, pin distance = track
-travel, no dangling ScrollTriggers, no nested/stuck splits, no horizontal
-overflow, edited text rendered. Scripted: `await window.__lab.run()`.
-Seed the three test pages with `SANITY_WRITE_TOKEN=… node scripts/seed-lab.mjs`
-(/lab-noir, /lab-kinetic, /lab-stack — noindex).
 
 ## Editor smoke test (logged in, before handing a site to a client)
 

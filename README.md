@@ -3,7 +3,7 @@
 **Sanity as the database + the Okapi Editor** (our own visual editor, a tab
 inside the Studio at `/studio#/editor`), added to an Astro project — new or
 already started. Pages built in the editor ship as static HTML; only sections
-with motion hydrate.
+that need JS (slider, 3D) hydrate.
 
 - **Install** into a project, with any coding agent: [`INSTALL.md`](INSTALL.md).
   Tell your agent: *"Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su
@@ -16,8 +16,8 @@ with motion hydrate.
 
 ## This repo
 
-It is also a complete Astro project (example blocks, theme, header/footer and
-the `/lab` motion test bench), which is what a new project starts from:
+It is also a complete Astro project (example blocks, theme, header/footer),
+which is what a new project starts from:
 
 ```bash
 npm install                       # also applies patches/ (sanity is pinned to 6.3.0)

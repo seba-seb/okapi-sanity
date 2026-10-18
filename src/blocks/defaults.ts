@@ -114,12 +114,6 @@ const DEFAULTS = {
   card: () => ({ layout: "imageTop", heading: CARD_HEADING, body: CARD_BODY }),
   grid: () => ({ items: [defaultCard()] }),
   logo3d: () => ({ preset: "shape1", maxWidth: 35 }),
-  horizontalScroll: () => ({ panelWidth: 45, items: [defaultCard(), defaultCard(), defaultCard(), defaultCard()] }),
-  stackCards: () => ({ items: [defaultCard(), defaultCard(), defaultCard()] }),
-  marquee: () => ({ items: ["Strategy", "Design", "Motion", "Code"], separator: "✦", direction: "left", duration: 24 }),
-  textScrub: () => ({ size: "xl", text: PARAGRAPH_TEXT }),
-  bigType: () => ({ text: "Okapi", effect: "rise" }),
-  parallaxMedia: () => ({ height: 80, strength: 15, reveal: true }),
   box: () => ({
     layout: "stack",
     gap: "md",
