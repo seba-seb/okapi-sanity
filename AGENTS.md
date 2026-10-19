@@ -8,7 +8,8 @@ history, images and CDN. Pages it renders are **static HTML**; only sections
 that need JS (slider, 3D) hydrate.
 
 This file is for any coding agent (Claude Code reads it through `CLAUDE.md`).
-Installing Okapi into a project: **`INSTALL.md`**. Team docs: `site/docs/index.html`.
+Installing Okapi into a project: **`INSTALL.md`**. Team docs: `site/docs/index.html`
+(both live in the Okapi repo, github.com/seba-seb/okapi-sanity).
 
 ## Layout
 
@@ -23,7 +24,8 @@ src/core/       The product. Same in every project — don't fork it per project
   render/       PageBuilder, BlockRenderer, Islands.astro + hydrate (public islands), Welcome
   lib/          clean, routes (pageHref/resolveLink), staleChunkReload, types
 src/blocks/     The project's blocks. One folder per type: schema.ts + Component.tsx
-  meta.ts       THE registry: type names, titles, container slots, canvas flags
+  meta.ts       THE registry: type names, titles, container slots, canvas
+                flags, inline-editable text (`text`) and image drop (`imageField`)
   schemas.ts    type → schema     (typed against meta.ts)
   components.tsx type → component (typed against meta.ts)
   defaults.ts   what a block contains when inserted
@@ -32,6 +34,7 @@ src/theme/      Per project. tokens.css = the design tokens (edit this first);
 src/chrome/     Header/footer. Per project — restyle or replace.
 src/documents/  Document types: page, settings (singleton), navigation (singleton)
 src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
+# Only in the Okapi repo (not in an installed project):
 skills/         okapi-astro: the Claude Code skill that starts a new project
 site/           the public site: landing + docs in English (site/) and Spanish (site/es/); keep both docs in sync with this file
 brand/          the Okapi mark (SVG) and brand notes
@@ -227,8 +230,16 @@ Automated checks cover the canvas side only; these need a real login, in
    runs anything in the browser — see Rules).
 3. Register it in `blocks/schemas.ts` and `blocks/components.tsx` — the
    compiler errors until you do.
-4. Optional: insert defaults in `blocks/defaults.ts`; inline-editable text in
-   `TEXT_TARGETS` (`core/editor/CanvasApp.tsx`); image drop in `IMAGE_FIELDS`.
+4. Optional: insert defaults in `blocks/defaults.ts`; inline-editable text as
+   `text: [{ sel?, field, kind: "pt" | "string", multiline? }]` and image drop
+   as `imageField` in the block's `meta.ts` entry (core stays untouched; verify
+   fails if they name a field the block doesn't have).
+5. If a role in `okapi.policy.ts` has a `blocks` list, add the new type there
+   or that role won't see it in + Add (verify warns).
+6. **Lists** (FAQ items, stats, logos): an array of objects gets no panel
+   control. Make it a container block + a child block (`faq` with
+   `slot: { field: "items", accepts: ["faqItem"] }`); items are then edited
+   from the layers.
 
 Remove a block: delete its folder, its `meta.ts` entry and the two map entries,
 and any `accepts` that names it (the compiler points at them).

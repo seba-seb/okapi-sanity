@@ -11,6 +11,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
 import { gzipSync } from "node:zlib";
+import { loadEnv } from "vite";
 
 const baseUrl = process.argv[2];
 let failed = 0;
@@ -20,6 +21,29 @@ const fail = (msg) => {
   console.log(`  ✗ ${msg}`);
 };
 const check = (cond, msg) => (cond ? ok(msg) : fail(msg));
+let warned = 0;
+const warn = (msg) => {
+  warned++;
+  console.log(`  ⚠ ${msg}`);
+};
+
+/** Published pages in the dataset (null if it can't tell). A fresh install has none until someone publishes. */
+async function publishedPages() {
+  const env = { ...loadEnv("production", process.cwd(), ""), ...process.env };
+  const projectId = env.PUBLIC_SANITY_PROJECT_ID;
+  if (!projectId) return null;
+  const query = encodeURIComponent('count(*[_type == "page" && defined(slug.current)])');
+  const token = env.SANITY_API_READ_TOKEN;
+  try {
+    const res = await fetch(
+      `https://${projectId}.api.sanity.io/v2024-10-01/data/query/${env.PUBLIC_SANITY_DATASET || "production"}?query=${query}&perspective=published`,
+      token ? { headers: { authorization: `Bearer ${token}` } } : {},
+    );
+    return res.ok ? (await res.json()).result : null;
+  } catch {
+    return null;
+  }
+}
 
 console.log("\n1. Unit checks");
 execSync("node --experimental-strip-types --no-warnings src/core/lib/routes.check.ts", { stdio: "inherit" });
@@ -84,7 +108,11 @@ function jsGraph(html) {
 const isOkapi = (f) => /data-sanity-path=/.test(readFileSync(f, "utf8"));
 const index = join(outDir, "index.html");
 const pageFile = isOkapi(index) ? index : sitePages.find(isOkapi);
-check(!!pageFile, `Okapi rendered a page (${pageFile ? pageFile.slice(outDir.length) : "none — env, dataset or routes?"})`);
+// The build already fails if Sanity is unreachable; zero pages just means nothing is published yet.
+const noPagesYet = !pageFile && (await publishedPages()) === 0;
+const NOTHING_PUBLISHED = "no page is published yet — create one in the editor and publish it (with the user's OK: it goes live), then re-run";
+if (noPagesYet) warn(`Okapi rendered a page: ${NOTHING_PUBLISHED}`);
+else check(!!pageFile, `Okapi rendered a page (${pageFile ? pageFile.slice(outDir.length) : "none — env, dataset or routes?"})`);
 if (pageFile) {
   const html = readFileSync(pageFile, "utf8");
   const graph = jsGraph(html);
@@ -95,7 +123,9 @@ if (pageFile) {
   check(/<link rel="canonical" href="https?:\/\/[^"]+"/.test(html), "page has an absolute canonical");
 }
 const home = readFileSync(index, "utf8");
-check(!home.includes("Your visual page builder is ready"), "home is not the <Welcome> setup screen — env + dataset OK");
+const welcome = home.includes("Your visual page builder is ready");
+if (welcome && noPagesYet) warn(`home shows the <Welcome> setup screen: ${NOTHING_PUBLISHED}`);
+else check(!welcome, "home is not the <Welcome> setup screen — env + dataset OK");
 check(["sitemap.xml", "sitemap-index.xml"].some((f) => existsSync(join(outDir, f))) && existsSync(join(outDir, "robots.txt")), "sitemap + robots.txt built");
 
 if (baseUrl) {
@@ -106,5 +136,5 @@ if (baseUrl) {
   check((await status("/edit-canvas")) === 200, "/edit-canvas → 200");
 }
 
-console.log(failed ? `\n${failed} check(s) failed.\n` : "\nAll checks passed.\n");
+console.log(failed ? `\n${failed} check(s) failed.\n` : `\nAll checks passed${warned ? ` (${warned} warning${warned > 1 ? "s" : ""})` : ""}.\n`);
 process.exit(failed ? 1 : 0);

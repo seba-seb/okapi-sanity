@@ -1049,7 +1049,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           </tbody>
         </table>
       </div>
-      <p class="prose small muted">The only tables in <code>src/core</code> a project touches are <code>TEXT_TARGETS</code> and <code>IMAGE_FIELDS</code> (<code>CanvasApp.tsx</code>), plus <code>pageHref()</code> if editor pages are mounted under a prefix.</p>
+      <p class="prose small muted">A project doesn't touch <code>src/core</code>: editable text and image drop are declared per block in <code>meta.ts</code>. The only exception is <code>pageHref()</code> if editor pages are mounted under a prefix.</p>
     </section>
 
     <!-- ───────────────────────── Code ───────────────────────── -->
@@ -1101,7 +1101,7 @@ AGENTS.md          <span class="c">rules for working on the code (imported by CL
         <li><div><strong>Schema and component</strong><p><code>src/blocks/&lt;type&gt;/schema.ts</code> with <code>defineType</code> and an icon from <code>@sanity/icons</code>, plus <code>&lt;Type&gt;.tsx</code>, which receives <code>{ block, path, ctx }</code>.</p></div></li>
         <li><div><strong>Registry</strong><p>An entry in <code>meta.ts</code>: title, <code>slot</code> if it contains other blocks, <code>margin</code>, and <code>js</code> if it runs anything in the browser.</p></div></li>
         <li><div><strong>Maps</strong><p>Register it in <code>schemas.ts</code> and <code>components.tsx</code>. The compiler reports an error until you do.</p></div></li>
-        <li><div><strong>Editor (optional)</strong><p>Content on insert in <code>defaults.ts</code>, editable text in <code>TEXT_TARGETS</code> and image drop in <code>IMAGE_FIELDS</code> (both in <code>CanvasApp.tsx</code>).</p></div></li>
+        <li><div><strong>Editor (optional)</strong><p>Content on insert in <code>defaults.ts</code>, editable text (<code>text</code>) and image drop (<code>imageField</code>) in the block's <code>meta.ts</code> entry. If a role has a <code>blocks</code> list, add the type there too.</p></div></li>
       </ol>
       <div class="code"><pre><span class="c">// src/blocks/meta.ts</span>
 quote: { title: <span class="k">"Quote"</span>, margin: true },

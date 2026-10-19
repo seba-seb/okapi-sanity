@@ -1049,7 +1049,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           </tbody>
         </table>
       </div>
-      <p class="prose small muted">Las únicas tablas de <code>src/core</code> que un proyecto toca son <code>TEXT_TARGETS</code> e <code>IMAGE_FIELDS</code> (<code>CanvasApp.tsx</code>), y <code>pageHref()</code> si las páginas del editor se montan bajo un prefijo.</p>
+      <p class="prose small muted">Un proyecto no toca <code>src/core</code>: el texto editable y el soltar imagen se declaran por bloque en <code>meta.ts</code>. La única excepción es <code>pageHref()</code> si las páginas del editor se montan bajo un prefijo.</p>
     </section>
 
     <!-- ───────────────────────── Código ───────────────────────── -->
@@ -1101,7 +1101,7 @@ AGENTS.md          <span class="c">reglas para trabajar en el código (CLAUDE.md
         <li><div><strong>Schema y componente</strong><p><code>src/blocks/&lt;tipo&gt;/schema.ts</code> con <code>defineType</code> y un ícono de <code>@sanity/icons</code>, más <code>&lt;Tipo&gt;.tsx</code>, que recibe <code>{ block, path, ctx }</code>.</p></div></li>
         <li><div><strong>Registro</strong><p>Entrada en <code>meta.ts</code>: título, <code>slot</code> si contiene otros bloques, <code>margin</code>, y <code>js</code> si corre algo en el navegador.</p></div></li>
         <li><div><strong>Mapas</strong><p>Registrarlo en <code>schemas.ts</code> y <code>components.tsx</code>. El compilador marca error hasta que esté.</p></div></li>
-        <li><div><strong>Editor (opcional)</strong><p>Contenido al insertarlo en <code>defaults.ts</code>, texto editable en <code>TEXT_TARGETS</code> y soltar imagen en <code>IMAGE_FIELDS</code> (ambos en <code>CanvasApp.tsx</code>).</p></div></li>
+        <li><div><strong>Editor (opcional)</strong><p>Contenido al insertarlo en <code>defaults.ts</code>, texto editable (<code>text</code>) y soltar imagen (<code>imageField</code>) en la entrada del bloque en <code>meta.ts</code>. Si un rol tiene lista <code>blocks</code>, sumá el tipo ahí también.</p></div></li>
       </ol>
       <div class="code"><pre><span class="c">// src/blocks/meta.ts</span>
 quote: { title: <span class="k">"Quote"</span>, margin: true },

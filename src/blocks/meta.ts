@@ -23,23 +23,38 @@ export type BlockMeta = {
    * plain HTML and only hydrates the top-level sections holding such a block.
    */
   js?: true | ((block: Record<string, unknown>) => boolean);
+  /**
+   * Text edited in place on the editor canvas (double-click): the block's own
+   * element, or `sel` inside it. `kind` = the field's type ("pt" = rich text).
+   */
+  text?: readonly TextTarget[];
+  /** Field a dropped image file goes to on the editor canvas. */
+  imageField?: string;
 };
+export type TextTarget = { sel?: string; field: string; kind: "pt" | "string"; multiline?: boolean };
 
 export const BLOCKS = {
-  section: { title: "Section", slot: { field: "content" }, topLevel: true },
+  section: { title: "Section", slot: { field: "content" }, topLevel: true, imageField: "backgroundImage" },
   componentRef: { title: "Component", topLevel: true },
-  eyebrow: { title: "Eyebrow", margin: true },
-  heading: { title: "Heading", margin: true },
-  paragraph: { title: "Paragraph", margin: true },
+  eyebrow: { title: "Eyebrow", margin: true, text: [{ field: "text", kind: "string" }] },
+  heading: { title: "Heading", margin: true, text: [{ field: "text", kind: "pt" }] },
+  paragraph: { title: "Paragraph", margin: true, text: [{ field: "text", kind: "pt", multiline: true }] },
   buttonWrapper: { title: "Button Group", slot: { field: "buttons", accepts: ["button"] } },
-  button: { title: "Button" },
-  imageBlock: { title: "Image" },
+  button: { title: "Button", text: [{ sel: ".btn__label", field: "label", kind: "string" }] },
+  imageBlock: { title: "Image", imageField: "image" },
   loopingVideo: { title: "Looping Video" },
   contentWrapper: {
     title: "Content",
     slot: { field: "content", accepts: ["eyebrow", "heading", "paragraph", "buttonWrapper"] },
   },
-  card: { title: "Card" },
+  card: {
+    title: "Card",
+    imageField: "image",
+    text: [
+      { sel: ".card__title", field: "heading", kind: "string" },
+      { sel: ".card__text", field: "body", kind: "string", multiline: true },
+    ],
+  },
   slider: { title: "Slider", slot: { field: "slides", accepts: ["card", "imageBlock"] }, js: true },
   grid: {
     title: "Grid",

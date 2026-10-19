@@ -2,6 +2,9 @@ import { defineArrayMember, defineField, defineType } from "sanity";
 import { FEATURES } from "@/core/config";
 import { DocumentIcon } from "@sanity/icons/Document";
 
+// Routes Okapi itself serves; a page with one of these slugs would never show.
+const RESERVED_SLUGS = ["studio", "edit-canvas", "api", "sitemap.xml", "robots.txt", "_astro"];
+
 export const page = defineType({
   name: "page",
   title: "Page",
@@ -25,8 +28,14 @@ export const page = defineType({
       type: "slug",
       group: "content",
       options: { source: "title", maxLength: 96 },
-      description: 'Use "home" for the homepage.',
-      validation: (rule) => rule.required(),
+      description: 'Use "home" for the homepage. One level: served at /<slug>.',
+      validation: (rule) =>
+        rule.required().custom((value) => {
+          const slug = (value as { current?: string } | undefined)?.current ?? "";
+          if (slug.includes("/")) return 'One level only, no "/": pages are served at /<slug>.';
+          if (RESERVED_SLUGS.includes(slug)) return `"${slug}" is a route of the site itself.`;
+          return true;
+        }),
     }),
     defineField({
       name: "sections",

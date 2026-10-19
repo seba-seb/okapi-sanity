@@ -4,7 +4,8 @@
 import { createSchema, type ObjectSchemaType, type SchemaType } from "sanity";
 
 import { schemaTypes } from "../src/schema";
-import { blockTypes } from "../src/blocks/meta";
+import { blockMeta, blockTypes } from "../src/blocks/meta";
+import { POLICY } from "../src/okapi.policy";
 import { controlKind, isContent } from "../src/core/editor/FieldControls";
 
 const schema = createSchema({ name: "check", types: schemaTypes });
@@ -26,9 +27,30 @@ function visit(type: ObjectSchemaType, path: string) {
 const active = blockTypes.filter((t) => schema.get(t));
 for (const t of active) visit(schema.get(t) as ObjectSchemaType, t);
 
+// Canvas declarations in meta.ts (`text`, `imageField`) must name real fields.
+const wrongFields: string[] = [];
+for (const t of active) {
+  const fields = new Set(((schema.get(t) as ObjectSchemaType).fields ?? []).map((f) => f.name));
+  const m = blockMeta(t);
+  for (const f of [...(m?.text ?? []).map((x) => x.field), ...(m?.imageField ? [m.imageField] : [])])
+    if (!fields.has(f)) wrongFields.push(`${t}.${f}`);
+}
+
 console.log(`${active.length} blocks · controls:`, tally, `· client-visible ${content} / team-only ${design}`);
 if (unsupported.length) {
   console.error("UNSUPPORTED:\n  " + unsupported.join("\n  "));
   process.exit(1);
+}
+if (wrongFields.length) {
+  console.error("meta.ts text/imageField names a field the block doesn't have:\n  " + wrongFields.join("\n  "));
+  process.exit(1);
+}
+
+// Warning only: roles with a `blocks` list don't get new blocks automatically.
+for (const [role, rule] of Object.entries(POLICY)) {
+  if (!rule.can.includes("structure") || !rule.blocks) continue;
+  const missing = active.filter((t) => t !== "componentRef" && !rule.blocks!.includes(t));
+  if (missing.length)
+    console.warn(`  ⚠ ${rule.label} (${role}) can't add: ${missing.join(", ")} — add them to its \`blocks\` in src/okapi.policy.ts if they should.`);
 }
 console.log("check-editor-schema: ok");

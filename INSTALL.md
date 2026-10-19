@@ -54,6 +54,9 @@ Preguntá solo lo que no puedas deducir del proyecto:
   sanity.io/manage y te pasa el **project ID**, que no es secreto.
 - **Solo si el proyecto es existente:**
   - ¿La home sale del editor o queda la actual? Por defecto, queda la actual.
+    Tercera opción: mover la home actual a otra ruta (por ejemplo
+    `src/pages/index.astro` → `src/pages/inicio.astro`) y que `/` salga del
+    editor. Si elige esa, revisá los links internos que apuntaban a `/`.
   - Las páginas del editor se sirven en `/<slug>` (ver B4).
 
 ### Qué instalar
@@ -103,7 +106,8 @@ Seguí con los **pasos comunes**.
 - **Astro ≥ 7.** Si es más viejo, frená: actualizar Astro es un trabajo aparte
   que el usuario tiene que aprobar.
 - **Árbol de git limpio.** Así el usuario ve el diff completo de la
-  instalación.
+  instalación. Si el proyecto no es un repo, proponé `git init` y un commit
+  base con todo lo actual, y hacelo solo con su OK.
 - **Alias `@/*` → `./src/*` en `tsconfig.json`.** Todo Okapi importa con
   `@/`.
   - Si no existe, agregalo.
@@ -128,15 +132,23 @@ según la tabla o preguntá.
 R=/tmp/okapi
 mkdir -p src/layouts src/pages scripts sanity public
 cp -Rn $R/src/core $R/src/blocks $R/src/documents $R/src/theme $R/src/chrome src/
-cp -n  $R/src/schema.ts $R/src/okapi.policy.ts src/
+cp -n  $R/src/schema.ts $R/src/okapi.config.json $R/src/okapi.policy.ts src/
 cp -n  $R/src/layouts/Base.astro src/layouts/
 cp -n  $R/src/pages/edit-canvas.astro "$R/src/pages/[slug].astro" src/pages/
 cp -n  $R/sanity.config.ts $R/sanity.cli.ts .
 cp -n  $R/scripts/verify.mjs $R/scripts/check-editor-schema.ts $R/scripts/okapi-setup.mjs scripts/
-cp -n  $R/src/okapi.config.json $R/src/okapi.policy.ts src/
 cp -n  $R/sanity/seed.ndjson sanity/
 cp -n  $R/public/placeholder.svg public/
+# Según la tabla de abajo:
+# cp -n $R/src/pages/index.astro src/pages/                         # solo si la home sale del editor
+# cp -n $R/src/pages/sitemap.xml.ts $R/src/pages/robots.txt.ts src/pages/   # ver "Sitemap y robots" (B3)
+# cp -n $R/AGENTS.md $R/CLAUDE.md .                            # ver B5 si ya existen
 ```
+
+**`.env.example`:** sumá al del proyecto (o creálo) las líneas de
+`$R/.env.example`. Ahí están documentadas las variables del chat
+(`ANTHROPIC_API_KEY`, `AI_MODELS`…); cuando se borra `/tmp/okapi`, es la única
+referencia que queda.
 
 | Copiar | Qué es | Obligatorio |
 |---|---|---|
@@ -144,6 +156,7 @@ cp -n  $R/public/placeholder.svg public/
 | `src/blocks/` | Registro de bloques y bloques base. Después se borran o se agregan bloques | Sí |
 | `src/documents/`, `src/schema.ts` | Documentos de Sanity: page, component, settings, navigation | Sí |
 | `src/okapi.policy.ts` | Qué puede hacer cada rol en el editor y el chat | Sí |
+| `src/okapi.config.json` | Módulos activos (chat, componentes); lo escribe `okapi:setup` | Sí |
 | `src/theme/` | `tokens.css` (los nombres que usa el editor) + CSS de los bloques | Sí |
 | `src/layouts/Base.astro` | Layout de las páginas de Okapi: SEO, header y footer, `<Islands />` | Sí (ver B4) |
 | `src/chrome/` | Header y footer que leen Navigation | Sí, salvo que reemplaces `SiteHeader`/`SiteFooter` en el layout (B4) |
@@ -176,9 +189,9 @@ cp -n  $R/public/placeholder.svg public/
   // bloques de ejemplo (si se quedan): slider, 3D
   "embla-carousel-react": "^8.6.0", "three": "^0.160.0"
 },
-"devDependencies": { "vite": "*", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
+"devDependencies": { "vite": "*", "@astrojs/check": "^0.9.10", "typescript": "^5.7.0", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
 "engines": { "node": ">=22.12" },
-"scripts": { "verify": "node scripts/verify.mjs", "okapi:setup": "node scripts/okapi-setup.mjs" }
+"scripts": { "verify": "node scripts/verify.mjs", "typecheck": "astro check && tsc --noEmit", "okapi:setup": "node scripts/okapi-setup.mjs" }
 ```
 
 `vite` va explícito porque `astro.config` importa `loadEnv` de `vite`.
@@ -192,7 +205,17 @@ Copiá los bloques tal cual: cada línea tiene su razón documentada en ese arch
 - `image.remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }]`.
 - `resolveAdapter()`, la const `adapter` y la integración `editorChat`: crean
   la ruta `/api/editor-chat` del chat. Si el proyecto ya tiene un `adapter`,
-  dejá el suyo y asignalo a esa const.
+  dejá el suyo y no copies `resolveAdapter()`:
+
+  ```js
+  import vercel from "@astrojs/vercel"; // el que ya usaba el proyecto
+  const adapter = vercel();             // editorChat lee esta const
+  // …editorChat tal cual…
+  export default defineConfig({ adapter, integrations: [editorChat, /* … */] });
+  ```
+
+  Corregí los comentarios copiados que nombran `resolveAdapter()`. Si el
+  proyecto ya tiene una ruta `/api/editor-chat`, frená y preguntá.
 - `image.service: passthroughImageService()` solo si el proyecto no usa
   `astro:assets`. Si lo usa, dejá su servicio.
 - `vite.optimizeDeps` completo (`entries` + `include`). Sin eso, el Studio
@@ -259,8 +282,9 @@ alias `@/*` (B1).
   contenido del nuestro. No reemplaces el suyo.
   - Sacale el título `#` al nuestro y bajá cada encabezado un nivel
     (`##` → `###`).
-  - Nuestro texto menciona `INSTALL.md` y `site/docs/index.html`. Copialos o
-    reemplazá esas menciones por el link al repo de Okapi.
+  - Nuestro texto menciona `INSTALL.md`, `site/docs/index.html` y, en
+    *Layout*, `skills/`, `site/` y `brand/`, que no existen en un proyecto
+    instalado. Sacá esas líneas o reemplazalas por el link al repo de Okapi.
 - **`CLAUDE.md`:**
   - Si existe y no contiene `@AGENTS.md`, agregale esa línea.
   - Si es un symlink a `AGENTS.md`, no lo toques.
@@ -305,6 +329,11 @@ internas del repo de Okapi y corre `npm install`.
 
 Con el MCP de Sanity, o pidiéndole al usuario que lo haga en sanity.io/manage:
 1. **Proyecto:** creá el proyecto, o usá el que te pasó el usuario.
+   - **Ojo con el MCP:** `create_project` devuelve tokens de lectura y
+     escritura en texto plano, dentro de tu contexto. Eso choca con la regla 1.
+     Lo recomendado es que el usuario cree el proyecto a mano y te pase el
+     project ID. Si igual lo creás con el MCP, no muestres ni uses esos tokens
+     y pedile al usuario que los revoque en sanity.io/manage → API → Tokens.
 2. **Dataset:** `production`, **público**. El sitio lee en el build sin token.
 3. **CORS:** origen `http://localhost:4321` **con credenciales**. Sin esto,
    `/studio` muestra "Connect this studio to your project". Cada puerto o
@@ -322,14 +351,21 @@ npm install
 npm run dev -- --port 4321
 ```
 
-### 3. Contenido demo (lo corre el usuario)
+Mirá en qué puerto arrancó de verdad: si el 4321 estaba ocupado, Astro usa
+otro y el Studio no conecta (CORS). Pedile al usuario que libere el 4321, o
+pedí OK para sumar ese origen al CORS.
+
+### 3. Contenido demo (solo con `--demo`)
 
 ```bash
 npx sanity login && npx sanity dataset import sanity/seed.ndjson production
 ```
 
-Usa la sesión del usuario; no hace falta token. En un proyecto existente es
-opcional: también se puede crear la primera página desde el editor.
+Usa la sesión del usuario; no hace falta token. `npx sanity login` lo corre el
+usuario. El import publica contenido, así que pedí un sí explícito. Con ese sí
+y la sesión de la CLI ya iniciada, lo podés correr vos. En un proyecto
+existente es opcional: también se puede crear la primera página desde el
+editor.
 
 ### 4. Comprobar
 
@@ -340,6 +376,9 @@ opcional: también se puede crear la primera página desde el editor.
 - [ ] `npm run verify` en verde.
   - En un proyecto existente, el chequeo que importa es "Okapi rendered
     a page".
+  - Sin contenido demo y sin ninguna página publicada, ese chequeo queda como
+    aviso (⚠), no como error. La instalación cierra igual. El usuario crea y
+    publica la primera página cuando quiera; publicar sale en vivo.
   - El de la pantalla de bienvenida pasa siempre si la home es del proyecto.
 
 ### 5. Roles
@@ -425,12 +464,19 @@ del editor:
      animaciones, carruseles.
 4. Opcional:
    - contenido inicial en `defaults.ts`;
-   - texto editable sobre la página en `TEXT_TARGETS`
-     (`src/core/editor/CanvasApp.tsx`);
-   - soltar imágenes en `IMAGE_FIELDS`.
-   - **Excepción:** son las únicas tablas de core que se tocan por proyecto.
-     Mencionalo.
-5. `npm run verify` falla si un campo no tiene control en el editor.
+   - texto editable sobre la página: `text` en la entrada de `meta.ts`
+     (`[{ sel: ".faq__q", field: "question", kind: "string" }]`; sin `sel`,
+     el bloque entero);
+   - soltar imágenes: `imageField` en `meta.ts`.
+   - Todo se declara en `meta.ts`: `src/core/` no se toca.
+5. `npm run verify` falla si un campo no tiene control en el editor, o si
+   `text`/`imageField` nombran un campo que el bloque no tiene. Avisa (sin
+   fallar) si un rol con lista `blocks` en `okapi.policy.ts` no puede
+   agregar el bloque nuevo.
+   - **Listas** (FAQ, stats, logos): un campo de tipo array de objetos no
+     tiene control en el panel. Se hace con un bloque contenedor y un bloque
+     hijo (`faq` con `slot: { field: "items", accepts: ["faqItem"] }`), y así
+     se editan desde capas.
 
 Reglas completas para bloques, animaciones y estilos: `AGENTS.md`.
 

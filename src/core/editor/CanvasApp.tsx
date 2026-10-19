@@ -6,6 +6,7 @@ import type { Routes } from "@/core/lib/routes";
 import type { Components } from "@/core/render/components";
 import type { Page } from "@/core/lib/types";
 import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
+import { blockMeta } from "@/blocks/meta";
 
 import { listen, post, type ToCanvas } from "./protocol";
 import { htmlToPt, ptPlain, ptToHtml } from "./richtext";
@@ -16,19 +17,9 @@ installStaleChunkReload();
 
 const EMPTY = {};
 
-/** Which text in each block can be edited in place (selector inside the block, or the block itself). */
-const TEXT_TARGETS: Record<string, { sel?: string; field: string; kind: "pt" | "string"; multiline?: boolean }[]> = {
-  heading: [{ field: "text", kind: "pt" }],
-  paragraph: [{ field: "text", kind: "pt", multiline: true }],
-  eyebrow: [{ field: "text", kind: "string" }],
-  button: [{ sel: ".btn__label", field: "label", kind: "string" }],
-  card: [
-    { sel: ".card__title", field: "heading", kind: "string" },
-    { sel: ".card__text", field: "body", kind: "string", multiline: true },
-  ],
-};
-/** Blocks that take a dropped image file, and the field it goes to. */
-const IMAGE_FIELDS: Record<string, string> = { imageBlock: "image", card: "image", section: "backgroundImage" };
+// Which text is editable in place and where a dropped image goes: declared per
+// block in the project's registry (`text`, `imageField` in blocks/meta.ts).
+const imageFieldOf = (type: string | null | undefined) => blockMeta(type ?? undefined)?.imageField;
 
 type Box = { top: number; left: number; width: number; height: number; label: string } | null;
 const boxOf = (el: Element | null): Box => {
@@ -190,7 +181,7 @@ export function CanvasApp() {
       const path = block?.getAttribute("data-sanity-path");
       const type = block?.getAttribute("data-sanity-type") ?? "";
       if (!block || !path || editing.current) return;
-      const targets = TEXT_TARGETS[type];
+      const targets = blockMeta(type)?.text;
       const target = targets?.find((t) => (t.sel ? (e.target as Element).closest(t.sel) : true));
       if (!target) return;
       const el = (target.sel ? (e.target as Element).closest(target.sel) : block) as HTMLElement | null;
@@ -297,7 +288,7 @@ export function CanvasApp() {
     const imageTarget = (t: EventTarget | null) => {
       // Inside an instance: the inner image block (the drop becomes an override).
       let el = t instanceof Element ? t.closest("[data-sanity-path]") : null;
-      while (el && !IMAGE_FIELDS[el.getAttribute("data-sanity-type") ?? ""]) el = el.parentElement?.closest("[data-sanity-path]") ?? null;
+      while (el && !imageFieldOf(el.getAttribute("data-sanity-type"))) el = el.parentElement?.closest("[data-sanity-path]") ?? null;
       return el;
     };
     const onDragOver = (e: DragEvent) => {
@@ -316,7 +307,7 @@ export function CanvasApp() {
       if (!el || !file) return;
       e.preventDefault();
       const path = el.getAttribute("data-sanity-path")!;
-      post(window.parent, { type: "drop", path, field: IMAGE_FIELDS[el.getAttribute("data-sanity-type")!], file });
+      post(window.parent, { type: "drop", path, field: imageFieldOf(el.getAttribute("data-sanity-type"))!, file });
       setSelected(path);
       post(window.parent, { type: "select", path });
     };
