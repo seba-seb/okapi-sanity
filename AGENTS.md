@@ -42,6 +42,19 @@ site/           the public site: index.html (landing) + docs/ (keep docs in sync
 brand/          the Okapi mark (SVG) and brand notes
 ```
 
+## What a project uses (`npm run okapi:setup`)
+
+At install time the agent asks which modules the person wants (INSTALL.md →
+Paso 0) and runs `scripts/okapi-setup.mjs` with the answers (`--dry-run` first,
+then `--yes`). **Optional blocks** (motion, slider, logo3d) are deleted with
+their deps; **core features** are flags in `src/okapi.config.json`
+(`features.chat`, `features.components`), read through `core/config.ts`
+(`FEATURES`): chat off = no host adapter, no `/api/editor-chat`, no Chat tab;
+components off = no `component` document, no `componentRef`, no Make
+component. It also writes `src/okapi.policy.ts` from a roles preset and removes
+the Okapi repo's own tooling (lab, seed generators). It refuses to run in the
+Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
+
 ## Rules
 
 - **Core is shared.** A fix in `src/core` belongs to the starter first, then

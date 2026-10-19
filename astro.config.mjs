@@ -2,6 +2,7 @@ import { defineConfig, passthroughImageService } from "astro/config";
 import react from "@astrojs/react";
 import sanity from "@sanity/astro";
 import { loadEnv } from "vite";
+import { readFileSync } from "node:fs";
 import tailwindcss from "@tailwindcss/vite";
 
 // astro.config runs before Astro loads .env, so read it with Vite's loader.
@@ -41,7 +42,18 @@ function resolveSite() {
  * (/api/editor-chat), which holds the project's AI key. Any other host: plain
  * static output, chat disabled. OKAPI_ADAPTER=vercel|netlify|cloudflare|none overrides.
  */
+// The project's Okapi choices (npm run okapi:setup). Chat off = no adapter, no server route.
+const okapi = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL("./src/okapi.config.json", import.meta.url), "utf8"));
+  } catch {
+    return {};
+  }
+})();
+const chatEnabled = okapi.features?.chat !== false;
+
 async function resolveAdapter() {
+  if (!chatEnabled) return undefined;
   const pick = (k) => (env[k] ?? process.env[k] ?? "").trim();
   const host =
     pick("OKAPI_ADAPTER") ||
@@ -64,7 +76,7 @@ const editorChat = {
   name: "okapi-editor-chat",
   hooks: {
     "astro:config:setup": ({ command, injectRoute }) => {
-      if (command === "dev" || adapter)
+      if (chatEnabled && (command === "dev" || adapter))
         injectRoute({ pattern: "/api/editor-chat", entrypoint: "./src/core/editor/server/chatRoute.ts", prerender: false });
     },
   },

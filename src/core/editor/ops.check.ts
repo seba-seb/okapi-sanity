@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 
 import { needsJs } from "../../blocks/meta.ts";
+import { FEATURES } from "../config.ts";
 import { canPlace, duplicate, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, topmost } from "./ops.ts";
 
 const h = (k: string) => ({ _type: "heading", _key: k, text: [] });
@@ -53,11 +54,15 @@ assert.equal(sec._type, "section");
 assert.equal((sec.content as { _type: string }[])[0]._type, "heading");
 assert.equal(insert(doc, "sections", 0, sec).doc.sections![0]._key, sec._key);
 
-// Component instances: page top level only, never inside a component
-assert.equal(canPlace(doc, "componentRef", "sections"), true);
-assert.equal(canPlace({ ...doc, _type: "component" }, "componentRef", "sections"), false);
-assert.equal(canPlace(doc, "componentRef", `${S1}.content`), false);
-assert.deepEqual(insertTarget(doc, H1, "componentRef"), { arrayPath: "sections", index: 1 }); // climbs to the page level
+// Component instances: page top level only, never inside a component — and only with the feature on
+if (FEATURES.components) {
+  assert.equal(canPlace(doc, "componentRef", "sections"), true);
+  assert.equal(canPlace({ ...doc, _type: "component" }, "componentRef", "sections"), false);
+  assert.equal(canPlace(doc, "componentRef", `${S1}.content`), false);
+  assert.deepEqual(insertTarget(doc, H1, "componentRef"), { arrayPath: "sections", index: 1 }); // climbs to the page level
+} else {
+  assert.equal(canPlace(doc, "componentRef", "sections"), false);
+}
 
 // Multi-selection
 assert.deepEqual(topmost([G1, C1, H1]), [G1, H1]); // the card is inside the selected grid
@@ -81,7 +86,7 @@ assert.throws(() => moveNextTo(doc, H1, C1, "before")); // a heading can't go in
 
 // Islands: a section needs JS only if some block in its tree does
 assert.equal(needsJs(doc.sections[0]), false);
-assert.equal(needsJs({ _type: "section", content: [{ _type: "grid", items: [{ _type: "logo3d" }] }] }), true);
+assert.equal(needsJs({ _type: "section", content: [{ _type: "grid", items: [{ _type: "card" }, { _type: "heading", animation: "words" }] }] }), true); // found deep
 assert.equal(needsJs([{ _type: "heading", animation: "none" }]), false);
 assert.equal(needsJs([{ _type: "heading", animation: "words" }]), true);
 

@@ -8,6 +8,7 @@ import { parsePath, randomKey, reKey, resolveSelection } from "@/core/editor/pat
 import { acceptedTypes, blockMeta } from "@/blocks/meta";
 import { INSERT_DEFAULTS } from "@/blocks/defaults";
 import type { Block } from "@/core/lib/types";
+import { FEATURES } from "@/core/config";
 
 export type Doc = { _type?: string; sections?: Block[] } & Record<string, unknown>;
 type Node = Record<string, unknown> | unknown[] | undefined;
@@ -51,7 +52,7 @@ export function canPlace(doc: Doc, type: string, arrayPath: string): boolean {
   const owner = ownerType(doc, arrayPath);
   // Top level: sections, plus component instances on pages (never inside a
   // component — instances don't nest).
-  if (owner === "page") return type === "section" || (type === "componentRef" && doc._type !== "component");
+  if (owner === "page") return type === "section" || (type === "componentRef" && FEATURES.components && doc._type !== "component");
   if (!owner) return false;
   const slot = blockMeta(owner)?.slot;
   const field = arrayPath.slice(arrayPath.lastIndexOf(".") + 1);

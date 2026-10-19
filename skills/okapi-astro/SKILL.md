@@ -22,7 +22,9 @@ sigue, así Claude Code y cualquier otro agente hacen lo mismo.
    - El branch por defecto es `main`. Si el usuario indica otro branch o tag,
      agregá `--branch <ref>`.
    - Si `/tmp/okapi` ya existe, borralo antes: puede ser una versión vieja.
-2. Leé `/tmp/okapi/INSTALL.md` completo y seguilo en orden:
+2. Leé `/tmp/okapi/INSTALL.md` completo y seguilo en orden. **Empezá por las
+   preguntas del Paso 0** (incluidas las de "Qué instalar"), hacelas todas
+   juntas con AskUserQuestion y no instales nada hasta tener las respuestas:
    - **Camino A** si la carpeta actual no tiene `astro.config.*`.
    - **Camino B** si es un proyecto Astro existente.
    - En los dos casos, después van los **pasos comunes**.

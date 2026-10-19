@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { FEATURES } from "@/core/config";
 import { DocumentIcon } from "@sanity/icons";
 
 export const page = defineType({
@@ -33,7 +34,7 @@ export const page = defineType({
       description: "Compose the page from sections.",
       type: "array",
       group: "content",
-      of: [defineArrayMember({ type: "section" }), defineArrayMember({ type: "componentRef" })],
+      of: [defineArrayMember({ type: "section" }), ...(FEATURES.components ? [defineArrayMember({ type: "componentRef" })] : [])],
     }),
     // All optional, all with fallbacks (page title → Settings). A <title> is
     // not an <h1>: write it for the search result, not for the page.

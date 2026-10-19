@@ -22,9 +22,11 @@ function visit(type: ObjectSchemaType, path: string) {
     else if (kind !== "structure") isContent(f.type) ? content++ : design++;
   }
 }
-for (const t of blockTypes) visit(schema.get(t) as ObjectSchemaType, t);
+// Types a feature switched off (okapi.config.json, e.g. componentRef) aren't in the schema.
+const active = blockTypes.filter((t) => schema.get(t));
+for (const t of active) visit(schema.get(t) as ObjectSchemaType, t);
 
-console.log(`${blockTypes.length} blocks · controls:`, tally, `· client-visible ${content} / team-only ${design}`);
+console.log(`${active.length} blocks · controls:`, tally, `· client-visible ${content} / team-only ${design}`);
 if (unsupported.length) {
   console.error("UNSUPPORTED:\n  " + unsupported.join("\n  "));
   process.exit(1);

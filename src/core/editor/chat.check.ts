@@ -23,7 +23,7 @@ assert.equal(mayAdd(editor, "heading"), true);
 assert.equal(mayAdd(editor, "box"), false); // not in the role's block list
 assert.equal(mayAdd(admin, "componentRef"), true);
 assert.equal(mayAdd(editor, "componentRef"), false); // needs `components`
-assert.ok(grantFor(["administrator"], POLICY).can.has("chat")); // the project policy parses
+assert.ok(grantFor(["administrator"], POLICY).can.has("text")); // the project policy parses (chat may be off for this project)
 
 const catalog: Catalog = {
   section: { title: "Section", fields: { theme: { kind: "settings", control: "choice", title: "Theme", options: ["light", "dark"] } } },

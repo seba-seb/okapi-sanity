@@ -31,7 +31,15 @@ que ya existe. Los dos terminan en los pasos comunes.
 
 ## Paso 0 — Preguntas
 
-Preguntá en una sola tanda solo lo que no puedas deducir del proyecto:
+**No instales nada antes de tener estas respuestas.** Okapi trae varios
+módulos y el proyecto tiene que quedar solo con los que la persona quiere.
+Preguntá todo en una sola tanda; si tu herramienta tiene un selector de
+opciones, usalo. No elijas por la persona: si dice "no sé", explicale en una
+línea qué hace cada opción y recomendá.
+
+### Sobre el proyecto
+
+Preguntá solo lo que no puedas deducir del proyecto:
 - **¿Proyecto nuevo o existente?** Si la carpeta actual tiene
   `astro.config.*`, es existente.
 - **¿En qué organización de Sanity va?** Si el agente tiene el MCP de Sanity,
@@ -40,6 +48,24 @@ Preguntá en una sola tanda solo lo que no puedas deducir del proyecto:
 - **Solo si el proyecto es existente:**
   - ¿La home sale del editor o queda la actual? Por defecto, queda la actual.
   - Las páginas del editor se sirven en `/<slug>` (ver B4).
+
+### Qué instalar
+
+Cada respuesta es un flag de `npm run okapi:setup` (paso común 0):
+
+| Pregunta | Flag | Si dice que no |
+|---|---|---|
+| ¿Bloques de animación? Scroll horizontal, cards apiladas, marquee, texto que se ilumina al scrollear, tipografía grande, parallax | `--motion` | Se borran esos 6 bloques. Los títulos pueden seguir animándose |
+| ¿Slider / carrusel? | `--slider` | Se borra el bloque y `embla-carousel-react` |
+| ¿Logo 3D? (suma ~140 KB, solo en las páginas que lo usan) | `--logo3d` | Se borra el bloque y `three` |
+| ¿Componentes reutilizables? Guardar una sección y usarla en varias páginas, como en Webflow | `--components` | Se apagan en el editor y en Sanity (se pueden prender después) |
+| ¿Chat con IA en el editor? Necesita Vercel, Netlify o Cloudflare y una clave de IA del cliente | `--chat` | El sitio queda 100% estático, sin adaptador ni función de servidor |
+| ¿Quién va a editar? Solo la agencia · agencia + cliente que publica · además un cliente que solo deja borradores | `--roles=agency` · `agency+client` · `agency+client+drafts` | Arma `src/okapi.policy.ts` con esos roles |
+| ¿Contenido de ejemplo? Una home armada para ver el editor andando | `--demo` | No se importa nada; la primera página se crea en el editor |
+
+Recomendación si la persona no sabe: animación **no** (se agrega después
+copiando los bloques), slider **sí**, logo 3D **no**, componentes **sí**, chat
+**sí** si el hosting es Vercel o Netlify, roles `agency+client`, ejemplo **sí**.
 
 Necesitás:
 - Node ≥ 22.
@@ -97,7 +123,8 @@ cp -n  $R/src/layouts/Base.astro src/layouts/
 cp -n  $R/src/pages/edit-canvas.astro "$R/src/pages/[slug].astro" src/pages/
 cp -n  $R/sanity.config.ts $R/sanity.cli.ts .
 cp -Rn $R/patches .
-cp -n  $R/scripts/verify.mjs $R/scripts/check-editor-schema.ts scripts/
+cp -n  $R/scripts/verify.mjs $R/scripts/check-editor-schema.ts $R/scripts/okapi-setup.mjs scripts/
+cp -n  $R/src/okapi.config.json $R/src/okapi.policy.ts src/
 cp -n  $R/sanity/seed.ndjson sanity/
 cp -n  $R/public/placeholder.svg public/
 ```
@@ -143,7 +170,7 @@ del repo de Okapi.
 },
 "devDependencies": { "patch-package": "^8.0.1", "vite": "*", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
 "overrides": { "sanity": "6.3.0" },
-"scripts": { "postinstall": "patch-package --error-on-fail", "verify": "node scripts/verify.mjs" }
+"scripts": { "postinstall": "patch-package --error-on-fail", "verify": "node scripts/verify.mjs", "okapi:setup": "node scripts/okapi-setup.mjs" }
 ```
 
 `vite` va explícito porque `astro.config` importa `loadEnv` de `vite`.
@@ -239,6 +266,27 @@ Asigná ahí los valores del diseño del proyecto: **los nombres no se cambian;
 los valores, sí.** Así el editor ofrece la paleta del proyecto.
 
 ## Pasos comunes
+
+### 0. Dejar solo lo elegido
+
+Con las respuestas del Paso 0. Primero el plan, sin cambiar nada:
+
+```bash
+npm run okapi:setup -- --motion=no --slider=yes --logo3d=no --components=yes \
+  --chat=yes --roles=agency+client --demo=yes --dry-run
+```
+
+Mostrale a la persona la lista que imprime (qué se borra, qué dependencias se
+van, qué roles quedan). Si está de acuerdo, corré lo mismo cambiando
+`--dry-run` por `--yes`. El script borra los bloques y sus dependencias,
+escribe `src/okapi.config.json` y `src/okapi.policy.ts`, saca las herramientas
+internas del repo de Okapi y corre `npm install`.
+
+- Si falta alguna respuesta, el script no hace nada y dice cuál falta.
+- En una terminal, `npm run okapi:setup` sin flags hace las preguntas solo.
+- Después se pueden prender o apagar `chat` y `components` a mano en
+  `src/okapi.config.json`. Un bloque borrado se vuelve a sumar copiándolo del
+  repo de Okapi (ver "Add a block" en `AGENTS.md`).
 
 ### 1. Sanity
 

@@ -16,6 +16,7 @@ import { EditorChat } from "./EditorChat";
 import { applyOps, type AttachedImages } from "./chat";
 import { grantFor, may, mayAdd, mayReorder } from "./policy";
 import { POLICY } from "@/okapi.policy";
+import { FEATURES } from "@/core/config";
 import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
 import { plainToPt } from "./text";
 import { STUDIO_ACCENT, STUDIO_RADIUS_CONTROL, STUDIO_RADIUS_PANEL } from "@/theme/studio";
@@ -141,6 +142,7 @@ function PageEditor({
   const grant = useMemo(() => grantFor(viewAs ? [viewAs] : roles, POLICY), [roles, viewAs]);
   const canStructure = may(grant, "structure");
   const canReorder = mayReorder(grant);
+  const canChat = FEATURES.chat && may(grant, "chat");
   const catalog = useMemo(() => buildCatalog(schema, blockTypes), [schema]);
   const [tab, setTab] = useState<"properties" | "chat">("properties");
   const [device, setDevice] = useState<keyof typeof DEVICES>("Desktop");
@@ -533,7 +535,7 @@ function PageEditor({
           <button type="button" onClick={() => setTab("properties")} style={{ ...chip, ...(tab === "properties" ? chipOn : null) }}>
             Properties
           </button>
-          {may(grant, "chat") ? (
+          {canChat ? (
             <button type="button" onClick={() => setTab("chat")} style={{ ...chip, ...(tab === "chat" ? chipOn : null) }}>
               ✦ Chat
             </button>
@@ -555,7 +557,7 @@ function PageEditor({
             </select>
           ) : null}
         </div>
-        {tab === "chat" && may(grant, "chat") ? (
+        {tab === "chat" && canChat ? (
           <EditorChat
             client={client}
             documentId={id}
@@ -607,7 +609,7 @@ function PageEditor({
                   </button>
                 </>
               ) : null}
-              {may(grant, "components") && target.item._type === "section" && docType === "page" ? (
+              {FEATURES.components && may(grant, "components") && target.item._type === "section" && docType === "page" ? (
                 <button type="button" onClick={makeComponent} style={chip} title="Save this section to the library and use it as a component">
                   Make component
                 </button>

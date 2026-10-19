@@ -1,0 +1,12 @@
+{
+  "$comment": "What this project uses. Written by `npm run okapi:setup`; features can be flipped by hand (blocks that were removed need re-copying from the Okapi repo).",
+  "features": {
+    "chat": true,
+    "components": true
+  },
+  "blocks": {
+    "motion": true,
+    "slider": true,
+    "logo3d": true
+  }
+}
