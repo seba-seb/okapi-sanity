@@ -1,10 +1,8 @@
 import { useCallback } from "react";
 import { set, setIfMissing, unset, type ObjectInputProps } from "sanity";
-import {
-  MobileDeviceIcon,
-  TabletDeviceIcon,
-  DesktopIcon,
-} from "@sanity/icons";
+import { MobileDeviceIcon } from "@sanity/icons/MobileDevice";
+import { TabletDeviceIcon } from "@sanity/icons/TabletDevice";
+import { DesktopIcon } from "@sanity/icons/Desktop";
 import { Box, Card, Flex, Stack, Text } from "@sanity/ui";
 
 type ResponsiveValue = {
@@ -53,7 +51,7 @@ export function ResponsiveNumberInput(props: ObjectInputProps) {
   );
 
   return (
-    <Stack space={3}>
+    <Stack gap={3}>
       {BREAKPOINTS.map(({ key, label, Icon }) => {
         const current = value?.[key as keyof ResponsiveValue] ?? min;
         return (

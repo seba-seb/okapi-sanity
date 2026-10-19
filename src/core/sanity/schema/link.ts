@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { LinkIcon } from "@sanity/icons";
+import { LinkIcon } from "@sanity/icons/Link";
 
 /**
  * Internal links PICK a page (they can't be mistyped, and follow slug

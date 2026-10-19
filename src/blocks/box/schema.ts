@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { BlockContentIcon } from "@sanity/icons";
+import { BlockContentIcon } from "@sanity/icons/BlockContent";
 
 import { membersFor } from "@/blocks/_shared/members";
 import { sliderField } from "@/blocks/_shared/fields";

@@ -1,5 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { ComponentIcon, LinkIcon } from "@sanity/icons";
+import { ComponentIcon } from "@sanity/icons/Component";
+import { LinkIcon } from "@sanity/icons/Link";
 
 /**
  * An instance of a library component, placed among a page's sections.

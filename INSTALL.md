@@ -24,8 +24,10 @@ que ya existe. Los dos terminan en los pasos comunes.
 2. **No modifiques `src/core/`.** Es el producto y es igual en todos los
    proyectos. Si algo de core no encaja, avisá al usuario: el arreglo va al
    repo de Okapi.
-3. **`sanity` va fijo en `6.3.0`**, con `overrides` y `patch-package`. No lo
-   actualices.
+3. **Sanity va en su versión actual** (`sanity` ≥ 6.19, `@sanity/client` 8,
+   `@sanity/ui` 4, `@sanity/icons` 5). Si el proyecto ya tiene versiones más
+   nuevas, se respetan. Si tiene más viejas, subilas dentro de la misma
+   versión mayor y avisá; no bajes nada.
 4. **No pises archivos del proyecto.** Si una ruta que tenés que copiar ya
    existe, frená y preguntá.
 5. **Publicar es salir en vivo.** No publiques, despubliques ni importes
@@ -75,8 +77,8 @@ Okapi no trae animaciones. Si el proyecto ya anima (GSAP, Motion, CSS), sigue
 con lo suyo; si las quiere, se agregan en el código del proyecto, no en Okapi.
 
 Necesitás:
-- Node ≥ 22.12 y **npm** (los `overrides` y `patch-package` no funcionan
-  igual con pnpm o yarn: si el proyecto usa otro gestor, frená y avisá).
+- Node ≥ 22.12 y el gestor de paquetes que ya use el proyecto (npm, pnpm o
+  yarn). En un proyecto nuevo, npm.
 - `git`.
 - Acceso de lectura al repo `seba-seb/okapi-sanity` (mientras sea privado)
   (`gh auth status`).
@@ -89,7 +91,7 @@ ejemplo, tema y header/footer que después se reemplazan.
 ```bash
 gh repo clone seba-seb/okapi-sanity <carpeta> -- --depth 1
 cd <carpeta> && rm -rf .git && git init -q
-npm install          # aplica patches/. Si falla, no sigas
+npm install
 ```
 
 Seguí con los **pasos comunes**.
@@ -130,7 +132,6 @@ cp -n  $R/src/schema.ts $R/src/okapi.policy.ts src/
 cp -n  $R/src/layouts/Base.astro src/layouts/
 cp -n  $R/src/pages/edit-canvas.astro "$R/src/pages/[slug].astro" src/pages/
 cp -n  $R/sanity.config.ts $R/sanity.cli.ts .
-cp -Rn $R/patches .
 cp -n  $R/scripts/verify.mjs $R/scripts/check-editor-schema.ts $R/scripts/okapi-setup.mjs scripts/
 cp -n  $R/src/okapi.config.json $R/src/okapi.policy.ts src/
 cp -n  $R/sanity/seed.ndjson sanity/
@@ -151,7 +152,6 @@ cp -n  $R/public/placeholder.svg public/
 | `src/pages/index.astro` | Home desde el editor | Solo si la home sale del editor |
 | `src/pages/sitemap.xml.ts`, `robots.txt.ts` | SEO | Ver "Sitemap y robots" en B3 |
 | `sanity.config.ts`, `sanity.cli.ts` | Config del Studio | Sí |
-| `patches/` | Ajustes a `sanity@6.3.0` | Sí |
 | `scripts/verify.mjs`, `scripts/check-editor-schema.ts` | Chequeos | Sí |
 | `sanity/seed.ndjson` | Página demo | Opcional |
 | `public/placeholder.svg` | Imagen por defecto de los bloques nuevos | Sí: sin ella, insertar una imagen muestra un ícono roto |
@@ -166,26 +166,22 @@ cp -n  $R/public/placeholder.svg public/
 ```jsonc
 "dependencies": {
   "@astrojs/react": "^7.0.0", "@portabletext/react": "^6.2.0",
-  "@sanity/astro": "^3.5.1", "@sanity/client": "^7.14.1", "@sanity/icons": "^3.7.0",
-  "@sanity/image-url": "^2.1.1", "@sanity/ui": "^3.3.1", "@sanity/themer": "0.10.4", "groq": "^6.3.0",
+  "@sanity/astro": "^3.5.1", "@sanity/client": "^8.9.0", "@sanity/icons": "^5.2.3",
+  "@sanity/image-url": "^2.1.1", "@sanity/ui": "^4.4.9", "@sanity/themer": "0.10.4", "groq": "^6.19.0",
   "react": "^19.2.0", "react-dom": "^19.2.0", "react-is": "^19.2.0",
-  "sanity": "6.3.0", "styled-components": "^6.4.3",
+  "sanity": "^6.19.0", "styled-components": "^6.6.0",
   "tailwindcss": "^4.3.3", "@tailwindcss/vite": "^4.3.3",
-  "patch-package": "^8.0.1",
   // chat del editor (el adapter se elige solo según el host)
   "@astrojs/vercel": "^11.0.15", "@astrojs/netlify": "^8.2.10",
   // bloques de ejemplo (si se quedan): slider, 3D
   "embla-carousel-react": "^8.6.0", "three": "^0.160.0"
 },
 "devDependencies": { "vite": "*", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
-"overrides": { "sanity": "6.3.0" },
 "engines": { "node": ">=22.12" },
-"scripts": { "postinstall": "patch-package --error-on-fail", "verify": "node scripts/verify.mjs", "okapi:setup": "node scripts/okapi-setup.mjs" }
+"scripts": { "verify": "node scripts/verify.mjs", "okapi:setup": "node scripts/okapi-setup.mjs" }
 ```
 
 `vite` va explícito porque `astro.config` importa `loadEnv` de `vite`.
-`patch-package` va en `dependencies` porque corre en el `postinstall` del host,
-que a veces instala sin devDependencies.
 
 **`astro.config.*`**: integrá lo que trae `/tmp/okapi/astro.config.mjs`.
 Copiá los bloques tal cual: cada línea tiene su razón documentada en ese archivo.
@@ -322,7 +318,7 @@ Con el MCP de Sanity, o pidiéndole al usuario que lo haga en sanity.io/manage:
 ### 2. Instalar y arrancar
 
 ```bash
-npm install            # aplica patches/; si falla, la versión de sanity no es 6.3.0
+npm install
 npm run dev -- --port 4321
 ```
 
@@ -434,6 +430,5 @@ Reglas completas para bloques, animaciones y estilos: `AGENTS.md`.
 | Studio o canvas en blanco + `504 (Outdated Optimize Dep)` | Pará el server, `rm -rf node_modules/.vite`, arrancá y recargá con ⌘⇧R. Revisá que `optimizeDeps` esté completo |
 | `@vitejs/plugin-react can't detect preamble` | El layout no incluye `<Islands />` |
 | Un bloque se ve pero no se anima | Le falta `js` en `meta.ts` |
-| `npm install` falla en patch-package | `sanity` no está en 6.3.0 |
 | La home muestra "Your visual page builder is ready" | Falta `.env` o no hay página `home` en Sanity |
 | Publiqué y el sitio no cambió | Falta el webhook al deploy hook, o el build todavía no terminó |

@@ -435,7 +435,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <p class="lead" data-only="vibe">Lo instala tu agente de código, el que uses, siguiendo una guía del repo. Esta vista explica cómo pedírselo y cómo se trabaja después.</p>
       <ul class="stack-line" aria-label="Stack">
         <li><b>Astro</b> 7.3 · estático</li>
-        <li><b>Sanity</b> 6.3.0 · fijo</li>
+        <li><b>Sanity</b> 6.19+ · al día</li>
         <li><b>React</b> 19</li>
         <li><b>Tailwind</b> 4 sobre tokens</li>
       </ul>
@@ -647,7 +647,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <li><strong>Publicar es salir online.</strong> Con el webhook configurado, cada publicación reconstruye el sitio en minutos. El agente nunca publica sin tu sí explícito.</li>
         <li><strong>El chat solo puede lo que tu rol puede.</strong> Sus cambios quedan como borrador y se deshacen en un paso. Nunca publica.</li>
         <li><strong>Okapi se arregla en su repo.</strong> <code>src/core</code> es igual en todos los proyectos: si algo del editor falla, el arreglo va al repo y después se trae a cada proyecto.</li>
-        <li><strong>No pidas actualizar Sanity de paso.</strong> Está fijo en 6.3.0 a propósito.</li>
+        <li><strong>Sanity va al día.</strong> Okapi sigue las versiones actuales de Sanity; después de actualizar, pedile al agente que corra verify y abra el editor.</li>
       </ul>
     </section>
 
@@ -955,7 +955,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h2>Instalación</h2>
         <p>La guía completa es <code>INSTALL.md</code>, en la raíz del repo, escrita para que la siga cualquier agente. Hay dos caminos y los dos terminan en los mismos pasos comunes: Sanity, <code>.env</code>, arranque, roles, producción y verify.</p>
         <h3>Camino A: proyecto nuevo</h3>
-        <p>El repo de Okapi ya es un proyecto Astro completo: se clona, se le saca el <code>.git</code> y se corre <code>npm install</code>, que aplica <code>patches/</code>.</p>
+        <p>El repo de Okapi ya es un proyecto Astro completo: se clona, se le saca el <code>.git</code> y se corre <code>npm install</code>.</p>
         <h3>Camino B: proyecto existente</h3>
         <p>Se copian piezas al proyecto sin pisar nada que ya exista. Si una ruta choca, el agente frena y pregunta.</p>
       </div>
@@ -969,7 +969,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td><code>src/theme/</code></td><td>Tokens (nombres que usa el editor) y CSS de los bloques. Solo lo cargan las páginas del editor</td></tr>
             <tr><td><code>src/layouts/Base.astro</code></td><td>Layout de las páginas del editor (o <code>OkapiBase.astro</code> si ya hay un Base)</td></tr>
             <tr><td><code>src/pages/[slug].astro</code>, <code>edit-canvas.astro</code></td><td>Páginas del editor y el canvas. <code>index.astro</code> solo si la home sale del editor</td></tr>
-            <tr><td><code>sanity.config.ts</code>, <code>sanity.cli.ts</code>, <code>patches/</code></td><td>Studio y ajustes a sanity@6.3.0</td></tr>
+            <tr><td><code>sanity.config.ts</code>, <code>sanity.cli.ts</code></td><td>El Studio</td></tr>
             <tr><td><code>scripts/verify.mjs</code>, <code>check-editor-schema.ts</code></td><td>Chequeos</td></tr>
             <tr><td><code>src/okapi.config.json</code>, <code>src/okapi.policy.ts</code>, <code>scripts/okapi-setup.mjs</code></td><td>Qué usa el proyecto, quién puede qué, y el script que aplica las respuestas de la instalación</td></tr>
             <tr><td><code>src/chrome/</code>, <code>public/placeholder.svg</code></td><td>Header y footer de las páginas del editor (reemplazables) e imagen por defecto de bloques nuevos</td></tr>
@@ -999,7 +999,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <p class="small muted">Los bloques se borran, así el sitio carga menos código. El chat y los componentes son flags que lee el core (<code>core/config.ts</code>), así el core es igual en todos los proyectos y se pueden cambiar después. Los chequeos pasan con cualquier combinación: probado con todo apagado, el JS de la página bajó y un build para Vercel salió 100% estático.</p>
         <h3>Configuración que se integra</h3>
         <ul>
-          <li><strong><code>package.json</code>:</strong> dependencias de Sanity, React 19 y Tailwind 4 (más Embla y three si quedan el slider y el logo 3D, y los adaptadores de hosting si el chat está prendido), <code>engines: node &gt;=22.12</code>, <code>overrides: { sanity: "6.3.0" }</code>, <code>postinstall: patch-package --error-on-fail</code> y el script <code>okapi:setup</code>. Solo npm.</li>
+          <li><strong><code>package.json</code>:</strong> dependencias de Sanity, React 19 y Tailwind 4 (más Embla y three si quedan el slider y el logo 3D, y los adaptadores de hosting si el chat está prendido), <code>engines: node &gt;=22.12</code> y el script <code>okapi:setup</code>. Sanity en sus versiones actuales: <code>sanity</code> ^6.19, <code>@sanity/client</code> 8, <code>@sanity/ui</code> 4, <code>@sanity/icons</code> 5. Si el proyecto tiene más nuevas, se respetan; las más viejas se suben dentro de la misma mayor.</li>
           <li><strong><code>astro.config</code>:</strong> la integración <code>sanity()</code> con <code>studioBasePath: "/studio"</code> y hash routing, <code>react()</code>, el plugin de Tailwind y <code>optimizeDeps</code> completo. Sin eso último, el Studio queda en blanco en dev. El <code>output</code> y el <code>site</code> del proyecto se respetan.</li>
           <li><strong><code>tsconfig</code>:</strong> JSX de React y el alias <code>@/*</code> → <code>./src/*</code>.</li>
         </ul>
@@ -1025,7 +1025,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td>Links con <code>resolveLink()</code> y <code>pageHref()</code></td><td>Una sola fuente de URLs: links, sitemap, canonical, futuros idiomas</td></tr>
             <tr><td>Okapi no trae librería de animación</td><td>Si el proyecto ya anima (GSAP, Motion, CSS), sigue con lo suyo y bajo su licencia. El editor no tiene controles de animación</td></tr>
             <tr><td>Las elecciones del proyecto viven en <code>src/okapi.config.json</code> y <code>src/okapi.policy.ts</code></td><td>El core las lee, así nunca hay que editarlo por proyecto</td></tr>
-            <tr><td><code>sanity</code> en 6.3.0</td><td><code>patches/</code> solo encaja en esa versión</td></tr>
+            <tr><td>Íconos desde su ruta propia (<code>@sanity/icons/Cube</code>) y piezas de UI movidas desde la suya (<code>@sanity/ui/tooltip</code>)</td><td>Así las exportan las versiones actuales de Sanity</td></tr>
           </tbody>
         </table>
       </div>
@@ -1054,7 +1054,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
 <span class="d">src/chrome/</span>        <span class="c">header y footer del proyecto</span>
 <span class="d">src/documents/</span>     <span class="c">page, component, settings, navigation</span>
 <span class="d">src/pages/</span>         <span class="c">[slug] = páginas del editor · /edit-canvas = canvas</span>
-<span class="d">patches/</span>           <span class="c">ajustes a sanity@6.3.0 (ver su README)</span>
 <span class="d">scripts/</span>           <span class="c">verify, check-editor-schema, seeds</span>
 <span class="d">skills/</span>            <span class="c">skill okapi-astro (Claude Code): sigue INSTALL.md</span>
 <span class="d">docs/</span>              <span class="c">esta documentación</span>
@@ -1197,7 +1196,6 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>Studio en blanco solo en Brave</td><td>Shields y el routing.</td><td>Resuelto con hash routing y <code>basePath: "/"</code>.</td></tr>
             <tr><td>La home muestra la pantalla de bienvenida</td><td>Falta <code>.env</code> o el contenido.</td><td>Completar <code>.env</code> e importar el seed.</td></tr>
             <tr><td>El build se frena con <code>[loadQuery] …</code></td><td>Sanity no respondió o falta el env. Frena a propósito para no deployar un sitio vacío.</td><td>Revisar <code>PUBLIC_SANITY_*</code> en el hosting y el estado de Sanity, y volver a buildear.</td></tr>
-            <tr><td><code>npm install</code> falla en patch-package</td><td><code>sanity</code> no está en 6.3.0.</td><td>Volver a 6.3.0. Actualizar es un trabajo aparte: rehacer <code>patches/</code>.</td></tr>
             <tr><td>"can't detect preamble" en dev</td><td>El layout no incluye <code>&lt;Islands /&gt;</code>.</td><td>Agregarlo al final del <code>&lt;body&gt;</code>.</td></tr>
             <tr><td>Publiqué y el sitio no cambió</td><td>El sitio es estático.</td><td>Revisar el webhook al deploy hook o correr un build.</td></tr>
             <tr><td>La pestaña ✦ Chat dice que no está disponible</td><td>No hay clave de IA en el hosting, el hosting no corre funciones, o <code>features.chat</code> está apagado.</td><td>Cargar una clave (<code>ANTHROPIC_API_KEY</code>…), usar Vercel/Netlify/Cloudflare y redeployar.</td></tr>
@@ -1235,9 +1233,9 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <p><b>Decisión.</b> Sin Presentation ya no hace falta hidratar todo: HTML puro y React solo en las secciones con <code>js</code>.</p>
         </div>
         <div class="decision">
-          <h3>Sanity fijo en 6.3.0</h3>
-          <p><b>Problema.</b> <code>patches/</code> ajusta formularios del Studio y solo encaja en una versión exacta.</p>
-          <p><b>Decisión.</b> Fijar la versión y hacer que install y verify fallen si se desvía. Actualizar es un trabajo planificado.</p>
+          <h3>Sanity al día, sin parches</h3>
+          <p><b>Problema.</b> Okapi fijaba <code>sanity@6.3.0</code> por parches escritos para Presentation. Los proyectos con un Sanity más nuevo no podían instalarlo limpio.</p>
+          <p><b>Decisión.</b> Presentation ya no está, así que los parches también se fueron. Okapi sigue las versiones actuales de Sanity; typecheck y verify detectan los cambios que rompen.</p>
         </div>
         <div class="decision">
           <h3>Estilos solo con tokens</h3>
@@ -1346,6 +1344,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <h3>La instalación pregunta primero</h3>
           <ul>
             <li>El agente pregunta qué módulos instalar; <code>npm run okapi:setup</code> deja solo esos y escribe <code>okapi.config.json</code>.</li>
+            <li>Sanity al día (6.19, client 8, ui 4, icons 5): se fueron el pin a 6.3.0 y la carpeta <code>patches/</code>.</li>
           </ul>
         </li>
       </ol>
@@ -1368,7 +1367,6 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>La home muestra "Your visual page builder is ready"</td><td>Falta la configuración o el contenido.</td><td>"La home muestra la pantalla de bienvenida"</td></tr>
             <tr><td>La pestaña ✦ Chat dice que no está disponible</td><td>El proyecto no tiene clave de IA en el hosting, o el chat está apagado.</td><td>"El chat dice que no está disponible"</td></tr>
             <tr><td>Publiqué y el sitio no cambió</td><td>Falta el webhook o el build todavía no terminó.</td><td>"Publiqué y el sitio no cambió"</td></tr>
-            <tr><td><code>npm install</code> falla en patch-package</td><td>Cambió la versión de Sanity.</td><td>"npm install falla en patch-package"</td></tr>
             <tr><td>Una página mía dejó de verse igual</td><td>El CSS de Okapi se cargó fuera de sus páginas.</td><td>"Desde que sumamos Okapi, /&lt;ruta&gt; se ve distinta"</td></tr>
           </tbody>
         </table>

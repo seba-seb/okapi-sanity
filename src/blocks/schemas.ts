@@ -1,5 +1,5 @@
 import type { SchemaTypeDefinition } from "sanity";
-import { CubeIcon } from "@sanity/icons";
+import { CubeIcon } from "@sanity/icons/Cube";
 import { defineField } from "sanity";
 
 import type { BlockType } from "./meta";

@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { ThLargeIcon } from "@sanity/icons";
+import { ThLargeIcon } from "@sanity/icons/ThLarge";
 
 import { responsiveNumberField, sliderField } from "@/blocks/_shared/fields";
 import { membersFor } from "@/blocks/_shared/members";

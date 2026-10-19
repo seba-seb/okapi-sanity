@@ -32,7 +32,6 @@ src/theme/      Per project. tokens.css = the design tokens (edit this first);
 src/chrome/     Header/footer. Per project — restyle or replace.
 src/documents/  Document types: page, settings (singleton), navigation (singleton)
 src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
-patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
 skills/         okapi-astro: the Claude Code skill that starts a new project
 site/           the public site: landing + docs in English (site/) and Spanish (site/es/); keep both docs in sync with this file
 brand/          the Okapi mark (SVG) and brand notes
@@ -93,9 +92,11 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   ~1 KB of JS. **A block with hooks/effects/handlers MUST declare `js`**, or it
   renders but never runs on the public site. The editor canvas is unaffected.
 - **Design assets don't go in the CMS** (logos, textures): they're code.
-- Pinned: `sanity@6.3.0` (override in package.json). Upgrading means
-  re-making `patches/` — see its README. `npm install` fails if the patch
-  doesn't apply, and verify fails if the installed version has no patch.
+- **Sanity stays current** (`sanity` ^6.19, `@sanity/client` 8, `@sanity/ui` 4,
+  `@sanity/icons` 5) — no pins, no patches. Import icons from their subpath
+  (`@sanity/icons/Cube`) and moved UI pieces from theirs (`@sanity/ui/tooltip`);
+  `@sanity/ui` uses `gap`, not `space`. After upgrading, run typecheck + verify
+  and open `/studio` and the editor.
 
 ## Okapi Editor
 

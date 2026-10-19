@@ -35,7 +35,7 @@ Lo que nunca se hace, aunque la guía no esté a mano:
 - **Tokens:** no los pedís, no los mostrás y no los escribís. Lo que requiere
   la cuenta del usuario lo corre el usuario.
 - **`src/core/`:** no se modifica por proyecto.
-- **`sanity`:** queda en `6.3.0`.
+- **Sanity:** versión actual; si el proyecto tiene una más vieja, se sube dentro de la misma mayor, nunca se baja.
 - **Archivos del proyecto:** no los pisás. Si una ruta ya existe, frenás y
   preguntás.
 - **Publicar:** es salir en vivo. No publicás, despublicás ni importás

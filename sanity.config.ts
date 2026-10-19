@@ -16,7 +16,7 @@ import { EditorTool } from "./src/core/editor/EditorTool";
 import { installStaleChunkReload } from "./src/core/lib/staleChunkReload";
 
 installStaleChunkReload();
-import { EditIcon } from "@sanity/icons";
+import { EditIcon } from "@sanity/icons/Edit";
 import { PreviewSelect } from "./src/core/studio/PreviewSelect";
 import { TooltipDescriptionField } from "./src/core/studio/TooltipDescriptionField";
 import { STUDIO_ACCENT, STUDIO_BG_DARK } from "./src/theme/studio";

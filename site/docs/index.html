@@ -435,7 +435,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <p class="lead" data-only="vibe">Your coding agent installs it, whichever one you use, by following a guide in the repo. This view explains how to ask for it and how to work with it afterwards.</p>
       <ul class="stack-line" aria-label="Stack">
         <li><b>Astro</b> 7.3 · static</li>
-        <li><b>Sanity</b> 6.3.0 · pinned</li>
+        <li><b>Sanity</b> 6.19+ · current</li>
         <li><b>React</b> 19</li>
         <li><b>Tailwind</b> 4 on tokens</li>
       </ul>
@@ -647,7 +647,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <li><strong>Publishing is going live.</strong> With the webhook set up, every publish rebuilds the site within minutes. The agent never publishes without your explicit yes.</li>
         <li><strong>The chat can only do what your role can.</strong> Its changes are drafts and undo in one step. It never publishes.</li>
         <li><strong>Okapi gets fixed in its own repo.</strong> <code>src/core</code> is the same in every project: if something in the editor breaks, the fix goes to the repo and is then pulled into each project.</li>
-        <li><strong>Don't ask it to upgrade Sanity along the way.</strong> It's pinned to 6.3.0 on purpose.</li>
+        <li><strong>Sanity stays up to date.</strong> Okapi follows Sanity's current versions; after an upgrade, ask your agent to run verify and open the editor.</li>
       </ul>
     </section>
 
@@ -955,7 +955,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h2>Installation</h2>
         <p>The full guide is <code>INSTALL.md</code>, at the root of the repo, written for any agent to follow. There are two paths, and both end with the same shared steps: Sanity, <code>.env</code>, first run, roles, production and verify.</p>
         <h3>Path A: new project</h3>
-        <p>The Okapi repo is already a complete Astro project: clone it, remove its <code>.git</code> and run <code>npm install</code>, which applies <code>patches/</code>.</p>
+        <p>The Okapi repo is already a complete Astro project: clone it, remove its <code>.git</code> and run <code>npm install</code>.</p>
         <h3>Path B: existing project</h3>
         <p>Pieces are copied into the project without overwriting anything that already exists. If a route collides, the agent stops and asks.</p>
       </div>
@@ -969,7 +969,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td><code>src/theme/</code></td><td>Tokens (names the editor uses) and the blocks' CSS. Only editor pages load it</td></tr>
             <tr><td><code>src/layouts/Base.astro</code></td><td>Layout for editor pages (or <code>OkapiBase.astro</code> if there's already a Base)</td></tr>
             <tr><td><code>src/pages/[slug].astro</code>, <code>edit-canvas.astro</code></td><td>Editor pages and the canvas. <code>index.astro</code> only if the home page comes from the editor</td></tr>
-            <tr><td><code>sanity.config.ts</code>, <code>sanity.cli.ts</code>, <code>patches/</code></td><td>The Studio and the fixes for sanity@6.3.0</td></tr>
+            <tr><td><code>sanity.config.ts</code>, <code>sanity.cli.ts</code></td><td>The Studio</td></tr>
             <tr><td><code>scripts/verify.mjs</code>, <code>check-editor-schema.ts</code></td><td>Checks</td></tr>
             <tr><td><code>src/okapi.config.json</code>, <code>src/okapi.policy.ts</code>, <code>scripts/okapi-setup.mjs</code></td><td>What the project uses, who can do what, and the script that applies the install answers</td></tr>
             <tr><td><code>src/chrome/</code>, <code>public/placeholder.svg</code></td><td>Header and footer for editor pages (replaceable) and the default image for new blocks</td></tr>
@@ -999,7 +999,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <p class="small muted">Blocks are deleted, so the site ships less code. Chat and components are flags that core reads (<code>core/config.ts</code>), so core stays the same in every project and they can be switched later. Checks pass with any combination: tested with everything off, the page JS dropped and a Vercel build came out fully static.</p>
         <h3>Configuration that gets merged</h3>
         <ul>
-          <li><strong><code>package.json</code>:</strong> the Sanity, React 19 and Tailwind 4 dependencies (plus Embla and three if the slider and the 3D logo stay, and the host adapters if the chat is on), <code>engines: node &gt;=22.12</code>, <code>overrides: { sanity: "6.3.0" }</code>, <code>postinstall: patch-package --error-on-fail</code> and the <code>okapi:setup</code> script. npm only.</li>
+          <li><strong><code>package.json</code>:</strong> the Sanity, React 19 and Tailwind 4 dependencies (plus Embla and three if the slider and the 3D logo stay, and the host adapters if the chat is on), <code>engines: node &gt;=22.12</code> and the <code>okapi:setup</code> script. Sanity at its current versions: <code>sanity</code> ^6.19, <code>@sanity/client</code> 8, <code>@sanity/ui</code> 4, <code>@sanity/icons</code> 5. If the project has newer ones, they stay; older ones are raised within the same major.</li>
           <li><strong><code>astro.config</code>:</strong> the <code>sanity()</code> integration with <code>studioBasePath: "/studio"</code> and hash routing, <code>react()</code>, the Tailwind plugin and the full <code>optimizeDeps</code> list. Without that last one, the Studio goes blank in dev. The project's <code>output</code> and <code>site</code> are kept.</li>
           <li><strong><code>tsconfig</code>:</strong> React JSX and the <code>@/*</code> → <code>./src/*</code> alias.</li>
         </ul>
@@ -1025,7 +1025,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td>Links go through <code>resolveLink()</code> and <code>pageHref()</code></td><td>A single source of URLs: links, sitemap, canonical, future languages</td></tr>
             <tr><td>Okapi ships no animation library</td><td>If the project already animates (GSAP, Motion, CSS), it keeps doing so, under its own licence. The editor has no animation controls</td></tr>
             <tr><td>Project choices live in <code>src/okapi.config.json</code> and <code>src/okapi.policy.ts</code></td><td>Core reads them, so core never needs per-project edits</td></tr>
-            <tr><td><code>sanity</code> at 6.3.0</td><td><code>patches/</code> only applies to that version</td></tr>
+            <tr><td>Icons from their subpath (<code>@sanity/icons/Cube</code>) and moved UI pieces from theirs (<code>@sanity/ui/tooltip</code>)</td><td>That's how current Sanity packages export them</td></tr>
           </tbody>
         </table>
       </div>
@@ -1054,7 +1054,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
 <span class="d">src/chrome/</span>        <span class="c">the project's header and footer</span>
 <span class="d">src/documents/</span>     <span class="c">page, component, settings, navigation</span>
 <span class="d">src/pages/</span>         <span class="c">[slug] = editor pages · /edit-canvas = canvas</span>
-<span class="d">patches/</span>           <span class="c">fixes for sanity@6.3.0 (see its README)</span>
 <span class="d">scripts/</span>           <span class="c">verify, check-editor-schema, seeds</span>
 <span class="d">skills/</span>            <span class="c">okapi-astro skill (Claude Code): follows INSTALL.md</span>
 <span class="d">docs/</span>              <span class="c">this documentation</span>
@@ -1197,7 +1196,6 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>Blank Studio in Brave only</td><td>Shields and routing.</td><td>Solved with hash routing and <code>basePath: "/"</code>.</td></tr>
             <tr><td>The home page shows the welcome screen</td><td><code>.env</code> or the content is missing.</td><td>Fill in <code>.env</code> and import the seed.</td></tr>
             <tr><td>The build stops with <code>[loadQuery] …</code></td><td>Sanity didn't respond or the env is missing. It stops on purpose so an empty site isn't deployed.</td><td>Check <code>PUBLIC_SANITY_*</code> on the host and Sanity's status, then rebuild.</td></tr>
-            <tr><td><code>npm install</code> fails in patch-package</td><td><code>sanity</code> isn't at 6.3.0.</td><td>Go back to 6.3.0. Upgrading is a separate job: it means redoing <code>patches/</code>.</td></tr>
             <tr><td>"can't detect preamble" in dev</td><td>The layout doesn't include <code>&lt;Islands /&gt;</code>.</td><td>Add it at the end of <code>&lt;body&gt;</code>.</td></tr>
             <tr><td>I published and the site didn't change</td><td>The site is static.</td><td>Check the webhook to the deploy hook, or run a build.</td></tr>
             <tr><td>The ✦ Chat tab says it isn't available</td><td>No AI key on the host, a host that can't run functions, or <code>features.chat</code> is off.</td><td>Set a key (<code>ANTHROPIC_API_KEY</code>…), use Vercel/Netlify/Cloudflare and redeploy.</td></tr>
@@ -1235,9 +1233,9 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <p><b>Decision.</b> Without Presentation, there's no need to hydrate everything: plain HTML, and React only in sections with <code>js</code>.</p>
         </div>
         <div class="decision">
-          <h3>Sanity pinned to 6.3.0</h3>
-          <p><b>Problem.</b> <code>patches/</code> adjusts Studio forms and only applies to an exact version.</p>
-          <p><b>Decision.</b> Pin the version and make install and verify fail if it drifts. Upgrading is planned work.</p>
+          <h3>Sanity up to date, no patches</h3>
+          <p><b>Problem.</b> Okapi used to pin <code>sanity@6.3.0</code> because of patches written for Presentation. Projects on newer Sanity couldn't install it cleanly.</p>
+          <p><b>Decision.</b> Presentation is gone, so the patches went too. Okapi follows Sanity's current versions; typecheck and verify catch breaking changes.</p>
         </div>
         <div class="decision">
           <h3>Token-only styling</h3>
@@ -1346,6 +1344,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <h3>Install asks first</h3>
           <ul>
             <li>The agent asks which modules to install; <code>npm run okapi:setup</code> keeps only those and writes <code>okapi.config.json</code>.</li>
+            <li>Sanity up to date (6.19, client 8, ui 4, icons 5): the pin to 6.3.0 and the <code>patches/</code> folder are gone.</li>
           </ul>
         </li>
       </ol>
@@ -1368,7 +1367,6 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>The home page shows "Your visual page builder is ready"</td><td>The configuration or the content is missing.</td><td>"The home page shows the welcome screen"</td></tr>
             <tr><td>The ✦ Chat tab says it isn't available</td><td>The project has no AI key on the host, or the chat is off.</td><td>"The chat says it isn't available"</td></tr>
             <tr><td>I published and the site didn't change</td><td>The webhook is missing, or the build hasn't finished yet.</td><td>"I published and the site didn't change"</td></tr>
-            <tr><td><code>npm install</code> fails in patch-package</td><td>The Sanity version changed.</td><td>"npm install fails in patch-package"</td></tr>
             <tr><td>One of my own pages looks different now</td><td>Okapi's CSS is loading outside its own pages.</td><td>"Since we added Okapi, /&lt;route&gt; looks different"</td></tr>
           </tbody>
         </table>

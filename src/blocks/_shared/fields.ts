@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, type ConditionalProperty } from "sanity";
-import { LinkIcon } from "@sanity/icons";
+import { LinkIcon } from "@sanity/icons/Link";
 
 import { RangeSliderInput } from "@/core/studio/RangeSliderInput";
 import { ResponsiveNumberInput } from "@/core/studio/ResponsiveNumberInput";

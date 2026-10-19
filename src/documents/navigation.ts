@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { MenuIcon } from "@sanity/icons";
+import { MenuIcon } from "@sanity/icons/Menu";
 
 /** Singleton (id "navigation"): header and footer menus. */
 export const navigation = defineType({

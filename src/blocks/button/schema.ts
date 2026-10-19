@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { LinkIcon } from "@sanity/icons";
+import { LinkIcon } from "@sanity/icons/Link";
 
 import { BUTTON_LABEL } from "@/blocks/defaults";
 

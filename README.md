@@ -26,7 +26,7 @@ It is also a complete Astro project (example blocks, theme, header/footer),
 which is what a new project starts from:
 
 ```bash
-npm install                       # also applies patches/ (sanity is pinned to 6.3.0)
+npm install
 cp .env.example .env              # fill PUBLIC_SANITY_PROJECT_ID
 npm run dev                       # http://localhost:4321 · Studio at /studio
 npm run verify                    # unit checks + build + public JS budget

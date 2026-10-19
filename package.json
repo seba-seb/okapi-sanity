@@ -9,7 +9,6 @@
     "build": "astro build",
     "typecheck": "astro check && tsc --noEmit",
     "typegen": "sanity typegen generate",
-    "postinstall": "patch-package --error-on-fail",
     "verify": "node scripts/verify.mjs",
     "okapi:setup": "node scripts/okapi-setup.mjs"
   },
@@ -19,21 +18,20 @@
     "@astrojs/vercel": "^11.0.15",
     "@portabletext/react": "^6.2.0",
     "@sanity/astro": "^3.5.1",
-    "@sanity/client": "^7.14.1",
-    "@sanity/icons": "^3.7.0",
+    "@sanity/client": "^8.9.0",
+    "@sanity/icons": "^5.2.3",
     "@sanity/image-url": "^2.1.1",
     "@sanity/themer": "0.10.4",
-    "@sanity/ui": "^3.3.1",
+    "@sanity/ui": "^4.4.9",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
     "embla-carousel-react": "^8.6.0",
-    "groq": "^6.3.0",
-    "patch-package": "^8.0.1",
+    "groq": "^6.19.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-is": "^19.2.0",
-    "sanity": "6.3.0",
-    "styled-components": "^6.4.3",
+    "sanity": "^6.19.0",
+    "styled-components": "^6.6.0",
     "tailwindcss": "^4.3.3",
     "three": "^0.160.0"
   },
@@ -45,9 +43,6 @@
     "@types/three": "^0.160.0",
     "typescript": "^5.7.0",
     "vite": "*"
-  },
-  "overrides": {
-    "sanity": "6.3.0"
   },
   "engines": {
     "node": ">=22.12"

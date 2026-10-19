@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { ComponentIcon } from "@sanity/icons";
+import { ComponentIcon } from "@sanity/icons/Component";
 
 /**
  * A reusable chunk of page (one or more sections), placed on pages through

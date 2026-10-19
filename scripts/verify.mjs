@@ -22,9 +22,6 @@ const fail = (msg) => {
 const check = (cond, msg) => (cond ? ok(msg) : fail(msg));
 
 console.log("\n1. Unit checks");
-// Sanity is pinned because patches/ only fit one exact version.
-const sanityVersion = JSON.parse(readFileSync("node_modules/sanity/package.json", "utf8")).version;
-check(existsSync(`patches/sanity+${sanityVersion}.patch`), `installed sanity@${sanityVersion} has its patch (patches/README.md)`);
 execSync("node --experimental-strip-types --no-warnings src/core/lib/routes.check.ts", { stdio: "inherit" });
 // Every block field gets a control in the Okapi Editor panel.
 execSync("npx sanity exec scripts/check-editor-schema.ts", { stdio: ["ignore", "inherit", "inherit"] });

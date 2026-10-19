@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { CogIcon } from "@sanity/icons";
+import { CogIcon } from "@sanity/icons/Cog";
 
 /** Singleton (id "settings"): site-wide defaults every page falls back to. */
 export const settings = defineType({

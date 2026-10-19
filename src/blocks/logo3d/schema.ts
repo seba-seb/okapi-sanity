@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { CubeIcon } from "@sanity/icons";
+import { CubeIcon } from "@sanity/icons/Cube";
 
 import { LOGO3D_PRESETS } from "@/blocks/logo3d/presets";
 import { CH_MAX_WIDTH } from "@/theme/maxWidth";

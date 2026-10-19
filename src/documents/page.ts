@@ -1,6 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { FEATURES } from "@/core/config";
-import { DocumentIcon } from "@sanity/icons";
+import { DocumentIcon } from "@sanity/icons/Document";
 
 export const page = defineType({
   name: "page",

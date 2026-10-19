@@ -1,7 +1,7 @@
 import { defineField, defineType } from "sanity";
 
 import { membersFor } from "@/blocks/_shared/members";
-import { CubeIcon } from "@sanity/icons";
+import { CubeIcon } from "@sanity/icons/Cube";
 
 import { defaultContentWrapperContent } from "@/blocks/defaults";
 

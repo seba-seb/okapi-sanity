@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { FormField, type FieldProps } from "sanity";
-import { Box, Flex, Text, Tooltip } from "@sanity/ui";
-import { InfoOutlineIcon } from "@sanity/icons";
+import { Box, Flex, Text } from "@sanity/ui";
+import { Tooltip } from "@sanity/ui/tooltip";
+import { InfoOutlineIcon } from "@sanity/icons/InfoOutline";
 
 /**
  * A field wrapper for the compact editing controls (segmented buttons, sliders,
