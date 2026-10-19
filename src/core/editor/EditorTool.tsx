@@ -507,9 +507,6 @@ function PageEditor({
               ))}
             </div>
           ) : null}
-          <button type="button" onClick={() => post(frame.current?.contentWindow, { type: "replay" })} style={chip} title="Play the page's animations once (the canvas keeps them still while you edit)">
-            ▶ Play
-          </button>
           <span style={{ flex: 1 }} />
           <span style={{ opacity: 0.6, fontSize: 12 }}>{status ?? (!ready ? "Loading…" : draft ? "Unpublished changes" : "Published")}</span>
           <button

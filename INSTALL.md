@@ -8,7 +8,7 @@ seguila paso a paso, en orden. Al terminar, el proyecto tiene:
 - **El Okapi Editor** en `/studio#/editor`: edición visual sobre la
   página real, con bloques, estilos por tokens y componentes.
 - **Páginas armadas en el editor**, servidas como HTML estático. Solo
-  hidratan las secciones con motion.
+  hidratan las secciones que necesitan JS (slider, 3D).
 
 Hay dos caminos: **A** para un proyecto nuevo y **B** para un proyecto Astro
 que ya existe. Los dos terminan en los pasos comunes.
@@ -20,6 +20,7 @@ que ya existe. Los dos terminan en los pasos comunes.
    - Lo que requiere la cuenta del usuario lo corre el usuario en su terminal.
      Pasale el comando exacto.
    - No te loguees con sus credenciales.
+   - La URL de un *deploy hook* también es un secreto.
 2. **No modifiques `src/core/`.** Es el producto y es igual en todos los
    proyectos. Si algo de core no encaja, avisá al usuario: el arreglo va al
    repo de Okapi.
@@ -27,7 +28,11 @@ que ya existe. Los dos terminan en los pasos comunes.
    actualices.
 4. **No pises archivos del proyecto.** Si una ruta que tenés que copiar ya
    existe, frená y preguntá.
-5. **Terminás con `npm run verify` en verde.**
+5. **Publicar es salir en vivo.** No publiques, despubliques ni importes
+   contenido sin un sí explícito del usuario para esa acción.
+6. **Confirmá antes de crear algo en sus cuentas** (proyecto, dataset, CORS,
+   usuarios): decí qué vas a crear y dónde, y esperá el sí.
+7. **Terminás con `npm run verify` en verde.**
 
 ## Paso 0 — Preguntas
 
@@ -55,7 +60,6 @@ Cada respuesta es un flag de `npm run okapi:setup` (paso común 0):
 
 | Pregunta | Flag | Si dice que no |
 |---|---|---|
-| ¿Bloques de animación? Scroll horizontal, cards apiladas, marquee, texto que se ilumina al scrollear, tipografía grande, parallax | `--motion` | Se borran esos 6 bloques. Los títulos pueden seguir animándose |
 | ¿Slider / carrusel? | `--slider` | Se borra el bloque y `embla-carousel-react` |
 | ¿Logo 3D? (suma ~140 KB, solo en las páginas que lo usan) | `--logo3d` | Se borra el bloque y `three` |
 | ¿Componentes reutilizables? Guardar una sección y usarla en varias páginas, como en Webflow | `--components` | Se apagan en el editor y en Sanity (se pueden prender después) |
@@ -63,12 +67,16 @@ Cada respuesta es un flag de `npm run okapi:setup` (paso común 0):
 | ¿Quién va a editar? Solo la agencia · agencia + cliente que publica · además un cliente que solo deja borradores | `--roles=agency` · `agency+client` · `agency+client+drafts` | Arma `src/okapi.policy.ts` con esos roles |
 | ¿Contenido de ejemplo? Una home armada para ver el editor andando | `--demo` | No se importa nada; la primera página se crea en el editor |
 
-Recomendación si la persona no sabe: animación **no** (se agrega después
-copiando los bloques), slider **sí**, logo 3D **no**, componentes **sí**, chat
-**sí** si el hosting es Vercel o Netlify, roles `agency+client`, ejemplo **sí**.
+Recomendación si la persona no sabe: slider **sí**, logo 3D **no**,
+componentes **sí**, chat **sí** si el hosting es Vercel o Netlify, roles
+`agency+client`, ejemplo **sí**.
+
+Okapi no trae animaciones. Si el proyecto ya anima (GSAP, Motion, CSS), sigue
+con lo suyo; si las quiere, se agregan en el código del proyecto, no en Okapi.
 
 Necesitás:
-- Node ≥ 22.
+- Node ≥ 22.12 y **npm** (los `overrides` y `patch-package` no funcionan
+  igual con pnpm o yarn: si el proyecto usa otro gestor, frená y avisá).
 - `git`.
 - Acceso de lectura al repo `seba-seb/okapi-sanity` (mientras sea privado)
   (`gh auth status`).
@@ -118,7 +126,7 @@ según la tabla o preguntá.
 R=/tmp/okapi
 mkdir -p src/layouts src/pages scripts sanity public
 cp -Rn $R/src/core $R/src/blocks $R/src/documents $R/src/theme $R/src/chrome src/
-cp -n  $R/src/schema.ts src/
+cp -n  $R/src/schema.ts $R/src/okapi.policy.ts src/
 cp -n  $R/src/layouts/Base.astro src/layouts/
 cp -n  $R/src/pages/edit-canvas.astro "$R/src/pages/[slug].astro" src/pages/
 cp -n  $R/sanity.config.ts $R/sanity.cli.ts .
@@ -131,9 +139,10 @@ cp -n  $R/public/placeholder.svg public/
 
 | Copiar | Qué es | Obligatorio |
 |---|---|---|
-| `src/core/` | El producto: editor, render, estilos, motion, Sanity | Sí |
+| `src/core/` | El producto: editor, render, estilos, Sanity | Sí |
 | `src/blocks/` | Registro de bloques y bloques base. Después se borran o se agregan bloques | Sí |
 | `src/documents/`, `src/schema.ts` | Documentos de Sanity: page, component, settings, navigation | Sí |
+| `src/okapi.policy.ts` | Qué puede hacer cada rol en el editor y el chat | Sí |
 | `src/theme/` | `tokens.css` (los nombres que usa el editor) + CSS de los bloques | Sí |
 | `src/layouts/Base.astro` | Layout de las páginas de Okapi: SEO, header y footer, `<Islands />` | Sí (ver B4) |
 | `src/chrome/` | Header y footer que leen Navigation | Sí, salvo que reemplaces `SiteHeader`/`SiteFooter` en el layout (B4) |
@@ -149,9 +158,6 @@ cp -n  $R/public/placeholder.svg public/
 | `AGENTS.md` | Reglas para agentes | Sí (ver B5) |
 | `INSTALL.md`, `docs/` | Esta guía y la documentación | Opcional |
 
-No copies `src/lab/` ni `src/pages/lab/`. Son el banco de pruebas de motion
-del repo de Okapi.
-
 ### B3. Configuración
 
 **`package.json`**: sumá sin bajar versiones que el proyecto ya tenga
@@ -161,19 +167,25 @@ del repo de Okapi.
 "dependencies": {
   "@astrojs/react": "^7.0.0", "@portabletext/react": "^6.2.0",
   "@sanity/astro": "^3.5.1", "@sanity/client": "^7.14.1", "@sanity/icons": "^3.7.0",
-  "@sanity/image-url": "^2.1.1", "@sanity/ui": "^3.3.1", "groq": "^6.3.0",
+  "@sanity/image-url": "^2.1.1", "@sanity/ui": "^3.3.1", "@sanity/themer": "0.10.4", "groq": "^6.3.0",
   "react": "^19.2.0", "react-dom": "^19.2.0", "react-is": "^19.2.0",
   "sanity": "6.3.0", "styled-components": "^6.4.3",
   "tailwindcss": "^4.3.3", "@tailwindcss/vite": "^4.3.3",
-  // bloques de motion (si se quedan): gsap, slider, 3D
-  "gsap": "^3.15.0", "@gsap/react": "^2.1.2", "embla-carousel-react": "^8.6.0", "three": "^0.160.0"
+  "patch-package": "^8.0.1",
+  // chat del editor (el adapter se elige solo según el host)
+  "@astrojs/vercel": "^11.0.15", "@astrojs/netlify": "^8.2.10",
+  // bloques de ejemplo (si se quedan): slider, 3D
+  "embla-carousel-react": "^8.6.0", "three": "^0.160.0"
 },
-"devDependencies": { "patch-package": "^8.0.1", "vite": "*", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
+"devDependencies": { "vite": "*", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/three": "^0.160.0" },
 "overrides": { "sanity": "6.3.0" },
+"engines": { "node": ">=22.12" },
 "scripts": { "postinstall": "patch-package --error-on-fail", "verify": "node scripts/verify.mjs", "okapi:setup": "node scripts/okapi-setup.mjs" }
 ```
 
 `vite` va explícito porque `astro.config` importa `loadEnv` de `vite`.
+`patch-package` va en `dependencies` porque corre en el `postinstall` del host,
+que a veces instala sin devDependencies.
 
 **`astro.config.*`**: integrá lo que trae `/tmp/okapi/astro.config.mjs`.
 Copiá los bloques tal cual: cada línea tiene su razón documentada en ese archivo.
@@ -182,12 +194,17 @@ Copiá los bloques tal cual: cada línea tiene su razón documentada en ese arch
 - `react()`.
 - `vite.plugins: [tailwindcss()]`.
 - `image.remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }]`.
+- `resolveAdapter()`, la const `adapter` y la integración `editorChat`: crean
+  la ruta `/api/editor-chat` del chat. Si el proyecto ya tiene un `adapter`,
+  dejá el suyo y asignalo a esa const.
+- `image.service: passthroughImageService()` solo si el proyecto no usa
+  `astro:assets`. Si lo usa, dejá su servicio.
 - `vite.optimizeDeps` completo (`entries` + `include`). Sin eso, el Studio
   queda en blanco en dev.
 - `site`: si el proyecto ya define uno, dejá el suyo. Si no, copiá
   `resolveSite()`.
-- `output`: dejá la del proyecto. Las páginas de Okapi son estáticas
-  igual.
+- `output`: dejá la del proyecto. Las páginas de Okapi exportan
+  `prerender = true`, así que son estáticas igual.
 
 **`tsconfig.json`**: `"jsx": "react-jsx"`, `"jsxImportSource": "react"` y el
 alias `@/*` (B1).
@@ -272,7 +289,7 @@ los valores, sí.** Así el editor ofrece la paleta del proyecto.
 Con las respuestas del Paso 0. Primero el plan, sin cambiar nada:
 
 ```bash
-npm run okapi:setup -- --motion=no --slider=yes --logo3d=no --components=yes \
+npm run okapi:setup -- --slider=yes --logo3d=no --components=yes \
   --chat=yes --roles=agency+client --demo=yes --dry-run
 ```
 
@@ -342,20 +359,34 @@ opcional: también se puede crear la primera página desde el editor.
 - **Build:** `npm run build`. Las páginas de Okapi son estáticas.
 - **Variables en el host:** las de `.env`, sin secretos salvo
   `SANITY_API_READ_TOKEN` si el dataset es privado.
-- **Chat del editor:** en el hosting, la clave del cliente por proveedor
-  (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY` y/o `OPENROUTER_API_KEY`) y, opcional,
-  `AI_MODELS` con los modelos que el chat puede elegir (ver `.env.example`). Pedile al
-  usuario que le ponga un tope de gasto en el proveedor. Funciona en Vercel y
+- **Chat del editor:** en el hosting, la clave por proveedor
+  (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY` y/o `OPENROUTER_API_KEY`) y
+  `AI_MODELS` con los modelos que el chat puede elegir (ver `.env.example`).
+  - **Una clave por proyecto, con su propio tope de gasto mensual**, que lo
+    pone el usuario en el proveedor. En Anthropic, un *workspace* por
+    proyecto; en OpenAI, un *project* con *budget*; en OpenRouter, una clave
+    con *credit limit*. Así un sitio no consume el presupuesto de otro y se ve
+    el gasto de cada uno.
+  - Sin `AI_MODELS`, el chat ofrece todos los modelos, incluidos los caros.
+  - **Privacidad:** el chat manda el contenido de la página y las imágenes
+    adjuntas al proveedor elegido. Avisale al usuario; si el sitio maneja
+    datos personales, que lo revise antes de cargar la clave. Sin clave, no
+    hay chat.
+  - Funciona en Vercel y
   Netlify sin tocar nada; en Cloudflare Pages, `npm i @astrojs/cloudflare
   wrangler`; en otro hosting el sitio anda igual pero el chat queda
   deshabilitado.
 - **CORS:** el dominio de producción, con credenciales.
-- **Publicar = rebuild:**
-  1. Creá un *deploy hook* en el host.
-  2. En sanity.io/manage → API → Webhooks, creá un webhook *on publish* con
-     filtro `_type in ["page","settings","navigation","component"]` que
-     llame a ese hook.
+- **Publicar = rebuild** (lo configura el usuario, la URL del hook es
+  secreta):
+  1. Crea un *deploy hook* en el host.
+  2. En sanity.io/manage → API → Webhooks, crea un webhook que se dispare en
+     *create*, *update* y *delete*, con filtro
+     `_type in ["page","settings","navigation","component"]`, que llame a ese
+     hook. Sin *delete*, despublicar no saca la página.
   - Sin esto, publicar no cambia el sitio hasta el próximo build manual.
+  - Si Sanity no responde durante el build, el build falla y el sitio en vivo
+    queda como estaba.
 - **Después del deploy:** `npm run verify -- https://<dominio>`.
 
 ### 7. Cierre
@@ -382,8 +413,8 @@ del editor:
    - Nunca hace fetch.
    - Si era `.astro`, pasalo a `.tsx`.
 3. Registrá el bloque en `src/blocks/meta.ts`, `schemas.ts` y `components.tsx`.
-   - Usá `js: true` si corre algo en el navegador: hooks, efectos, GSAP,
-     carruseles.
+   - Usá `js: true` si corre algo en el navegador: hooks, efectos,
+     animaciones, carruseles.
 4. Opcional:
    - contenido inicial en `defaults.ts`;
    - texto editable sobre la página en `TEXT_TARGETS`
@@ -393,7 +424,7 @@ del editor:
      Mencionalo.
 5. `npm run verify` falla si un campo no tiene control en el editor.
 
-Reglas completas para bloques, motion y estilos: `AGENTS.md`.
+Reglas completas para bloques, animaciones y estilos: `AGENTS.md`.
 
 ## Problemas conocidos
 

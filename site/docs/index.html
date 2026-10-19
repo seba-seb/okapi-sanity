@@ -384,6 +384,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <li><a href="#pedir-bien">How to ask</a></li>
       <li><a href="#editor">The editor</a></li>
       <li><a href="#componentes">Components</a></li>
+      <li><a href="#permisos">Permissions and AI chat</a></li>
       <li><a href="#bloques">Blocks</a></li>
       <li><a href="#si-falla">If something breaks</a></li>
       <li><a href="#entregar">Before you hand off</a></li>
@@ -399,7 +400,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <li><a href="#estilos">Styles and tokens</a></li>
       <li><a href="#componentes">Components</a></li>
       <li><a href="#bloques">Blocks</a></li>
-      <li><a href="#motion">Motion</a></li>
+      <li><a href="#permisos">Permissions and AI chat</a></li>
     </ol>
     <h2 data-only="tech">Integration</h2>
     <ol data-only="tech">
@@ -437,11 +438,10 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <li><b>Sanity</b> 6.3.0 · pinned</li>
         <li><b>React</b> 19</li>
         <li><b>Tailwind</b> 4 on tokens</li>
-        <li><b>GSAP</b> 3.15</li>
       </ul>
       <div class="figures">
-        <div><strong>≈1 KB</strong><span>of JS on a page without animated blocks</span></div>
-        <div><strong>138 KB</strong><span>of JS (gzip) on a page with motion</span></div>
+        <div><strong>≈1 KB</strong><span>of JS on a page without blocks that need it</span></div>
+        <div><strong>91 KB</strong><span>of JS (gzip) on a page with a slider or a 3D logo</span></div>
         <div><strong>0 KB</strong><span>of editor code on the public site, checked on every build</span></div>
         <div><strong>2</strong><span>paths: a new project or an existing Astro project</span></div>
       </div>
@@ -467,12 +467,12 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         </div>
         <div class="part">
           <h3>Pages built in the editor</h3>
-          <p>The routes you choose are built in the editor and served as static HTML. Only animated sections load JavaScript.</p>
+          <p>The routes you choose are built in the editor and served as static HTML. Only sections with a slider or a 3D logo load JavaScript.</p>
         </div>
       </div>
 
       <h3>Team and client</h3>
-      <p class="prose">The same editor shows two views depending on the Sanity role. The team (<code>administrator</code> role) can switch to the client view to check what the client sees.</p>
+      <p class="prose">What each person can do depends on their Sanity role and is decided per project in <code>src/okapi.policy.ts</code>. This is the default; the agency changes it. Admins can preview the editor as any role with <strong>View as</strong>.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Can…</th><th>Team</th><th>Client</th></tr></thead>
@@ -482,6 +482,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td>Insert, duplicate and delete blocks</td><td><span class="pill ok">Yes</span></td><td><span class="pill no">No</span></td></tr>
             <tr><td>Style panel (spacing, color, radius, breakpoints)</td><td><span class="pill ok">Yes</span></td><td><span class="pill no">No</span></td></tr>
             <tr><td>Create, edit and detach components</td><td><span class="pill ok">Yes</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Use the AI chat (if the project has it on)</td><td><span class="pill ok">Yes</span></td><td><span class="pill warn">Depends on role</span></td></tr>
             <tr><td>Publish</td><td><span class="pill ok">Yes</span></td><td><span class="pill warn">Depends on role</span></td></tr>
           </tbody>
         </table>
@@ -518,13 +519,17 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <ul>
           <li>Which Sanity organization the project goes in, or the project ID if you've already created one.</li>
           <li>For an existing project: which routes come from the editor, and whether the home page comes from the editor or stays yours.</li>
+          <li><strong>Which modules you want:</strong> slider, 3D logo, reusable components and the AI chat. What you don't pick isn't installed.</li>
+          <li><strong>Who will edit:</strong> only your team, a client who publishes, or also someone who only leaves drafts.</li>
+          <li><strong>Whether to load example content</strong> to see the editor working right away.</li>
         </ul>
+        <p>Before changing anything, it shows you the plan (which blocks go, which dependencies are removed, which roles stay) and waits for your OK. The chat and components can be switched on or off later in <code>src/okapi.config.json</code>.</p>
         <h3>What you do yourself</h3>
         <p>Anything that needs your account. The agent gives you the exact command or steps:</p>
         <ul>
           <li>Log in to Sanity and, if you want, import the example page.</li>
           <li>Invite the client.</li>
-          <li>On your host: environment variables, the domain in CORS and the publish webhook.</li>
+          <li>On your host: environment variables (including the AI key, if you use the chat), the domain in CORS and the publish webhook.</li>
           <li>The logged-in editor test (<a href="#entregar">Before you hand off</a>).</li>
         </ul>
       </div>
@@ -572,14 +577,22 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <div class="prompt-meta"><div><b>The agent</b>Schema, component, registration, initial content and editable text on the canvas. Runs verify.</div><div><b>You check</b>+ Add → Testimonials, then type the quote on the page.</div></div>
         </article>
         <article class="prompt">
-          <div class="prompt-head"><h3>Animate a block</h3><button class="copy" type="button">Copy</button></div>
-          <blockquote>Make the Testimonials block animate in on scroll.</blockquote>
-          <div class="prompt-meta"><div><b>The agent</b>Adds the animation following the motion rules and flags the block so it loads its JavaScript.</div><div><b>You check</b>Look at it on the site. In the editor, decorative animations stay still: use ▶ Play.</div></div>
-        </article>
-        <article class="prompt">
           <div class="prompt-head"><h3>Remove the example blocks</h3><button class="copy" type="button">Copy</button></div>
           <blockquote>Delete the Okapi example blocks we don't use in this project.</blockquote>
-          <div class="prompt-meta"><div><b>The agent</b>Deletes the folders and registry entries and runs verify. Fewer animated blocks means lighter pages.</div><div><b>You check</b>That they no longer appear in + Add.</div></div>
+          <div class="prompt-meta"><div><b>The agent</b>Deletes the folders and registry entries and runs verify. Fewer blocks with JS means lighter pages.</div><div><b>You check</b>That they no longer appear in + Add.</div></div>
+        </article>
+      </div>
+      <p class="prompt-group">Permissions and chat</p>
+      <div class="prompts">
+        <article class="prompt">
+          <div class="prompt-head"><h3>Decide who can do what</h3><button class="copy" type="button">Copy</button></div>
+          <blockquote>Let clients add headings, paragraphs and images, but not change styles or delete sections.</blockquote>
+          <div class="prompt-meta"><div><b>The agent</b>Edits <code>src/okapi.policy.ts</code> for the client's role and runs verify.</div><div><b>You check</b>In the editor, <strong>View as</strong> that role: the style panel and those actions are gone.</div></div>
+        </article>
+        <article class="prompt">
+          <div class="prompt-head"><h3>Turn on the AI chat</h3><button class="copy" type="button">Copy</button></div>
+          <blockquote>Turn on the editor's AI chat with Anthropic, offer only Sonnet and Haiku, and tell me exactly what to set on Vercel.</blockquote>
+          <div class="prompt-meta"><div><b>The agent</b>Sets <code>features.chat</code> to true and gives you the variables for the host (<code>ANTHROPIC_API_KEY</code>, <code>AI_MODELS</code>).</div><div><b>You check</b>Paste the key on the host, with a spend limit at the provider, and redeploy. The ✦ Chat tab appears.</div></div>
         </article>
       </div>
       <p class="prompt-group">Publish and maintain</p>
@@ -619,7 +632,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <thead><tr><th>Done in the editor</th><th>Asked of your agent</th></tr></thead>
           <tbody>
             <tr><td>Text, links and images</td><td>New blocks, or making something that already exists editable</td></tr>
-            <tr><td>Adding, reordering and duplicating sections and blocks</td><td>How a block looks and how it animates</td></tr>
+            <tr><td>Adding, reordering and duplicating sections and blocks</td><td>How a block looks</td></tr>
             <tr><td>A block's style, within the tokens</td><td>The token values (your design)</td></tr>
             <tr><td>Building and reusing components</td><td>Routes, layout, header and footer of the editor pages</td></tr>
             <tr><td>Publishing</td><td>Connecting publishing to deployment</td></tr>
@@ -629,9 +642,10 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <ul class="prose">
         <li><strong>Token names don't change.</strong> Their values do. The style panel relies on those names.</li>
         <li><strong>The editor only sees registered blocks.</strong> For something to be editable, it has to be a block.</li>
-        <li><strong>Anything that moves loads JavaScript.</strong> The agent flags it. If something shows up but doesn't animate on the site, tell it exactly that.</li>
+        <li><strong>Okapi doesn't animate.</strong> If your project already uses GSAP, Motion or CSS animations, it keeps them: animation lives in your code, not in the editor.</li>
         <li><strong>Ask it to verify.</strong> "Run verify" before calling anything done.</li>
-        <li><strong>Publishing isn't deploying.</strong> Publish gets the content ready; the site changes on the next build.</li>
+        <li><strong>Publishing is going live.</strong> With the webhook set up, every publish rebuilds the site within minutes. The agent never publishes without your explicit yes.</li>
+        <li><strong>The chat can only do what your role can.</strong> Its changes are drafts and undo in one step. It never publishes.</li>
         <li><strong>Okapi gets fixed in its own repo.</strong> <code>src/core</code> is the same in every project: if something in the editor breaks, the fix goes to the repo and is then pulled into each project.</li>
         <li><strong>Don't ask it to upgrade Sanity along the way.</strong> It's pinned to 6.3.0 on purpose.</li>
       </ul>
@@ -642,7 +656,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Product</p>
         <h2>Architecture</h2>
-        <p>The core idea: <strong>the same <code>PageBuilder</code> component draws the page in the editor and on the site</strong>. What you see while editing is the real site, with its styles and animations.</p>
+        <p>The core idea: <strong>the same <code>PageBuilder</code> component draws the page in the editor and on the site</strong>. What you see while editing is the real site, with its styles.</p>
       </div>
 
       <div class="diagram" role="img" aria-label="Diagram: the editor in the Studio talks to the canvas over postMessage and saves to Sanity; the build reads Sanity and generates static HTML with islands.">
@@ -692,7 +706,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <ul>
           <li><strong>Isolated CSS:</strong> the site's CSS doesn't mix with the Studio's.</li>
           <li><strong>Real breakpoints:</strong> desktop, tablet and mobile change the iframe's width.</li>
-          <li><strong>Motion follows the same policy as the site</strong> (see <a href="#motion">Motion</a>).</li>
           <li><strong>No exposed drafts:</strong> the route is public but has no data of its own. It only draws what an already authenticated editor sends it, over same-origin <code>postMessage</code>.</li>
         </ul>
         <h3>Block paths</h3>
@@ -707,7 +720,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Product</p>
         <h2>The public site</h2>
-        <p>The site is 100% static (<code>output: "static"</code>, no adapter). At build time, each page requests its document from Sanity, and <code>loadSite()</code> fetches settings, navigation, the route map and the component library. Build reads bypass Sanity's CDN on purpose: a rebuild triggered by a publish could otherwise read a stale cached response.</p>
+        <p>Pages are static (<code>output: "static"</code>). If the AI chat is on and the host runs functions (Vercel, Netlify, Cloudflare Pages), Astro adds one server function, <code>/api/editor-chat</code>; everything else is still prerendered. With the chat off there is no adapter at all. At build time, each page requests its document from Sanity, and <code>loadSite()</code> fetches settings, navigation, the route map and the component library. Build reads bypass Sanity's CDN on purpose, and a production build <strong>stops</strong> if Sanity can't be reached or the env is missing, so a failed fetch never deploys an empty site.</p>
         <h3>HTML first, JavaScript only where needed</h3>
         <p>PageBuilder renders on the server. Every top-level section that contains a block with <code>js</code> in the registry is wrapped as an island:</p>
       </div>
@@ -723,7 +736,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <thead><tr><th>Who downloads what</th><th class="num">JS (gzip)</th><th>When</th></tr></thead>
           <tbody>
             <tr><td>Page without <code>js</code> blocks</td><td class="num">≈1 KB</td><td>Always (just the script that looks for islands)</td></tr>
-            <tr><td>Page with motion: React DOM, blocks, GSAP, Portable Text</td><td class="num">138 KB</td><td>If there's at least one island</td></tr>
+            <tr><td>Page with islands: React DOM, blocks, Portable Text</td><td class="num">91 KB</td><td>If there's at least one island (slider, 3D logo)</td></tr>
             <tr><td>three.js for the 3D Logo block</td><td class="num">140 KB</td><td>Only if the page has that block</td></tr>
             <tr><td>Studio + Okapi Editor</td><td class="num">≈1,650 KB</td><td>Only for whoever opens <code>/studio</code></td></tr>
             <tr><td>Editor canvas</td><td class="num">144 KB</td><td>Only inside the editor</td></tr>
@@ -746,16 +759,16 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Product</p>
         <h2>Okapi Editor</h2>
-        <p>It's the Studio's first tab. It has three columns: <strong>pages and layers</strong>, <strong>canvas</strong> and <strong>properties</strong>. Along the top are undo and redo, <strong>+ Add</strong>, the device selector, <strong>▶ Play</strong> and <strong>Publish</strong>.</p>
+        <p>It's the Studio's first tab. It has three columns: <strong>pages and layers</strong>, <strong>canvas</strong> and <strong>properties</strong>. Along the top are undo and redo, <strong>+ Add</strong>, the device selector and <strong>Publish</strong>. The right column has two tabs, <strong>Properties</strong> and <strong>✦ Chat</strong>. Both side columns resize by dragging their edge (double-click resets).</p>
         <h3>What you can do</h3>
         <ul>
-          <li><strong>In-place text.</strong> Double-click headings, paragraphs, eyebrows, buttons, card titles and bodies, Big Type and Scroll Text. Rich text has a floating toolbar with bold, italic, link and unlink.</li>
+          <li><strong>In-place text.</strong> Double-click headings, paragraphs, eyebrows, buttons, and card titles and bodies. Rich text has a floating toolbar with bold, italic, link and unlink.</li>
           <li><strong>Layers.</strong> A tree with drag and drop (before, after or inside), insert, duplicate, delete, move, and copy and paste between pages.</li>
           <li><strong>Dragging on the canvas.</strong> The selected block shows a ⠿ handle. A blue line shows where it will land, and the move is validated with the same rules as the layers.</li>
           <li><strong>Multi-select.</strong> ⇧ or ⌘ + click on the canvas or in the layers. Delete, duplicate, copy and move apply to all of them.</li>
-          <li><strong>Images.</strong> Drag a file onto an image, card, parallax or section background, or upload it from the panel.</li>
+          <li><strong>Images.</strong> Drag a file onto an image, card or section background, or upload it from the panel.</li>
           <li><strong>Properties generated from the schema.</strong> Every field of every block has its own control; verify fails if any field is left without one.</li>
-          <li><strong>▶ Play.</strong> Plays decorative animations once. While you edit, they stay still.</li>
+          <li><strong>✦ Chat.</strong> Ask for changes in your own words and attach up to 3 images. Only what your role allows; changes are drafts that undo in one step. See <a href="#permisos">Permissions and AI chat</a>.</li>
         </ul>
         <h3>Shortcuts</h3>
       </div>
@@ -791,7 +804,6 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <tbody>
             <tr><td>Editor → canvas</td><td><code>render</code></td><td>Document, routes and components to draw</td></tr>
             <tr><td>Editor → canvas</td><td><code>select</code></td><td>Highlight the selection, with optional scrolling</td></tr>
-            <tr><td>Editor → canvas</td><td><code>replay</code></td><td>▶ Play: remount with decorative motion</td></tr>
             <tr><td>Canvas → editor</td><td><code>ready</code></td><td>The iframe has loaded</td></tr>
             <tr><td>Canvas → editor</td><td><code>select</code></td><td>Click on a block (with <code>add</code> for multi-select)</td></tr>
             <tr><td>Canvas → editor</td><td><code>text</code></td><td>Edited text (string or Portable Text)</td></tr>
@@ -859,21 +871,66 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       </div>
     </section>
 
+    <!-- ───────────────────────── Permissions + AI chat ───────────────────────── -->
+    <section id="permisos">
+      <div class="prose">
+        <p class="eyebrow">Product</p>
+        <h2>Permissions and AI chat</h2>
+        <p>Each project decides who can do what in <code>src/okapi.policy.ts</code>: every Sanity role gets a list of permissions and, optionally, the block types it may add. The editor and the chat follow it. The chat can never do more than the person using it.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Permission</th><th>Allows</th></tr></thead>
+          <tbody>
+            <tr><td><code>text</code></td><td>Edit texts, rich text and links</td></tr>
+            <tr><td><code>images</code></td><td>Replace images</td></tr>
+            <tr><td><code>style</code></td><td>The style panel (tokens only)</td></tr>
+            <tr><td><code>settings</code></td><td>Block settings: variants, sizes, layout</td></tr>
+            <tr><td><code>reorder</code></td><td>Move blocks up and down</td></tr>
+            <tr><td><code>structure</code></td><td>Add, duplicate and delete blocks (limited by <code>blocks</code>)</td></tr>
+            <tr><td><code>components</code></td><td>Make, detach and insert library components</td></tr>
+            <tr><td><code>publish</code></td><td>Publish</td></tr>
+            <tr><td><code>chat</code></td><td>Use the AI chat</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <strong>The policy shapes the editor; it isn't a lock</strong>
+        <p>The real boundary is the Sanity role: what the API lets that person write. Someone technical can write anything their role allows without going through the editor. Give clients the narrowest Sanity role that works.</p>
+      </div>
+      <div class="prose">
+        <h3>How the chat works</h3>
+        <ul>
+          <li>The editor sends the request, with the person's Sanity session, to the site's own function <code>/api/editor-chat</code>.</li>
+          <li>The function checks the session with Sanity, works out the person's permissions, reads the page from Sanity and asks the model with the <strong>project's key, stored in the host</strong>. The key never reaches the browser.</li>
+          <li>The model only proposes changes. The editor checks each one against the permissions, the block registry and the schema, and applies the valid ones as <strong>one undo step</strong>, saved as a draft. The chat never publishes.</li>
+          <li>Images: attach up to 3 (📎, paste or drop). The original is uploaded to Sanity; the model sees a smaller copy.</li>
+          <li>Model picker: every provider with a key on the host appears (Anthropic, OpenAI, OpenRouter). <code>AI_MODELS</code> limits the list; the first is the default.</li>
+        </ul>
+        <h3>Cost and privacy</h3>
+        <ul>
+          <li>One key per project, with its own spend limit at the provider. Every request has a token cap and a per-person rate limit; the drafts-only role has no chat by default.</li>
+          <li>The page being edited and any attached images are sent to the chosen provider. Say so to the client.</li>
+          <li>The chat is optional: with <code>features.chat: false</code> in <code>src/okapi.config.json</code> the site stays fully static.</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- ───────────────────────── Blocks ───────────────────────── -->
     <section id="bloques">
       <div class="prose">
         <p class="eyebrow">Product</p>
         <h2>Blocks</h2>
-        <p>Okapi ships with these example blocks: each project deletes the ones it doesn't use and adds its own. The single registry is <code>src/blocks/meta.ts</code>. It defines which types exist, what they can contain, which ones need JS and what the editor offers in each place. <code>schemas.ts</code> and <code>components.tsx</code> are typed against the registry: if something is missing, the compiler flags it.</p>
+        <p>Okapi ships with these example blocks. At install, <code>npm run okapi:setup</code> removes the optional ones you don't want (Slider, 3D Logo); each project then adds its own. The single registry is <code>src/blocks/meta.ts</code>. It defines which types exist, what they can contain, which ones need JS and what the editor offers in each place. <code>schemas.ts</code> and <code>components.tsx</code> are typed against the registry: if something is missing, the compiler flags it.</p>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Block</th><th>Contains</th><th>JS</th><th>On the canvas</th></tr></thead>
           <tbody>
             <tr><td><strong>Section</strong></td><td>Any block</td><td><span class="pill no">No</span></td><td>Theme, spacing, background (drop an image)</td></tr>
-            <tr><td><strong>Component</strong> <code>componentRef</code></td><td>An instance from the library</td><td>Depends on content</td><td>Text and image overrides</td></tr>
+            <tr><td><strong>Component</strong> <code>componentRef</code></td><td>An instance from the library (if components are on)</td><td>Depends on content</td><td>Text and image overrides</td></tr>
             <tr><td><strong>Eyebrow</strong></td><td>—</td><td><span class="pill no">No</span></td><td>In-place text</td></tr>
-            <tr><td><strong>Heading</strong></td><td>—</td><td><span class="pill js">If animated</span></td><td>In-place rich text</td></tr>
+            <tr><td><strong>Heading</strong></td><td>—</td><td><span class="pill no">No</span></td><td>In-place rich text</td></tr>
             <tr><td><strong>Paragraph</strong></td><td>—</td><td><span class="pill no">No</span></td><td>In-place rich text</td></tr>
             <tr><td><strong>Button Group</strong></td><td>Button</td><td><span class="pill no">No</span></td><td>—</td></tr>
             <tr><td><strong>Button</strong></td><td>—</td><td><span class="pill no">No</span></td><td>In-place label</td></tr>
@@ -883,47 +940,12 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td><strong>Card</strong></td><td>—</td><td><span class="pill no">No</span></td><td>In-place title and body, drop an image</td></tr>
             <tr><td><strong>Grid</strong></td><td>Card, Content, Image, 3D Logo</td><td><span class="pill no">No</span></td><td>—</td></tr>
             <tr><td><strong>Box</strong></td><td>Any block</td><td><span class="pill no">No</span></td><td>—</td></tr>
-            <tr><td><strong>Slider</strong></td><td>Card, Image</td><td><span class="pill js">Yes</span></td><td>—</td></tr>
-            <tr><td><strong>3D Logo</strong></td><td>—</td><td><span class="pill js">Yes · three.js loaded separately</span></td><td>—</td></tr>
-            <tr><td><strong>Horizontal Scroll</strong></td><td>Card, Image, Content</td><td><span class="pill js">Yes</span></td><td>—</td></tr>
-            <tr><td><strong>Stacked Cards</strong></td><td>Card</td><td><span class="pill js">Yes</span></td><td>—</td></tr>
-            <tr><td><strong>Marquee</strong></td><td>—</td><td><span class="pill js">Yes</span></td><td>—</td></tr>
-            <tr><td><strong>Scroll Text</strong></td><td>—</td><td><span class="pill js">Yes</span></td><td>In-place text</td></tr>
-            <tr><td><strong>Big Type</strong></td><td>—</td><td><span class="pill js">Yes</span></td><td>In-place text</td></tr>
-            <tr><td><strong>Parallax Media</strong></td><td>—</td><td><span class="pill js">Yes</span></td><td>Drop an image</td></tr>
+            <tr><td><strong>Slider</strong></td><td>Card, Image</td><td><span class="pill js">Yes</span></td><td>Optional at install</td></tr>
+            <tr><td><strong>3D Logo</strong></td><td>—</td><td><span class="pill js">Yes · three.js loaded separately</span></td><td>Optional at install</td></tr>
           </tbody>
         </table>
       </div>
       <p class="prose small muted">Every block also has the style panel. "JS" indicates whether the block makes its section hydrate on the public site.</p>
-    </section>
-
-    <!-- ───────────────────────── Motion ───────────────────────── -->
-    <section id="motion" data-only="tech">
-      <div class="prose">
-        <p class="eyebrow">Product</p>
-        <h2>Motion</h2>
-        <p>GSAP is imported in a single place, <code>core/motion/gsap.ts</code>, which also defines when each kind of animation runs. The rule is to separate the motion you need to reach the content from motion that is decorative:</p>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Kind</th><th>Examples</th><th>Site</th><th>Editor canvas</th><th>Reduced motion</th></tr></thead>
-          <tbody>
-            <tr><td><strong>Layout</strong></td><td>Pin, horizontal scroll, sticky scrub, parallax</td><td><span class="pill ok">Runs</span></td><td><span class="pill ok">Runs</span></td><td>Native fallback</td></tr>
-            <tr><td><strong>Decorative</strong></td><td>Text splits, entrances, marquee loop, reveals</td><td><span class="pill ok">Runs</span></td><td><span class="pill no">Still</span> · ▶ Play</td><td><span class="pill no">Doesn't run</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="prose">
-        <h3>Rules for animated blocks</h3>
-        <ul>
-          <li><code>useGSAP</code> with <code>scope</code>, inside the React component. Never an Astro <code>&lt;script&gt;</code> with <code>querySelector</code>: the editor re-renders blocks and the script doesn't see the new nodes.</li>
-          <li>If the block has children: <code>dependencies: [childKeys]</code> and <code>revertOnUpdate: true</code>, so inserting or deleting rebuilds the animation.</li>
-          <li>Pin an <em>inner</em> element, never the one that carries <code>data-sanity-path</code>. React owns the outer node, and GSAP's pin-spacer goes in between.</li>
-          <li>Split text inside a wrapper with a <code>key</code> per text. <code>SplitReveal</code> and <code>useSplit</code> already do this; reuse them.</li>
-          <li>Anything on screen at load gets a time-based entrance, not a scrub, because a scrub would start halfway through.</li>
-          <li>Declare <code>js</code> in <code>meta.ts</code>. Otherwise, on the public site the block shows up but doesn't move.</li>
-        </ul>
-      </div>
     </section>
 
     <!-- ───────────────────────── Installation ───────────────────────── -->
@@ -941,7 +963,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <table>
           <thead><tr><th>Copied</th><th>What it is</th></tr></thead>
           <tbody>
-            <tr><td><code>src/core/</code></td><td>The product: editor, rendering, styles, motion, Sanity. Not modified per project</td></tr>
+            <tr><td><code>src/core/</code></td><td>The product: editor, rendering, styles, Sanity. Not modified per project</td></tr>
             <tr><td><code>src/blocks/</code></td><td>The registry and the example blocks. Delete blocks or add your own</td></tr>
             <tr><td><code>src/documents/</code>, <code>src/schema.ts</code></td><td>page, component, settings, navigation</td></tr>
             <tr><td><code>src/theme/</code></td><td>Tokens (names the editor uses) and the blocks' CSS. Only editor pages load it</td></tr>
@@ -949,6 +971,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td><code>src/pages/[slug].astro</code>, <code>edit-canvas.astro</code></td><td>Editor pages and the canvas. <code>index.astro</code> only if the home page comes from the editor</td></tr>
             <tr><td><code>sanity.config.ts</code>, <code>sanity.cli.ts</code>, <code>patches/</code></td><td>The Studio and the fixes for sanity@6.3.0</td></tr>
             <tr><td><code>scripts/verify.mjs</code>, <code>check-editor-schema.ts</code></td><td>Checks</td></tr>
+            <tr><td><code>src/okapi.config.json</code>, <code>src/okapi.policy.ts</code>, <code>scripts/okapi-setup.mjs</code></td><td>What the project uses, who can do what, and the script that applies the install answers</td></tr>
             <tr><td><code>src/chrome/</code>, <code>public/placeholder.svg</code></td><td>Header and footer for editor pages (replaceable) and the default image for new blocks</td></tr>
             <tr><td><code>AGENTS.md</code></td><td>Rules for agents. If the project already has one, it's added as a section</td></tr>
           </tbody>
@@ -956,9 +979,27 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       </div>
       <div class="prose">
         <p class="small muted">Tested on Astro's official blog template: build and verify pass, the blog is untouched and <code>src/core</code> is unchanged.</p>
+        <h3>Choosing what to install</h3>
+        <p>Before installing, the agent asks which modules the person wants and runs <code>npm run okapi:setup</code> with the answers: first with <code>--dry-run</code> to show the plan, then with <code>--yes</code>. If an answer is missing, the script does nothing and says which one. Run in a terminal without flags, it asks the questions itself. It refuses to run inside the Okapi repo.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Question</th><th>If no</th></tr></thead>
+          <tbody>
+            <tr><td><code>--slider</code></td><td>Slider / carousel?</td><td>The block and <code>embla-carousel-react</code> are deleted</td></tr>
+            <tr><td><code>--logo3d</code></td><td>3D logo? (~140 KB, only on pages that use it)</td><td>The block and <code>three</code> are deleted</td></tr>
+            <tr><td><code>--components</code></td><td>Reusable components?</td><td><code>features.components: false</code>: no library and no instances</td></tr>
+            <tr><td><code>--chat</code></td><td>AI chat in the editor?</td><td><code>features.chat: false</code>: no adapter, no server function, fully static</td></tr>
+            <tr><td><code>--roles</code></td><td>Who edits? <code>agency</code> · <code>agency+client</code> · <code>agency+client+drafts</code> · <code>keep</code></td><td>Writes <code>okapi.policy.ts</code> with those roles</td></tr>
+            <tr><td><code>--demo</code></td><td>Example content?</td><td>No seed file; the first page is created in the editor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p class="small muted">Blocks are deleted, so the site ships less code. Chat and components are flags that core reads (<code>core/config.ts</code>), so core stays the same in every project and they can be switched later. Checks pass with any combination: tested with everything off, the page JS dropped and a Vercel build came out fully static.</p>
         <h3>Configuration that gets merged</h3>
         <ul>
-          <li><strong><code>package.json</code>:</strong> the Sanity, React 19 and Tailwind 4 dependencies (plus GSAP, Embla and three if the motion blocks stay), <code>overrides: { sanity: "6.3.0" }</code> and <code>postinstall: patch-package --error-on-fail</code>.</li>
+          <li><strong><code>package.json</code>:</strong> the Sanity, React 19 and Tailwind 4 dependencies (plus Embla and three if the slider and the 3D logo stay, and the host adapters if the chat is on), <code>engines: node &gt;=22.12</code>, <code>overrides: { sanity: "6.3.0" }</code>, <code>postinstall: patch-package --error-on-fail</code> and the <code>okapi:setup</code> script. npm only.</li>
           <li><strong><code>astro.config</code>:</strong> the <code>sanity()</code> integration with <code>studioBasePath: "/studio"</code> and hash routing, <code>react()</code>, the Tailwind plugin and the full <code>optimizeDeps</code> list. Without that last one, the Studio goes blank in dev. The project's <code>output</code> and <code>site</code> are kept.</li>
           <li><strong><code>tsconfig</code>:</strong> React JSX and the <code>@/*</code> → <code>./src/*</code> alias.</li>
         </ul>
@@ -979,10 +1020,11 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td>Everything editable is a block registered in <code>src/blocks/meta.ts</code>, <code>schemas.ts</code> and <code>components.tsx</code></td><td>The registry defines what exists, what can contain what and what the editor offers</td></tr>
             <tr><td>A block receives <code>{ block, path, ctx }</code>, never fetches, and puts <code>{...editable(…)}</code> on its root</td><td>The canvas draws the document it receives and selects by <code>data-sanity-path</code></td></tr>
             <tr><td><code>js</code> in <code>meta.ts</code> if the block runs anything in the browser</td><td>Otherwise the site serves it as HTML and it never hydrates</td></tr>
-            <tr><td>Every layout that renders <code>&lt;PageBuilder islands /&gt;</code> includes <code>&lt;Islands /&gt;</code></td><td>It hydrates the animated sections, and in dev it installs the React preamble</td></tr>
+            <tr><td>Every layout that renders <code>&lt;PageBuilder islands /&gt;</code> includes <code>&lt;Islands /&gt;</code></td><td>It hydrates the sections that need JS (slider, 3D logo), and in dev it installs the React preamble</td></tr>
             <tr><td>The names in <code>tokens.css</code> don't change; the values do</td><td>The style panel offers those names</td></tr>
             <tr><td>Links go through <code>resolveLink()</code> and <code>pageHref()</code></td><td>A single source of URLs: links, sitemap, canonical, future languages</td></tr>
-            <tr><td>GSAP from <code>@/core/motion/gsap</code>, with <code>useGSAP</code> and <code>scope</code></td><td>That's where the motion policy for the editor and the site lives</td></tr>
+            <tr><td>Okapi ships no animation library</td><td>If the project already animates (GSAP, Motion, CSS), it keeps doing so, under its own licence. The editor has no animation controls</td></tr>
+            <tr><td>Project choices live in <code>src/okapi.config.json</code> and <code>src/okapi.policy.ts</code></td><td>Core reads them, so core never needs per-project edits</td></tr>
             <tr><td><code>sanity</code> at 6.3.0</td><td><code>patches/</code> only applies to that version</td></tr>
           </tbody>
         </table>
@@ -1002,15 +1044,16 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
   <span class="d">editor/</span>         <span class="c">EditorTool, CanvasApp, FieldControls, ops, paths, protocol, richtext</span>
   <span class="d">render/</span>         <span class="c">PageBuilder, BlockRenderer, instances, overrides, Islands.astro + hydrate</span>
   <span class="d">style/</span>          <span class="c">panel tokens, per-page stylesheet, design field schema</span>
-  <span class="d">motion/</span>         <span class="c">gsap.ts (policy), ScrollRefresh, useSplit, SplitReveal</span>
   <span class="d">sanity/</span>         <span class="c">client + loadQuery, site loader, queries, editable(), env</span>
   <span class="d">studio/</span>         <span class="c">custom Studio inputs (sliders, enums, responsive)</span>
   <span class="d">lib/</span>            <span class="c">routes (pageHref/resolveLink), clean, staleChunkReload, types</span>
+<span class="d">src/okapi.config.json</span> <span class="c">what the project uses: features.chat, features.components</span>
+<span class="d">src/okapi.policy.ts</span>   <span class="c">who can do what, per Sanity role (editor + chat)</span>
 <span class="d">src/blocks/</span>        <span class="c">one folder per block · meta.ts = the registry</span>
 <span class="d">src/theme/</span>         <span class="c">tokens.css (the first thing you change) + globals.css</span>
 <span class="d">src/chrome/</span>        <span class="c">the project's header and footer</span>
 <span class="d">src/documents/</span>     <span class="c">page, component, settings, navigation</span>
-<span class="d">src/pages/</span>         <span class="c">[slug] = editor pages · /edit-canvas = canvas · /lab = motion test bench (this repo only)</span>
+<span class="d">src/pages/</span>         <span class="c">[slug] = editor pages · /edit-canvas = canvas</span>
 <span class="d">patches/</span>           <span class="c">fixes for sanity@6.3.0 (see its README)</span>
 <span class="d">scripts/</span>           <span class="c">verify, check-editor-schema, seeds</span>
 <span class="d">skills/</span>            <span class="c">okapi-astro skill (Claude Code): follows INSTALL.md</span>
@@ -1044,7 +1087,7 @@ AGENTS.md          <span class="c">rules for working on the code (imported by CL
       <div class="code"><pre><span class="c">// src/blocks/meta.ts</span>
 quote: { title: <span class="k">"Quote"</span>, margin: true },
 ticker: { title: <span class="k">"Ticker"</span>, js: true },
-heading: { title: <span class="k">"Heading"</span>, js: (b) =&gt; !!b.animation &amp;&amp; b.animation !== <span class="k">"none"</span> },</pre></div>
+gallery: { title: <span class="k">"Gallery"</span>, js: (b) =&gt; b.layout === <span class="k">"carousel"</span> },</pre></div>
       <div class="code"><pre><span class="c">// src/blocks/quote/Quote.tsx</span>
 export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
   return (
@@ -1063,14 +1106,14 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
       <div class="prose">
         <p class="eyebrow">Working with it</p>
         <h2>Hosting and publishing</h2>
-        <p>Any static host works: Vercel, Netlify, Cloudflare Pages or another. Configure it with the build command <code>npm run build</code>, output directory <code>dist</code> and Node 22.</p>
+        <p>Any host works. Build with <code>npm run build</code>, output <code>dist</code>, Node 22.12+ and npm. With the AI chat on, use Vercel or Netlify (built in) or Cloudflare Pages (<code>npm i @astrojs/cloudflare wrangler</code> once): Okapi picks the adapter from where the build runs and adds the chat's single function. On any other host the site works and the chat shows as unavailable.</p>
       </div>
       <div class="diagram" role="img" aria-label="Publishing flow: Publish in the editor, Sanity fires a webhook, the host rebuilds and serves the new HTML.">
         <div class="diagram-inner">
           <div class="flow">
             <div class="node hl"><h4>Publish</h4>In the editor</div>
             <div class="arrow right"><span></span></div>
-            <div class="node"><h4>Sanity</h4>Webhook on publish</div>
+            <div class="node"><h4>Sanity</h4>Webhook on create, update, delete</div>
             <div class="arrow right"><span></span></div>
             <div class="node"><h4>Deploy hook</h4>From the host</div>
             <div class="arrow right"><span></span></div>
@@ -1093,10 +1136,13 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td><code>PUBLIC_SANITY_API_VERSION</code></td><td>API version date, for example <code>2024-10-01</code></td></tr>
             <tr><td><code>PUBLIC_SITE_URL</code></td><td>Origin for canonical, og:url and the sitemap. On Vercel, Netlify and Cloudflare it falls back to the deployment URL if missing. An empty value counts as unset.</td></tr>
             <tr><td><code>SANITY_API_READ_TOKEN</code></td><td>Only if the dataset is private: a <em>Viewer</em> token, read at build time</td></tr>
+            <tr><td><code>ANTHROPIC_API_KEY</code> · <code>OPENAI_API_KEY</code> · <code>OPENROUTER_API_KEY</code></td><td>Only with the chat on: the project's key per provider, never <code>PUBLIC_</code>. Give it a spend limit at the provider</td></tr>
+            <tr><td><code>AI_MODELS</code></td><td>Optional: the models the chat offers, e.g. <code>anthropic:claude-sonnet-5-5, anthropic:claude-haiku-5-5</code>. The first is the default</td></tr>
           </tbody>
         </table>
       </div>
       <p class="prose">Every domain you open <code>/studio</code> from has to be in the project's CORS origins, <strong>with credentials allowed</strong>. Without that, the Studio shows "Connect this studio to your project".</p>
+      <p class="prose small muted">The deploy hook URL is a secret: whoever has it can trigger builds. Keep it only in Sanity's webhook and the host.</p>
     </section>
 
     <!-- ───────────────────────── Quality ───────────────────────── -->
@@ -1113,21 +1159,12 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <li>Insert, move, delete and duplicate keep the document valid, and island detection is correct (<code>ops.check</code>).</li>
           <li>Tokens produce the expected CSS, with no selector injection (<code>stylesheet.check</code>).</li>
           <li>Overrides apply to the right block and never touch the original (<code>overrides.check</code>).</li>
+          <li>Each role's permissions gate every change the chat proposes, and provider requests have the right shape (<code>chat.check</code>).</li>
+          <li>Rich text round-trips to editable HTML without breaking out of attributes (<code>richtext.check</code>).</li>
           <li>The build passes, the public HTML contains no editor or Studio code, and the home page stays at or under 250 KB of JS.</li>
           <li>The home page has real content, an absolute canonical, a sitemap and robots.txt.</li>
           <li>Given a URL (<code>npm run verify -- https://your-domain</code>), it also checks that <code>/</code>, <code>/studio</code> and <code>/edit-canvas</code> respond.</li>
         </ul>
-        <h3>Motion test bench</h3>
-        <p><code>/lab/&lt;slug&gt;</code>, available in dev only, replays what the editor does on the real PageBuilder. It types into every text, inserts and deletes inside pinned bands, reverses and duplicates sections, cycles through animations and themes, and makes 25 rapid edits, half of them while scrolled inside a pin. After each step it checks for:</p>
-        <ul>
-          <li>no React errors;</li>
-          <li>one pin-spacer per band;</li>
-          <li>pin distance matching the track's travel;</li>
-          <li>no dangling ScrollTriggers;</li>
-          <li>no stuck splits;</li>
-          <li>no horizontal overflow.</li>
-        </ul>
-        <p>The test pages are <code>/lab-noir</code>, <code>/lab-kinetic</code> and <code>/lab-stack</code>.</p>
         <h3>Logged-in smoke test</h3>
         <p>Flows that need a login can't be automated without credentials. Test them by hand, on a throwaway page, before handing off a site:</p>
         <ol class="check">
@@ -1137,6 +1174,8 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <li>Make component on a section. Edit text on an instance: only that one changes. Reset. Edit component: all of them change.</li>
           <li>Publish, then <code>npm run build</code>, and the change is on the static page.</li>
           <li>Log in as a client-role user: they don't see styles or structure actions.</li>
+          <li>With <strong>View as</strong> each role, only what <code>okapi.policy.ts</code> allows shows up; the chat refuses the rest.</li>
+          <li>✦ Chat: "make the selected heading shorter" is applied, and Undo reverts it.</li>
         </ol>
       </div>
     </section>
@@ -1157,10 +1196,11 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>Blank Studio right after login</td><td>The tab is requesting chunks from a previous server or deploy.</td><td><code>staleChunkReload</code> reloads once on its own. If it persists: <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>.</td></tr>
             <tr><td>Blank Studio in Brave only</td><td>Shields and routing.</td><td>Solved with hash routing and <code>basePath: "/"</code>.</td></tr>
             <tr><td>The home page shows the welcome screen</td><td><code>.env</code> or the content is missing.</td><td>Fill in <code>.env</code> and import the seed.</td></tr>
-            <tr><td>A block shows up but doesn't animate on the site</td><td>It's missing <code>js</code> in <code>meta.ts</code>.</td><td>Add it.</td></tr>
+            <tr><td>The build stops with <code>[loadQuery] …</code></td><td>Sanity didn't respond or the env is missing. It stops on purpose so an empty site isn't deployed.</td><td>Check <code>PUBLIC_SANITY_*</code> on the host and Sanity's status, then rebuild.</td></tr>
             <tr><td><code>npm install</code> fails in patch-package</td><td><code>sanity</code> isn't at 6.3.0.</td><td>Go back to 6.3.0. Upgrading is a separate job: it means redoing <code>patches/</code>.</td></tr>
             <tr><td>"can't detect preamble" in dev</td><td>The layout doesn't include <code>&lt;Islands /&gt;</code>.</td><td>Add it at the end of <code>&lt;body&gt;</code>.</td></tr>
             <tr><td>I published and the site didn't change</td><td>The site is static.</td><td>Check the webhook to the deploy hook, or run a build.</td></tr>
+            <tr><td>The ✦ Chat tab says it isn't available</td><td>No AI key on the host, a host that can't run functions, or <code>features.chat</code> is off.</td><td>Set a key (<code>ANTHROPIC_API_KEY</code>…), use Vercel/Netlify/Cloudflare and redeploy.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1219,6 +1259,21 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <p><b>Problem.</b> No current project needs it.</p>
           <p><b>Decision.</b> Every URL goes through <code>pageHref()</code> and <code>resolveLink()</code>. Adding languages happens in one place.</p>
         </div>
+        <div class="decision">
+          <h3>No animation library</h3>
+          <p><b>Problem.</b> Shipping GSAP and animated blocks tied every project to one library and its licence terms for visual builders, and added weight.</p>
+          <p><b>Decision.</b> Okapi doesn't animate. Projects that already animate keep their own tools. Page JS with islands went from 139 KB to 91 KB.</p>
+        </div>
+        <div class="decision">
+          <h3>The AI chat runs on the site's server</h3>
+          <p><b>Problem.</b> A key in the browser can be read by any script in the Studio, and clients would see it.</p>
+          <p><b>Decision.</b> One function per site, <code>/api/editor-chat</code>, with the project's key in the host. It verifies the Sanity session and the role before asking the model.</p>
+        </div>
+        <div class="decision">
+          <h3>Ask before installing</h3>
+          <p><b>Problem.</b> Installing everything by default left projects with modules and dependencies nobody asked for.</p>
+          <p><b>Decision.</b> The agent asks first and <code>okapi:setup</code> applies the answers the same way every time.</p>
+        </div>
       </div>
     </section>
 
@@ -1268,6 +1323,31 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <li>Installable in existing Astro projects, with <code>INSTALL.md</code> and <code>AGENTS.md</code> for any agent. This documentation.</li>
           </ul>
         </li>
+        <li>
+          <time datetime="2026-10-16">Oct 16, 2026</time>
+          <h3>Permissions and AI chat</h3>
+          <ul>
+            <li>Per-role permissions in <code>okapi.policy.ts</code>, with <strong>View as</strong>.</li>
+            <li>✦ Chat on the site's server function, with the project's key, a model picker and image attachments.</li>
+            <li>Resizable side columns in the editor.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-10-18">Oct 18, 2026</time>
+          <h3>Okapi, no GSAP, audit</h3>
+          <ul>
+            <li>Remarkable is renamed Okapi; repo <code>seba-seb/okapi-sanity</code>, MIT licence, brand and site in English and Spanish.</li>
+            <li>GSAP, the animated blocks and ▶ Play are removed. Page JS with islands: 139 KB → 91 KB.</li>
+            <li>Audit: escaped JSON-LD and canvas HTML, builds stop if Sanity is unreachable, chat cost caps, publishing = going live.</li>
+          </ul>
+        </li>
+        <li>
+          <time datetime="2026-10-19">Oct 19, 2026</time>
+          <h3>Install asks first</h3>
+          <ul>
+            <li>The agent asks which modules to install; <code>npm run okapi:setup</code> keeps only those and writes <code>okapi.config.json</code>.</li>
+          </ul>
+        </li>
       </ol>
     </section>
 
@@ -1286,7 +1366,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td>"Connect this studio to your project"</td><td>You opened it on a different port. The local one is <code>:4321</code>.</td><td>"I'm getting Connect this studio on localhost:&lt;port&gt;"</td></tr>
             <tr><td>The Studio goes blank</td><td>The tab went stale after the server restarted.</td><td>First <kbd>⌘</kbd><kbd>⇧</kbd><kbd>R</kbd>. If it persists: "The Studio is blank, check the console"</td></tr>
             <tr><td>The home page shows "Your visual page builder is ready"</td><td>The configuration or the content is missing.</td><td>"The home page shows the welcome screen"</td></tr>
-            <tr><td>A block shows up but doesn't animate on the site</td><td>It isn't flagged as a block with JS.</td><td>"Block X doesn't animate on the published site"</td></tr>
+            <tr><td>The ✦ Chat tab says it isn't available</td><td>The project has no AI key on the host, or the chat is off.</td><td>"The chat says it isn't available"</td></tr>
             <tr><td>I published and the site didn't change</td><td>The webhook is missing, or the build hasn't finished yet.</td><td>"I published and the site didn't change"</td></tr>
             <tr><td><code>npm install</code> fails in patch-package</td><td>The Sanity version changed.</td><td>"npm install fails in patch-package"</td></tr>
             <tr><td>One of my own pages looks different now</td><td>Okapi's CSS is loading outside its own pages.</td><td>"Since we added Okapi, /&lt;route&gt; looks different"</td></tr>
@@ -1308,6 +1388,8 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <li>Create a component, change the text on one instance (only that one changes) and edit the original (all of them change).</li>
           <li>Publish and see the change on the site after the build.</li>
           <li>Log in as the client: they don't see styles or structure actions.</li>
+          <li>With <strong>View as</strong> each role, only what <code>okapi.policy.ts</code> allows shows up; the chat refuses the rest.</li>
+          <li>✦ Chat: "make the selected heading shorter" is applied, and Undo reverts it.</li>
           <li>Settings filled in: site name, description and social sharing image.</li>
           <li>The domain is in CORS and the publish webhook works.</li>
         </ol>
@@ -1328,7 +1410,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <dt>Override</dt><dd>A text or image changed on a single instance, without touching the component.</dd>
           <dt>Token</dt><dd>A named design value: a color, a spacing step, a radius. Changing it changes the whole site.</dd>
           <dt>Draft</dt><dd>What you've edited but haven't published yet. Only the team sees it.</dd>
-          <dt>Publish</dt><dd>Mark content as ready for the site. It shows up after the next build.</dd>
+          <dt>Publish</dt><dd>Put content live. With the webhook, the site rebuilds within minutes.</dd>
           <dt>Build</dt><dd>When the site is generated from the published content. It takes a few seconds, plus install time.</dd>
           <dt>Webhook</dt><dd>The notification Sanity sends on publish so your host runs a build.</dd>
           <dt>Studio</dt><dd>Sanity's admin panel, at <code>/studio</code>. The editor lives inside it.</dd>
@@ -1338,6 +1420,10 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <dt>AGENTS.md</dt><dd>The rules the agent reads before working on the project. Claude Code reads them through <code>CLAUDE.md</code>.</dd>
           <dt>Skill</dt><dd>A Claude Code shortcut: <code>okapi-astro</code> fetches INSTALL.md and follows it.</dd>
           <dt>Core</dt><dd><code>src/core</code>, the editor's code. It's the same in every project and gets fixed in the Okapi repo.</dd>
+          <dt>okapi:setup</dt><dd>The install script: keeps only the modules you chose.</dd>
+          <dt>okapi.config.json</dt><dd>What the project uses: the chat and components, on or off.</dd>
+          <dt>okapi.policy.ts</dt><dd>Who can do what in the editor and the chat, per Sanity role.</dd>
+          <dt>✦ Chat</dt><dd>The editor's AI assistant. It proposes changes; you keep or undo them.</dd>
         </dl>
       </div>
     </section>
@@ -1357,14 +1443,14 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
             <tr><td><strong>Components of any size</strong></td><td>Save a card or a button as a component and insert it inside sections, grids or boxes.</td><td><span class="pill warn">Medium</span></td></tr>
             <tr><td><strong>Insert as a copy or linked</strong></td><td>Choose when inserting from the library.</td><td><span class="pill ok">Small</span></td></tr>
             <tr><td><strong>Custom Studio UI</strong></td><td>Replace Sanity's toolbar and frame through the official API (<code>studio.components</code>) so the editor is the whole app.</td><td><span class="pill warn">Medium</span></td></tr>
-            <tr><td><strong>Per-block JS</strong></td><td>So a section with only a marquee doesn't load every block. Cuts the 138 KB on pages with little motion.</td><td><span class="pill warn">Medium</span></td></tr>
+            <tr><td><strong>Per-block JS</strong></td><td>So a section with only a slider doesn't load every block. Cuts the 91 KB on pages with little JS.</td><td><span class="pill warn">Medium</span></td></tr>
             <tr><td><strong>Private npm package</strong></td><td>Install and update with <code>npm</code> instead of copying <code>src/core</code>. Once there are 3 or more sites in production.</td><td><span class="pill warn">Medium</span></td></tr>
             <tr><td><strong>Languages</strong></td><td>When a client asks for it. The groundwork is in <code>pageHref</code> and <code>resolveLink</code>.</td><td><span class="pill warn">Medium</span></td></tr>
             <tr><td><strong>3D gizmo on the canvas</strong></td><td>Rotate the 3D Logo directly on the canvas. Postponed.</td><td><span class="pill no">Paused</span></td></tr>
           </tbody>
         </table>
       </div>
-      <footer class="end">Okapi · repo <code>seba-seb/okapi-sanity</code> · installation in <code>INSTALL.md</code> · rules in <code>AGENTS.md</code> · updated October 8, 2026</footer>
+      <footer class="end">Okapi · repo <code>seba-seb/okapi-sanity</code> · installation in <code>INSTALL.md</code> · rules in <code>AGENTS.md</code> · updated October 19, 2026</footer>
     </section>
   </main>
 

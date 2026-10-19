@@ -1,7 +1,7 @@
 // Run: node --experimental-strip-types src/core/editor/ops.check.ts  (also run by verify)
 import assert from "node:assert/strict";
 
-import { needsJs } from "../../blocks/meta.ts";
+import { BLOCKS, needsJs } from "../../blocks/meta.ts";
 import { FEATURES } from "../config.ts";
 import { canPlace, duplicate, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, topmost } from "./ops.ts";
 
@@ -86,9 +86,10 @@ assert.throws(() => moveNextTo(doc, H1, C1, "before")); // a heading can't go in
 
 // Islands: a section needs JS only if some block in its tree does
 assert.equal(needsJs(doc.sections[0]), false);
-assert.equal(needsJs({ _type: "section", content: [{ _type: "grid", items: [{ _type: "card" }, { _type: "heading", animation: "words" }] }] }), true); // found deep
-assert.equal(needsJs([{ _type: "heading", animation: "none" }]), false);
-assert.equal(needsJs([{ _type: "heading", animation: "words" }]), true);
+// A block that needs JS anywhere in the tree (slider / 3D logo, when the project kept them)
+const jsType = Object.keys(BLOCKS).find((t) => (BLOCKS as Record<string, { js?: unknown }>)[t].js === true);
+if (jsType) assert.equal(needsJs({ _type: "section", content: [{ _type: "grid", items: [{ _type: "card" }, { _type: jsType }] }] }), true);
+assert.equal(needsJs([{ _type: "heading" }]), false);
 
 // Helpers
 assert.equal(parentBlock(C1), G1);

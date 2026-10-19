@@ -3,6 +3,8 @@
 // Static and data-free: it renders only what the authenticated editor posts.
 import "@/theme/globals.css";
 import { CanvasApp } from "@/core/editor/CanvasApp";
+
+export const prerender = true;
 ---
 
 <!doctype html>
@@ -12,7 +14,6 @@ import { CanvasApp } from "@/core/editor/CanvasApp";
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>Editor canvas</title>
-    <style>[data-split]{visibility:visible}</style>
   </head>
   <body>
     <CanvasApp client:only="react" />

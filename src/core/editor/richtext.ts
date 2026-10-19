@@ -11,7 +11,8 @@ type Span = { _type: "span"; _key: string; text: string; marks: string[] };
 type MarkDef = { _key: string; _type: string; [k: string]: unknown };
 export type PTBlock = { _type: "block"; _key: string; style: string; markDefs: MarkDef[]; children: Span[] };
 
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /** PT → HTML for a contenteditable element (one <div> per block). */
 export function ptToHtml(value: unknown): string {

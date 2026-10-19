@@ -38,4 +38,6 @@ Lo que nunca se hace, aunque la guía no esté a mano:
 - **`sanity`:** queda en `6.3.0`.
 - **Archivos del proyecto:** no los pisás. Si una ruta ya existe, frenás y
   preguntás.
+- **Publicar:** es salir en vivo. No publicás, despublicás ni importás
+  contenido sin un sí explícito.
 - **Cierre:** no se da por terminado sin `npm run verify` en verde.

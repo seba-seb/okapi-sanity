@@ -5,7 +5,7 @@ editor (a Studio tool at `/studio#/editor`), added to an Astro project. Edit
 text on the page, drag layers, add/duplicate/delete blocks, style with tokens,
 reusable components, drop images, undo. Sanity provides auth, roles, drafts,
 history, images and CDN. Pages it renders are **static HTML**; only sections
-with motion hydrate.
+that need JS (slider, 3D) hydrate.
 
 This file is for any coding agent (Claude Code reads it through `CLAUDE.md`).
 Installing Okapi into a project: **`INSTALL.md`**. Team docs: `site/docs/index.html`.
@@ -21,8 +21,6 @@ src/core/       The product. Same in every project — don't fork it per project
                 (settings/menus/routes), link type schema, structure
   studio/       custom Studio inputs (segmented enums, sliders, responsive numbers)
   render/       PageBuilder, BlockRenderer, Islands.astro + hydrate (public islands), Welcome
-  motion/       gsap.ts (the ONE place GSAP is imported + the motion policy),
-                ScrollRefresh, useSplit, SplitReveal
   lib/          clean, routes (pageHref/resolveLink), staleChunkReload, types
 src/blocks/     The project's blocks. One folder per type: schema.ts + Component.tsx
   meta.ts       THE registry: type names, titles, container slots, canvas flags
@@ -34,11 +32,9 @@ src/theme/      Per project. tokens.css = the design tokens (edit this first);
 src/chrome/     Header/footer. Per project — restyle or replace.
 src/documents/  Document types: page, settings (singleton), navigation (singleton)
 src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
-                /lab/[slug] = dev-only stress harness (not built in production).
-src/lab/        LabHarness: replays editor mutations + checks (see "Testing motion").
 patches/        patch-package fixes for sanity@6.3.0 (Studio form tweaks)
 skills/         okapi-astro: the Claude Code skill that starts a new project
-site/           the public site: index.html (landing) + docs/ (keep docs in sync with this file)
+site/           the public site: landing + docs in English (site/) and Spanish (site/es/); keep both docs in sync with this file
 brand/          the Okapi mark (SVG) and brand notes
 ```
 
@@ -46,17 +42,23 @@ brand/          the Okapi mark (SVG) and brand notes
 
 At install time the agent asks which modules the person wants (INSTALL.md →
 Paso 0) and runs `scripts/okapi-setup.mjs` with the answers (`--dry-run` first,
-then `--yes`). **Optional blocks** (motion, slider, logo3d) are deleted with
+then `--yes`). **Optional blocks** (slider, logo3d) are deleted with
 their deps; **core features** are flags in `src/okapi.config.json`
 (`features.chat`, `features.components`), read through `core/config.ts`
 (`FEATURES`): chat off = no host adapter, no `/api/editor-chat`, no Chat tab;
 components off = no `component` document, no `componentRef`, no Make
 component. It also writes `src/okapi.policy.ts` from a roles preset and removes
-the Okapi repo's own tooling (lab, seed generators). It refuses to run in the
+the Okapi repo's own tooling (seed generators). It refuses to run in the
 Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
 
 ## Rules
 
+- **Publishing is going live** (a webhook rebuilds the site). Never publish,
+  unpublish, delete or import content without the user's explicit yes for
+  that action — not from a script, not through an MCP. Test on drafts.
+- **Ask before creating anything in the user's accounts** (Sanity projects,
+  datasets, CORS origins, users, tokens, webhooks). Tokens and deploy-hook
+  URLs are secrets: never ask for, print or write them.
 - **Core is shared.** A fix in `src/core` belongs to the starter first, then
   gets copied to projects. (When 3+ projects are live, extract core into a
   private package so fixes arrive with `npm update`.)
@@ -67,11 +69,14 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
 - **Blocks get their data as props and stamp `editable(...)` on their root.**
   Never fetch inside a block: the editor canvas renders the same components
   from the document it is sent, and selects blocks by `data-sanity-path`.
-- **Animations live inside the React component** (`useGSAP` with a `scope`),
-  never in an Astro `<script>` with querySelector: the editor re-renders blocks
-  and a script won't see the new nodes. Split text inside a wrapper `key`ed by
-  the text, never on the element that carries `data-sanity-path`.
-  `core/motion/SplitReveal` already does this — reuse it.
+- **Okapi ships no animation library.** If the project already animates (GSAP,
+  Motion, CSS…), it keeps doing so under its own licence; Okapi adds no
+  animation fields or editor controls. Animate inside the React component
+  (effect with cleanup, declare `js` in `meta.ts`), never in an Astro
+  `<script>` with querySelector: the editor re-renders blocks and a script
+  won't see the new nodes. Never rewrite the DOM of the element that carries
+  `data-sanity-path` (split text inside an inner wrapper keyed by the text).
+  The editor canvas doesn't need to play animations.
 - **Styling: Tailwind 4 utilities built from the tokens** — `bg-bg text-fg
   bg-surface text-muted border-border bg-brand text-brand-contrast`,
   `rounded-main`, `gap-md p-lg` (the t-shirt spacing), `text-h-xl`,
@@ -81,8 +86,8 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   + the `@theme inline` map. No preflight, so the starter's base CSS is
   untouched; it lives in `@layer components`, so utilities override it.
 - **Public pages are plain HTML; only sections that need JS hydrate.** A block
-  with `js` in `meta.ts` (motion, slider, WebGL — or a predicate, e.g. Heading
-  only when `animation` is set) turns its top-level section into an island
+  with `js` in `meta.ts` (slider, WebGL, a project's own animations — or a
+  predicate on the block's fields) turns its top-level section into an island
   (`PageBuilder islands` → `[data-island]` → `core/render/hydrate.tsx`, loaded
   by `<Islands />` — put it in every layout that renders PageBuilder). A page without such blocks ships
   ~1 KB of JS. **A block with hooks/effects/handlers MUST declare `js`**, or it
@@ -112,11 +117,11 @@ Studio tool at `/studio#/editor` (the Studio's landing tool):
   validated against `meta.ts`); `ops.check.ts` runs in verify.
 
 What it does: double-click text to edit it in place (headings, paragraphs,
-eyebrows, button labels, card title/body, Big Type, Scroll Text — the canvas
+eyebrows, button labels, card title/body — the canvas
 holds incoming renders while you type and restores React's exact DOM after, so
 no caret jumps); layers tree with drag (before/after/inside); + Add, duplicate,
 delete, move, copy/paste between pages; undo/redo (typing coalesced); drop an
-image file on any image block/card/parallax/section or upload from the panel;
+image file on any image block/card/section or upload from the panel;
 device widths. Client view: content fields + reorder only.
 Rich text edits in place too: a floating bar (B, I, Link, Unlink; ⌘B ⌘I ⌘K) —
 `core/editor/richtext.ts` maps PT ⇄ editable HTML, keeping existing link
@@ -126,8 +131,6 @@ copy/paste and ▲▼ apply to all of them.
 **Drag on the canvas**: the selected block shows a ⠿ grip — drag it; a blue
 line shows where it lands (before/after the block under the pointer,
 horizontal inside rows/grids). Validated like any move (`moveNextTo`).
-**▶ Play** remounts the canvas once with decorative motion on (the canvas
-keeps it still while you edit); a block you edit afterwards goes still again.
 
 ### Permissions and the AI chat
 
@@ -135,8 +138,10 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   permissions (`text images style settings reorder structure components
   publish chat`) + optional `blocks` a role may add. It gates the panel
   fields (`FieldControls.fieldKind`), the actions, canvas edits, publish and
-  the chat. Pure logic in `core/editor/policy.ts`. This shapes the editor; the
-  hard boundary is still the Sanity role (what the API lets them write).
+  the chat. Pure logic in `core/editor/policy.ts`. **It is not a security
+  boundary:** it shapes the editor UI, and the server only checks `chat`.
+  Anyone can still write whatever their Sanity role allows from
+  `#/structure` or the API — use Sanity roles for real limits.
 - **✦ Chat** (tab in the right column): the browser part
   (`core/editor/EditorChat.tsx`) sends the request with the person's Sanity
   session token to the site's own server route **`/api/editor-chat`**
@@ -150,8 +155,12 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   (`chat.ts applyOps`: grant + registry + schema) and applies them as ONE undo
   step, saved as a draft with the person's own session. Never publishes. The
   key never reaches the browser. The Studio uses `auth.loginMethod: "token"` so
-  the session token can be sent. Rate limit per user (in memory) — the real
-  ceiling is the spend limit on the provider account.
+  the session token can be sent. Cost guards: body/catalog size caps,
+  `max_tokens` on every provider, no top-tier model unless `AI_MODELS` lists
+  it, `contributor` has no chat by default, rate limit per user (in memory).
+  The real ceiling is **one key per project with its own monthly spend limit**
+  on the provider (Anthropic workspace / OpenAI project budget / OpenRouter key
+  limit). Privacy: the page content and attached images go to that provider.
 - **Hosting:** `astro.config` picks the adapter from where the build runs
   (Vercel / Netlify built in; Cloudflare Pages needs `npm i @astrojs/cloudflare
   wrangler`) and only then injects `/api/editor-chat`; pages stay prerendered.
@@ -192,44 +201,6 @@ keeps it still while you edit); a block you edit afterwards goes still again.
   with Reset. Inner blocks carry synthetic paths (`….__component.…`) — that
   marker is what routes an edit to an override.
 
-## Motion blocks
-
-Horizontal Scroll (pinned), Stacked Cards (sticky + scrub), Marquee (loop +
-scroll velocity), Scroll Text (words light up), Big Type (chars), Parallax
-Media, plus the Heading `animation` field. Policy (`core/motion/gsap.ts`):
-
-| Kind | Examples | Public | Editor canvas | Reduced motion |
-|---|---|---|---|---|
-| Layout | pin, horizontal scroll, sticky scrub, parallax | ✓ | ✓ (you must reach the content) | native fallback |
-| Decorative | text splits, entrances, marquee loop, clip reveals | ✓ | ✗ (would replay / re-split per keystroke) | ✗ |
-
-Rules for new motion blocks:
-- Import GSAP from `@/core/motion/gsap`, never from `"gsap"`.
-- `useGSAP` with `scope`; if the block has children, pass
-  `dependencies: [childKeys], revertOnUpdate: true` so inserts/removes rebuild it.
-- Pin an INNER element, never the one with `data-sanity-path` (React owns the
-  outer node; GSAP's pin-spacer goes between them).
-- Anything whose size can change without the page height changing (a track's
-  width) needs its own ResizeObserver → `ScrollTrigger.refresh()`.
-  `ScrollRefresh` covers page-height changes.
-- Full-bleed: `.section__container > .your-block { margin-inline: calc(50% - 50vw); width: 100vw }`
-  (the container resets child margins; match its specificity + 1).
-- On-screen-at-load elements get a time-based entrance, not a scrub (it would
-  start half-played).
-
-## Testing motion
-
-`npm run dev`, then open `/lab/<slug>` (append `?as-preview` for the editor's
-motion policy). The panel replays editor mutations on the real PageBuilder —
-typing into every text, inserting/removing items inside pinned bands,
-reversing/duplicating/deleting pinned sections, cycling animations and
-themes, 25 rapid edits — half of them while scrolled INTO a pin, and checks
-after each: React errors, one pin-spacer per band, pin distance = track
-travel, no dangling ScrollTriggers, no nested/stuck splits, no horizontal
-overflow, edited text rendered. Scripted: `await window.__lab.run()`.
-Seed the three test pages with `SANITY_WRITE_TOKEN=… node scripts/seed-lab.mjs`
-(/lab-noir, /lab-kinetic, /lab-stack — noindex).
-
 ## Editor smoke test (logged in, before handing a site to a client)
 
 Automated checks cover the canvas side only; these need a real login, in
@@ -239,7 +210,7 @@ Automated checks cover the canvas side only; these need a real login, in
 3. Drop an image on an Image block → uploads and shows.
 4. Make component from a section → edit text on an instance → only that
    instance changes; Reset override; Edit component → all instances change.
-5. Publish → `npm run build` → the change is on the static page.
+5. Publish (with the user's OK: it goes live) → `npm run build` → the change is on the static page.
 6. Log in as a client-role user (or "View as") → only what `okapi.policy.ts`
    allows is visible; the chat refuses the rest.
 7. ✦ Chat: "make the selected heading shorter" → applied, Undo reverts it.

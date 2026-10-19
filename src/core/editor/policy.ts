@@ -10,7 +10,7 @@ export const PERMISSIONS = {
   text: "Edit texts, rich text and links",
   images: "Replace images",
   style: "Style panel (tokens: spacing, colors, radius, width)",
-  settings: "Block settings (variants, sizes, layout, animation)",
+  settings: "Block settings (variants, sizes, layout)",
   reorder: "Move blocks up and down",
   structure: "Add, duplicate and delete blocks",
   components: "Make, detach and insert library components",

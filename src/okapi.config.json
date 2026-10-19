@@ -5,7 +5,6 @@
     "components": true
   },
   "blocks": {
-    "motion": true,
     "slider": true,
     "logo3d": true
   }

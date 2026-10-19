@@ -26,11 +26,9 @@ const TEXT_TARGETS: Record<string, { sel?: string; field: string; kind: "pt" | "
     { sel: ".card__title", field: "heading", kind: "string" },
     { sel: ".card__text", field: "body", kind: "string", multiline: true },
   ],
-  bigType: [{ field: "text", kind: "string" }],
-  textScrub: [{ field: "text", kind: "string", multiline: true }],
 };
 /** Blocks that take a dropped image file, and the field it goes to. */
-const IMAGE_FIELDS: Record<string, string> = { imageBlock: "image", card: "image", parallaxMedia: "image", section: "backgroundImage" };
+const IMAGE_FIELDS: Record<string, string> = { imageBlock: "image", card: "image", section: "backgroundImage" };
 
 type Box = { top: number; left: number; width: number; height: number; label: string } | null;
 const boxOf = (el: Element | null): Box => {
@@ -95,7 +93,6 @@ export function CanvasApp() {
   const pending = useRef<{ doc: Page; routes: Routes; components: Components } | null>(null);
   const hoverEl = useRef<Element | null>(null);
   const dropEl = useRef<Element | null>(null);
-  const [replayKey, setReplayKey] = useState(0);
   // Canvas drag: the selected block, dropped before/after the block under the pointer.
   const [dropLine, setDropLine] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const startDrag = (e: React.PointerEvent) => {
@@ -155,9 +152,6 @@ export function CanvasApp() {
           setRoutes(msg.routes);
           setComponents(msg.components);
         }
-      } else if (msg.type === "replay") {
-        (globalThis as { __okapiReplay?: boolean }).__okapiReplay = true;
-        setReplayKey((k) => k + 1);
       } else if (msg.type === "select") {
         setSelected(msg.path);
         setOthers((msg.paths ?? []).filter((p) => p !== msg.path));
@@ -215,11 +209,15 @@ export function CanvasApp() {
     const startEdit = (el: HTMLElement, path: string, field: string, kind: "pt" | "string", multiline: boolean, current: unknown) => {
       const snap = snapshot(el);
       const rich = kind === "pt";
-      const original = rich ? JSON.stringify(current ?? []) : el.innerText;
+      // textContent, not innerText: innerText applies CSS text-transform (an
+      // uppercase eyebrow would be saved in capitals). Multiline keeps innerText
+      // for the line breaks contenteditable inserts.
+      const read = () => (multiline ? el.innerText : (el.textContent ?? ""));
+      const original = rich ? JSON.stringify(current ?? []) : read();
       let timer: number | undefined;
       let suspendBlur = false;
       const pt = () => htmlToPt(el, current);
-      const value = () => (rich ? JSON.stringify(pt()) : el.innerText.replace(/\n+$/, ""));
+      const value = () => (rich ? JSON.stringify(pt()) : read().replace(/\n+$/, ""));
       const send = (final: boolean) => {
         if (!rich) return post(window.parent, { type: "text", path, field, kind, value: value(), final });
         const blocks = pt();
@@ -385,16 +383,10 @@ export function CanvasApp() {
     return () => cancelAnimationFrame(raf);
   }, [selected, others]);
 
-  // Animations are created on mount (layout effects); by the time this effect
-  // runs they exist, so later remounts (edits) go back to the still canvas.
-  useEffect(() => {
-    if (replayKey) (globalThis as { __okapiReplay?: boolean }).__okapiReplay = false;
-  }, [replayKey]);
-
   // Re-render the page only when the document changes, not on overlay moves.
   const page = useMemo(
-    () => (doc?.sections?.length ? <PageBuilder key={replayKey} page={doc} routes={routes} components={components} /> : null),
-    [doc, routes, components, replayKey],
+    () => (doc?.sections?.length ? <PageBuilder page={doc} routes={routes} components={components} /> : null),
+    [doc, routes, components],
   );
 
   if (!doc) return <p style={{ padding: 32, font: "14px system-ui", opacity: 0.6 }}>Waiting for the editor…</p>;

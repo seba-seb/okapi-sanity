@@ -3,7 +3,7 @@
  * Okapi setup: keep only what the project uses.
  *
  *   npm run okapi:setup                      asks each question (terminal)
- *   npm run okapi:setup -- --motion=no --slider=no --logo3d=no \
+ *   npm run okapi:setup -- --slider=no --logo3d=no \
  *     --components=yes --chat=yes --roles=agency+client --demo=yes --dry-run
  *                                            agents: ask the person first, then pass every answer
  *   …same flags with --yes                   apply without the confirmation prompt
@@ -11,18 +11,13 @@
  * Blocks you don't want are deleted (folder, registry entries, npm deps), so the
  * site ships less code. Core features (chat, components) are flags in
  * src/okapi.config.json, so core stays the same in every project. Also removes
- * the Okapi repo's own dev tooling (motion lab, seed generators).
+ * the Okapi repo's own dev tooling (seed generators).
  */
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 
 const BLOCK_GROUPS = {
-  motion: {
-    q: "¿Bloques de animación? (scroll horizontal, cards apiladas, marquee, texto que se ilumina, tipografía grande, parallax)",
-    blocks: ["horizontalScroll", "stackCards", "marquee", "textScrub", "bigType", "parallaxMedia"],
-    deps: [],
-  },
   slider: { q: "¿Slider / carrusel?", blocks: ["slider"], deps: ["embla-carousel-react"] },
   logo3d: { q: "¿Logo 3D? (suma ~140 KB de three.js solo en las páginas que lo usen)", blocks: ["logo3d"], deps: ["three", "@types/three"] },
 };
@@ -36,7 +31,7 @@ const ROLES = {
   "agency+client+drafts": "La agencia + un cliente que publica + otro que solo deja borradores",
   keep: "Dejar src/okapi.policy.ts como está",
 };
-const DEV_TOOLING = ["src/lab", "src/pages/lab", "scripts/seed-lab.mjs", "scripts/generate-seed.mjs", "scripts/rebuild-home.mjs"];
+const DEV_TOOLING = ["scripts/generate-seed.mjs"];
 
 // ── Answers ───────────────────────────────────────────────────────────────────
 const args = Object.fromEntries(
@@ -117,7 +112,7 @@ function policyFile(roles, f, blocks) {
   ];
   if (roles !== "agency")
     rows.push(`  editor: {\n    label: "Client — publishes",\n    can: [${can(["text", "images", "reorder", "structure", "publish", "chat"])}],\n    blocks: [${clientBlocks.map((b) => `"${b}"`).join(", ")}],\n  },`);
-  if (roles === "agency+client+drafts") rows.push(`  contributor: {\n    label: "Client — drafts only",\n    can: [${can(["text", "images", "reorder", "chat"])}],\n  },`);
+  if (roles === "agency+client+drafts") rows.push(`  contributor: {\n    label: "Client — drafts only",\n    can: [${can(["text", "images", "reorder"])}],\n  },`); // no chat by default: drafts-only people don't spend the key
   rows.push(`  default: {\n    label: "Read only",\n    can: [],\n  },`);
   const head = read("src/okapi.policy.ts").split("export const POLICY")[0];
   return `${head}export const POLICY: Policy = {\n${rows.join("\n")}\n};\n`;
@@ -146,7 +141,6 @@ for (const [k, g] of Object.entries(BLOCK_GROUPS)) {
   if (keepGroup[k]) continue;
   g.blocks.forEach(removeBlock);
   deps.push(...g.deps);
-  if (k === "motion") write("src/blocks/meta.ts", read("src/blocks/meta.ts").replace(/^  \/\/ Creative \/ motion blocks\n/m, ""));
 }
 if (!features.components) plan.push("apagar componentes (features.components = false)");
 if (!features.chat) {

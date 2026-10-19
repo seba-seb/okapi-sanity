@@ -23,7 +23,8 @@ export const POLICY: Policy = {
   },
   contributor: {
     label: "Client — drafts only",
-    can: ["text", "images", "reorder", "chat"],
+    // No "chat" by default: every message costs the project. Add it if the agency wants.
+    can: ["text", "images", "reorder"],
   },
   default: {
     label: "Read only",
