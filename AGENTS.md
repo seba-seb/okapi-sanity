@@ -23,6 +23,8 @@ src/core/       The product. Same in every project — don't fork it per project
   studio/       custom Studio inputs (segmented enums, sliders, responsive numbers)
   render/       PageBuilder, BlockRenderer, Islands.astro + hydrate (public islands), Welcome
   lib/          clean, routes (pageHref/resolveLink), staleChunkReload, types
+  astro/        okapi.ts: everything astro.config needs (okapi(), okapiAdapter(),
+                okapiSanity(), okapiSite()), imported, never pasted
 src/blocks/     The project's blocks. One folder per type: schema.ts + Component.tsx
   meta.ts       THE registry: type names, titles, container slots, canvas
                 flags, inline-editable text (`text`) and image drop (`imageField`)
@@ -70,7 +72,8 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   Links, sitemap, canonicals. Adding i18n later = changing those two functions.
   Both, and core's own routes (`/studio`, `/edit-canvas`, `/api/editor-chat`),
   go through `sitePath()` (`core/sanity/env.ts`), which follows the project's
-  `trailingSlash` (handed over by the `editorChat` integration in astro.config).
+  final `trailingSlash` (handed over by the `okapi()` integration, read at
+  `astro:config:done` so integrations that set it count).
   Where pages live is config, not a core edit: `pagesBase` in
   `src/okapi.config.json` ("" → `/<slug>`, "/p" → `/p/<slug>`; the route file
   moves to match). `reservedSlugs` = the project's own routes: Okapi's `[slug]`
@@ -105,9 +108,10 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   globally is prefixed — CSS vars `--ok-*`, classes `ok-*` (`ok-section`,
   `ok-btn`, `ok-card`…), utility keys `ok-` — so a project's own Tailwind,
   shadcn or DaisyUI CSS can't override it, nor Okapi theirs. Keep that prefix
-  on anything you add to globals.css/tokens.css. No preflight, so the starter's
-  base CSS is untouched; it lives in `@layer components`, so utilities override
-  it.
+  on anything you add to globals.css/tokens.css (verify checks it). Layers:
+  `theme, base, project, components, utilities` — Okapi's element defaults
+  (`body`, `a`) in `base`, the project's CSS imported into `project`, `ok-*`
+  components above both, utilities on top. No preflight.
 - **Public pages are plain HTML; only sections that need JS hydrate.** A block
   with `js` in `meta.ts` (slider, WebGL, a project's own animations — or a
   predicate on the block's fields) turns its top-level section into an island
@@ -189,7 +193,7 @@ horizontal inside rows/grids). Validated like any move (`moveNextTo`).
   The real ceiling is **one key per project with its own monthly spend limit**
   on the provider (Anthropic workspace / OpenAI project budget / OpenRouter key
   limit). Privacy: the page content and attached images go to that provider.
-- **Hosting:** `astro.config` picks the adapter from where the build runs
+- **Hosting:** `okapiAdapter()` (`core/astro/okapi.ts`, imported by astro.config) picks the adapter from where the build runs
   (Vercel / Netlify built in; Cloudflare Pages needs `npm i @astrojs/cloudflare
   wrangler`) and only then injects `/api/editor-chat`; pages stay prerendered.
   Any other host = plain static output and the chat shows "not available".
@@ -297,8 +301,8 @@ Follow `INSTALL.md` (any agent). Claude Code users can install the
   failure within 15s is left alone, so a real broken module can't loop.
 - Sanity UI fonts only its own components: plain HTML in custom tools inherits
   the root, which `sanity.config.ts` sets to Sanity's sans stack.
-- `astro build`/`astro check` use their own Vite cache (`vite.cacheDir` in
-  astro.config): sharing `node_modules/.vite` with a running dev server swapped
+- `astro build`/`astro check` use their own Vite cache (`vite.cacheDir`, set by
+  `okapi()`): sharing `node_modules/.vite` with a running dev server swapped
   its React runtime for the production one (`_jsxDEV is not a function`).
 - The editor canvas has its own `<head>`: fonts/CSS go in `src/theme/Head.astro`
   (used by the layout and the canvas), or the canvas won't match the site.

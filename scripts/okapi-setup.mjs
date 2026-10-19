@@ -218,6 +218,14 @@ for (const t of removed) rmSync(`src/blocks/${t}`, { recursive: true, force: tru
 for (const p of DEV_TOOLING) rmSync(p, { recursive: true, force: true });
 if (!demo) rmSync("sanity/seed.ndjson", { force: true });
 // Always install: in path B the dependencies added by hand (INSTALL.md B3) aren't installed yet either.
-const install = pm === "npm" ? "npm install --no-audit --no-fund" : `${pm} install`;
-if (!args["no-install"]) execSync(install, { stdio: "inherit" });
+// pnpm asks before purging node_modules when the .npmrc changes; with no TTY it
+// exits 0 without installing, so answer it up front and check the result.
+const install = { npm: "npm install --no-audit --no-fund", pnpm: "pnpm install --config.confirm-modules-purge=false" }[pm] ?? `${pm} install`;
+if (!args["no-install"]) {
+  execSync(install, { stdio: "inherit" });
+  if (!existsSync("node_modules/sanity")) {
+    console.error(`\n\`${install}\` terminó sin instalar sanity (falta node_modules/sanity). Corrélo a mano y revisá la salida.`);
+    process.exit(1);
+  }
+}
 console.log(`\nListo. Siguiente: ${args["no-install"] ? `${pm} install && ` : ""}${pm} run verify`);

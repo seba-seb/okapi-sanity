@@ -3,7 +3,10 @@
  * ------------------------------------------------------------------ */
 /* Tailwind 4 without preflight: the starter's base styles below stay as they
  * are, and utilities win over them (they're in a later layer). */
-@layer theme, base, components, utilities;
+/* `project` = the project's own CSS when it's brought into Okapi pages
+ * (`@import "…" layer(project)`, see INSTALL.md B4): it beats Okapi's base
+ * element rules below, and Okapi's ok- components beat it. */
+@layer theme, base, project, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 /* source(none) + @source: only Okapi's own files. Scanning the whole project
  * would re-emit the project's classes from this stylesheet too, and in a
@@ -65,17 +68,8 @@
   --container-ok-page: var(--ok-maxw-page);
 }
 
-@layer components {
-/* Box: free layout container (src/blocks/box). */
-.ok-box { display: flex; flex-direction: column; align-self: stretch; min-width: 0; }
-.ok-box--row { flex-direction: row; }
-.ok-box--grid { display: grid; grid-template-columns: repeat(var(--ok-box-cols, 3), minmax(0, 1fr)); }
-.ok-box--row > *, .ok-box--grid > * { min-width: 0; }
-@media (max-width: 1023px) { .ok-box--grid { grid-template-columns: repeat(min(var(--ok-box-cols, 3), 2), minmax(0, 1fr)); } }
-@media (max-width: 767px) { .ok-box--row { flex-direction: column; } .ok-box--grid { grid-template-columns: 1fr; } }
-
-/* Room for ascenders/descenders: tight display line-heights would clip them. */
-.ok-split-line-mask { padding-block: 0.12em; margin-block: -0.12em; }
+/* Element defaults for Okapi pages. In `base`, so the project's CSS wins. */
+@layer base {
 * {
   box-sizing: border-box;
 }
@@ -103,6 +97,19 @@ a {
   color: inherit;
   text-decoration: none;
 }
+}
+
+@layer components {
+/* Box: free layout container (src/blocks/box). */
+.ok-box { display: flex; flex-direction: column; align-self: stretch; min-width: 0; }
+.ok-box--row { flex-direction: row; }
+.ok-box--grid { display: grid; grid-template-columns: repeat(var(--ok-box-cols, 3), minmax(0, 1fr)); }
+.ok-box--row > *, .ok-box--grid > * { min-width: 0; }
+@media (max-width: 1023px) { .ok-box--grid { grid-template-columns: repeat(min(var(--ok-box-cols, 3), 2), minmax(0, 1fr)); } }
+@media (max-width: 767px) { .ok-box--row { flex-direction: column; } .ok-box--grid { grid-template-columns: 1fr; } }
+
+/* Room for ascenders/descenders: tight display line-heights would clip them. */
+.ok-split-line-mask { padding-block: 0.12em; margin-block: -0.12em; }
 
 /* ------------------------------------------------------------------ *
  * Section

@@ -180,6 +180,8 @@ if (baseUrl) {
     const res = await fetch(new URL(path, baseUrl), { redirect: "manual" });
     const to = res.headers.get("location");
     if (res.status >= 300 && res.status < 400 && to && new URL(to, baseUrl).pathname === `${path}/`) return status(`${path}/`);
+    // `astro dev` with trailingSlash: "always" answers 404, not a redirect, without the slash.
+    if (res.status === 404 && !path.endsWith("/")) return status(`${path}/`);
     return res.status;
   };
   check((await status("/")) === 200, "/ → 200");

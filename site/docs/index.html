@@ -1021,7 +1021,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Configuration that gets merged</h3>
         <ul>
           <li><strong><code>package.json</code>:</strong> the Sanity, React 19 and Tailwind 4 dependencies (plus Embla and three if the slider and the 3D logo stay, and the host adapters if the chat is on), <code>engines: node &gt;=22.12</code> and the <code>okapi:setup</code> script. Sanity at its current versions: <code>sanity</code> ^6.19, <code>@sanity/client</code> 8, <code>@sanity/ui</code> 4, <code>@sanity/icons</code> 5. If the project has newer ones, they stay; older ones are raised within the same major.</li>
-          <li><strong><code>astro.config</code>:</strong> the <code>sanity()</code> integration with <code>studioBasePath: "/studio"</code> and hash routing, <code>react()</code>, the Tailwind plugin and the full <code>optimizeDeps</code> list. Without that last one, the Studio goes blank in dev. The project's <code>output</code> and <code>site</code> are kept.</li>
+          <li><strong><code>astro.config</code>:</strong> nothing is pasted. It imports <code>okapi()</code>, <code>okapiSanity()</code>, <code>okapiAdapter()</code> and <code>okapiSite()</code> from <code>src/core/astro/okapi.ts</code> and adds them next to <code>react()</code> and the Tailwind plugin. <code>okapi()</code> brings the chat route, the project's final <code>trailingSlash</code>, Sanity's image CDN and the <code>optimizeDeps</code> list, merged with the project's own. The project's <code>output</code> and <code>site</code> are kept.</li>
           <li><strong><code>tsconfig</code>:</strong> React JSX and the <code>@/*</code> → <code>./src/*</code> alias.</li>
         </ul>
       </div>
