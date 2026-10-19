@@ -4,7 +4,7 @@
  *
  *   npm run okapi:setup                      asks each question (terminal)
  *   npm run okapi:setup -- --slider=no --logo3d=no \
- *     --components=yes --chat=yes --roles=agency+client --demo=yes --dry-run
+ *     --components=yes --chat=yes --roles=administrator+editor --demo=yes --dry-run
  *                                            agents: ask the person first, then pass every answer
  *   …same flags with --yes                   apply without the confirmation prompt
  *
@@ -26,9 +26,9 @@ const FEATURE_QS = {
   chat: "¿Chat con IA en el editor? (necesita Vercel, Netlify o Cloudflare y una clave de IA)",
 };
 const ROLES = {
-  agency: "Solo la agencia edita",
-  "agency+client": "La agencia + un cliente que edita y publica",
-  "agency+client+drafts": "La agencia + un cliente que publica + otro que solo deja borradores",
+  administrator: "Solo Administrator (la agencia) edita",
+  "administrator+editor": "Administrator + Editor (un cliente que edita y publica)",
+  "administrator+editor+contributor": "Administrator + Editor + Contributor (alguien que solo deja borradores)",
   keep: "Dejar src/okapi.policy.ts como está",
 };
 const DEV_TOOLING = ["scripts/generate-seed.mjs"];
@@ -108,12 +108,12 @@ function policyFile(roles, f, blocks) {
   const can = (list) => list.filter((p) => (p !== "chat" || f.chat) && (p !== "components" || f.components)).map((p) => `"${p}"`).join(", ");
   const clientBlocks = ["section", "eyebrow", "heading", "paragraph", "buttonWrapper", "button", "imageBlock", "card", "contentWrapper", "grid"].filter((b) => blocks.has(b));
   const rows = [
-    `  administrator: {\n    label: "Agency",\n    can: [${can(["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"])}],\n  },`,
+    `  administrator: {\n    label: "Administrator",\n    can: [${can(["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"])}],\n  },`,
   ];
-  if (roles !== "agency")
-    rows.push(`  editor: {\n    label: "Client — publishes",\n    can: [${can(["text", "images", "reorder", "structure", "publish", "chat"])}],\n    blocks: [${clientBlocks.map((b) => `"${b}"`).join(", ")}],\n  },`);
-  if (roles === "agency+client+drafts") rows.push(`  contributor: {\n    label: "Client — drafts only",\n    can: [${can(["text", "images", "reorder"])}],\n  },`); // no chat by default: drafts-only people don't spend the key
-  rows.push(`  default: {\n    label: "Read only",\n    can: [],\n  },`);
+  if (roles !== "administrator")
+    rows.push(`  editor: {\n    label: "Editor",\n    can: [${can(["text", "images", "reorder", "structure", "publish", "chat"])}],\n    blocks: [${clientBlocks.map((b) => `"${b}"`).join(", ")}],\n  },`);
+  if (roles === "administrator+editor+contributor") rows.push(`  contributor: {\n    label: "Contributor",\n    can: [${can(["text", "images", "reorder"])}],\n  },`); // no chat by default: drafts-only people don't spend the key
+  rows.push(`  default: {\n    label: "Viewer",\n    can: [],\n  },`);
   const head = read("src/okapi.policy.ts").split("export const POLICY")[0];
   return `${head}export const POLICY: Policy = {\n${rows.join("\n")}\n};\n`;
 }

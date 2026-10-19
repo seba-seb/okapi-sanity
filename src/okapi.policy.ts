@@ -13,21 +13,21 @@ import type { Policy } from "@/core/editor/policy";
  */
 export const POLICY: Policy = {
   administrator: {
-    label: "Agency",
+    label: "Administrator",
     can: ["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"],
   },
   editor: {
-    label: "Client — publishes",
+    label: "Editor",
     can: ["text", "images", "reorder", "structure", "publish", "chat"],
     blocks: ["section", "eyebrow", "heading", "paragraph", "buttonWrapper", "button", "imageBlock", "card", "contentWrapper", "grid"],
   },
   contributor: {
-    label: "Client — drafts only",
+    label: "Contributor",
     // No "chat" by default: every message costs the project. Add it if the agency wants.
     can: ["text", "images", "reorder"],
   },
   default: {
-    label: "Read only",
+    label: "Viewer",
     can: [],
   },
 };

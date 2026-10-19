@@ -135,7 +135,9 @@ horizontal inside rows/grids). Validated like any move (`moveNextTo`).
 
 ### Permissions and the AI chat
 
-- **`src/okapi.policy.ts` (per project, the agency decides):** Sanity role →
+- **`src/okapi.policy.ts` (per project, the agency decides):** keyed by the
+  Sanity role names and labelled with them (Administrator, Editor,
+  Contributor, Viewer) so nobody has to translate. Sanity role →
   permissions (`text images style settings reorder structure components
   publish chat`) + optional `blocks` a role may add. It gates the panel
   fields (`FieldControls.fieldKind`), the actions, canvas edits, publish and

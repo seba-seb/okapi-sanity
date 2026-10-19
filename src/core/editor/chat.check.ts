@@ -7,10 +7,10 @@ import { POLICY } from "../../okapi.policy.ts";
 import { availableModels, buildRequest, readResponse } from "./server/models.ts";
 
 const policy: Policy = {
-  administrator: { label: "Agency", can: ["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"] },
-  editor: { label: "Client", can: ["text", "images", "reorder", "structure", "chat"], blocks: ["heading", "paragraph"] },
-  contributor: { label: "Drafts", can: ["text", "reorder", "chat"] },
-  default: { label: "Read only", can: [] },
+  administrator: { label: "Administrator", can: ["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"] },
+  editor: { label: "Editor", can: ["text", "images", "reorder", "structure", "chat"], blocks: ["heading", "paragraph"] },
+  contributor: { label: "Contributor", can: ["text", "reorder", "chat"] },
+  default: { label: "Viewer", can: [] },
 };
 const admin = grantFor(["administrator"], policy);
 const editor = grantFor(["editor"], policy);
@@ -87,7 +87,7 @@ assert.deepEqual(r.applied, ["+ Paragraph", "− Button"]);
 assert.equal(r.rejected.length, 2); // box not allowed + unknown field
 assert.equal(textOf(r.doc, 1), "New para");
 
-// Agency: style tokens and choices validated; links coerced
+// Administrator: style tokens and choices validated; links coerced
 r = applyOps(doc, [
   { op: "style", path: H1, prop: "padding", value: "lg" },
   { op: "style", path: H1, prop: "padding", value: "13px" },

@@ -66,12 +66,12 @@ Cada respuesta es un flag de `npm run okapi:setup` (paso común 0):
 | ¿Logo 3D? (suma ~140 KB, solo en las páginas que lo usan) | `--logo3d` | Se borra el bloque y `three` |
 | ¿Componentes reutilizables? Guardar una sección y usarla en varias páginas, como en Webflow | `--components` | Se apagan en el editor y en Sanity (se pueden prender después) |
 | ¿Chat con IA en el editor? Necesita Vercel, Netlify o Cloudflare y una clave de IA del cliente | `--chat` | El sitio queda 100% estático, sin adaptador ni función de servidor |
-| ¿Quién va a editar? Solo la agencia · agencia + cliente que publica · además un cliente que solo deja borradores | `--roles=agency` · `agency+client` · `agency+client+drafts` | Arma `src/okapi.policy.ts` con esos roles |
+| ¿Quién va a editar? Solo **Administrator** (la agencia) · además **Editor** (un cliente que publica) · además **Contributor** (alguien que solo deja borradores). Son los mismos nombres de roles que en Sanity | `--roles=administrator` · `administrator+editor` · `administrator+editor+contributor` | Arma `src/okapi.policy.ts` con esos roles |
 | ¿Contenido de ejemplo? Una home armada para ver el editor andando | `--demo` | No se importa nada; la primera página se crea en el editor |
 
 Recomendación si la persona no sabe: slider **sí**, logo 3D **no**,
 componentes **sí**, chat **sí** si el hosting es Vercel o Netlify, roles
-`agency+client`, ejemplo **sí**.
+`administrator+editor`, ejemplo **sí**.
 
 Okapi no trae animaciones. Si el proyecto ya anima (GSAP, Motion, CSS), sigue
 con lo suyo; si las quiere, se agregan en el código del proyecto, no en Okapi.
@@ -286,7 +286,7 @@ Con las respuestas del Paso 0. Primero el plan, sin cambiar nada:
 
 ```bash
 npm run okapi:setup -- --slider=yes --logo3d=no --components=yes \
-  --chat=yes --roles=agency+client --demo=yes --dry-run
+  --chat=yes --roles=administrator+editor --demo=yes --dry-run
 ```
 
 Mostrale a la persona la lista que imprime (qué se borra, qué dependencias se
@@ -344,11 +344,23 @@ opcional: también se puede crear la primera página desde el editor.
 
 ### 5. Roles
 
-- **Equipo:** rol `administrator`. Ve estilos, estructura y componentes.
-- **Cliente:**
-  - `npx sanity users invite <email> --role editor` si publica solo.
-  - `--role contributor` si deja borradores y publica alguien del equipo.
-  - Lo corre el usuario.
+Okapi usa **los mismos nombres de rol que Sanity**. El rol se asigna en Sanity
+al invitar (sanity.io/manage → el proyecto → **Members** → **Invite**, o
+`npx sanity users invite <email> --role <rol>`, que corre el usuario) y
+`src/okapi.policy.ts` define qué ve cada rol en el editor:
+
+| Rol de Sanity | Plan de Sanity | En el editor (por defecto) |
+|---|---|---|
+| `administrator` | Todos | Todo (la agencia) |
+| `editor` | Growth o superior | Textos, imágenes, reordenar, algunos bloques, publicar, chat |
+| `contributor` | Growth o superior | Textos, imágenes, reordenar; sin publicar ni chat |
+| `viewer` y cualquier otro | Todos | Solo mirar |
+
+- **Plan gratis:** solo hay `administrator` y `viewer`, así que un cliente que
+  edite tiene que ser `administrator` y ve todo. Avisale al usuario: para
+  separar agencia y cliente hace falta el plan Growth.
+- Un administrator puede previsualizar cualquier rol con **View as** en el
+  editor; no cambia el rol real de nadie.
 
 ### 6. Producción
 

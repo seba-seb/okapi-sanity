@@ -471,23 +471,23 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         </div>
       </div>
 
-      <h3>Equipo y cliente</h3>
-      <p class="prose">Lo que puede hacer cada persona depende de su rol en Sanity y se decide por proyecto en <code>src/okapi.policy.ts</code>. Esto es lo que viene por defecto; la agencia lo cambia. Los admins pueden ver el editor como cualquier rol con <strong>View as</strong>.</p>
+      <h3>Roles: los mismos nombres que en Sanity</h3>
+      <p class="prose">Okapi usa los nombres de rol de Sanity tal cual. A cada persona le das un rol cuando la invitás al proyecto de Sanity, y <code>src/okapi.policy.ts</code> decide qué ve ese rol en el editor. Esto es lo que viene por defecto; la agencia lo cambia por proyecto. Un Administrator puede ver cualquier rol con <strong>View as</strong>.</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Puede…</th><th>Equipo</th><th>Cliente</th></tr></thead>
+          <thead><tr><th>Puede…</th><th>Administrator</th><th>Editor</th><th>Contributor</th></tr></thead>
           <tbody>
-            <tr><td>Editar textos, rich text, links e imágenes</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
-            <tr><td>Reordenar bloques dentro de lo diseñado</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
-            <tr><td>Insertar, duplicar y borrar bloques</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
-            <tr><td>Panel de estilo (espaciado, color, radio, breakpoints)</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
-            <tr><td>Crear, editar y separar componentes</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
-            <tr><td>Usar el chat con IA (si el proyecto lo tiene)</td><td><span class="pill ok">Sí</span></td><td><span class="pill warn">Según rol</span></td></tr>
-            <tr><td>Publicar</td><td><span class="pill ok">Sí</span></td><td><span class="pill warn">Según rol</span></td></tr>
+            <tr><td>Editar textos, rich text, links e imágenes</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
+            <tr><td>Reordenar bloques dentro de lo diseñado</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
+            <tr><td>Insertar, duplicar y borrar bloques</td><td><span class="pill ok">Sí</span></td><td><span class="pill warn">Algunos bloques</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Panel de estilo (espaciado, color, radio, breakpoints)</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Crear, editar y separar componentes</td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Usar el chat con IA (si el proyecto lo tiene)</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
+            <tr><td>Publicar</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td><td><span class="pill no">No</span></td></tr>
           </tbody>
         </table>
       </div>
-      <p class="small muted prose">Con <code>editor</code> el cliente publica solo. Con <code>contributor</code> deja borradores y publica alguien del equipo. Los roles disponibles dependen del plan de Sanity.</p>
+      <p class="small muted prose">Lo habitual: la agencia es <strong>Administrator</strong>, un cliente que publica es <strong>Editor</strong>, y alguien que solo deja borradores es <strong>Contributor</strong>. <strong>Viewer</strong> (y cualquier otro rol) solo mira. Editor y Contributor existen desde el plan Growth de Sanity; ver <a href="#roles">Roles e invitaciones</a>.</p>
     </section>
 
     <!-- ───────────────────────── Vibe: instalar ───────────────────────── -->
@@ -520,7 +520,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
           <li>En qué organización de Sanity va el proyecto, o el project ID si ya lo creaste.</li>
           <li>Si el proyecto existe: qué rutas salen del editor y si la home sale del editor o queda la tuya.</li>
           <li><strong>Qué módulos querés:</strong> slider, logo 3D, componentes reutilizables y el chat con IA. Lo que no elegís no se instala.</li>
-          <li><strong>Quién va a editar:</strong> solo tu equipo, un cliente que publica, o además alguien que solo deja borradores.</li>
+          <li><strong>Quién va a editar</strong>, con los nombres de rol de Sanity: solo <strong>Administrator</strong> (tu equipo), además <strong>Editor</strong> (un cliente que publica), además <strong>Contributor</strong> (alguien que solo deja borradores).</li>
           <li><strong>Si cargar contenido de ejemplo</strong> para ver el editor andando enseguida.</li>
         </ul>
         <p>Antes de tocar nada te muestra el plan (qué bloques se van, qué dependencias se sacan, qué roles quedan) y espera tu OK. El chat y los componentes se pueden prender o apagar después en <code>src/okapi.config.json</code>.</p>
@@ -878,6 +878,26 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h2>Permisos y chat con IA</h2>
         <p>Cada proyecto decide quién puede qué en <code>src/okapi.policy.ts</code>: cada rol de Sanity tiene una lista de permisos y, opcionalmente, los tipos de bloque que puede agregar. El editor y el chat lo respetan. El chat nunca puede más que la persona que lo usa.</p>
       </div>
+      <div class="prose" id="roles">
+        <h3>Roles e invitaciones</h3>
+        <p>El rol se pone en Sanity, no en Okapi. Las personas se invitan en <strong>sanity.io/manage → el proyecto → Members → Invite</strong>, eligiendo el rol ahí (se cambia después desde la misma lista), o desde la terminal: <code>npx sanity users invite ana@cliente.com --role editor</code>.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rol de Sanity</th><th>Plan de Sanity</th><th>Qué permite Sanity</th><th>En Okapi (por defecto)</th></tr></thead>
+          <tbody>
+            <tr><td><code>administrator</code></td><td>Todos</td><td>Todo, incluida la configuración del proyecto</td><td>Todo</td></tr>
+            <tr><td><code>editor</code></td><td>Growth o superior</td><td>Leer, escribir y publicar</td><td>Textos, imágenes, reordenar, algunos bloques, publicar, chat</td></tr>
+            <tr><td><code>contributor</code></td><td>Growth o superior</td><td>Escribir borradores, sin publicar</td><td>Textos, imágenes, reordenar</td></tr>
+            <tr><td><code>viewer</code></td><td>Todos (asiento gratis)</td><td>Solo leer</td><td>Solo mirar</td></tr>
+            <tr><td><code>developer</code> y otros</td><td>Growth o superior</td><td>Según el rol</td><td>Solo mirar, salvo que la política lo nombre</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <strong>En el plan gratis de Sanity</strong>
+        <p>Solo existen <code>administrator</code> y <code>viewer</code>, así que un cliente que edite tiene que ser administrator y ve todo. Para separar agencia y cliente hace falta el plan Growth.</p>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Permiso</th><th>Permite</th></tr></thead>
@@ -990,7 +1010,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
             <tr><td><code>--logo3d</code></td><td>¿Logo 3D? (~140 KB, solo en las páginas que lo usan)</td><td>Se borran el bloque y <code>three</code></td></tr>
             <tr><td><code>--components</code></td><td>¿Componentes reutilizables?</td><td><code>features.components: false</code>: sin librería ni instancias</td></tr>
             <tr><td><code>--chat</code></td><td>¿Chat con IA en el editor?</td><td><code>features.chat: false</code>: sin adaptador ni función de servidor, 100% estático</td></tr>
-            <tr><td><code>--roles</code></td><td>¿Quién edita? <code>agency</code> · <code>agency+client</code> · <code>agency+client+drafts</code> · <code>keep</code></td><td>Escribe <code>okapi.policy.ts</code> con esos roles</td></tr>
+            <tr><td><code>--roles</code></td><td>¿Quién edita? <code>administrator</code> · <code>administrator+editor</code> · <code>administrator+editor+contributor</code> · <code>keep</code> (los nombres de rol de Sanity)</td><td>Escribe <code>okapi.policy.ts</code> con esos roles</td></tr>
             <tr><td><code>--demo</code></td><td>¿Contenido de ejemplo?</td><td>Sin archivo de seed; la primera página se crea en el editor</td></tr>
           </tbody>
         </table>
@@ -1420,6 +1440,7 @@ export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
           <dt>Core</dt><dd><code>src/core</code>, el código del editor. Es igual en todos los proyectos y se arregla en el repo de Okapi.</dd>
           <dt>okapi:setup</dt><dd>El script de instalación: deja solo los módulos que elegiste.</dd>
           <dt>okapi.config.json</dt><dd>Qué usa el proyecto: el chat y los componentes, prendidos o apagados.</dd>
+          <dt>Rol</dt><dd>Administrator, Editor, Contributor o Viewer: se pone en Sanity al invitar a alguien. Okapi usa los mismos nombres.</dd>
           <dt>okapi.policy.ts</dt><dd>Quién puede qué en el editor y en el chat, por rol de Sanity.</dd>
           <dt>✦ Chat</dt><dd>El asistente con IA del editor. Propone cambios; vos los dejás o los deshacés.</dd>
         </dl>
