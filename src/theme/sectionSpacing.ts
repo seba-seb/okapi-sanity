@@ -20,11 +20,11 @@ export type SectionPadToken =
 /** token → CSS length (the `--section-*` vars in globals.css). */
 export const SECTION_PAD_CSS: Record<SectionPadToken, string> = {
   none: "0px",
-  even: "var(--section-px)",
-  small: "var(--section-pad-sm)",
-  medium: "var(--section-pad-md)",
-  large: "var(--section-pad-lg)",
-  pageTop: "var(--section-pad-page-top)",
+  even: "var(--ok-section-px)",
+  small: "var(--ok-section-pad-sm)",
+  medium: "var(--ok-section-pad-md)",
+  large: "var(--ok-section-pad-lg)",
+  pageTop: "var(--ok-section-pad-page-top)",
 };
 
 /**

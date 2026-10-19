@@ -10,10 +10,12 @@ import { loadQuery } from "@/core/sanity/client";
 import { loadSite } from "@/core/sanity/site";
 import { PAGE_QUERY } from "@/core/sanity/queries";
 import type { Page } from "@/core/lib/types";
+import { RESERVED_SLUGS } from "@/core/config";
 
 export const getStaticPaths = (async () => {
   const { routes } = await loadSite();
-  const slugs = Object.values(routes).filter((slug) => slug !== "home");
+  // Reserved = the project's own routes: [slug] would outrank its [...rest] routes and replace them.
+  const slugs = Object.values(routes).filter((slug) => slug !== "home" && !RESERVED_SLUGS.includes(slug));
   return await Promise.all(
     slugs.map(async (slug) => ({
       params: { slug },

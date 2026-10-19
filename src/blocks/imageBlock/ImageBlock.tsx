@@ -28,14 +28,14 @@ export function ImageBlock({ block, path, ctx }: BlockProps<ImageBlockData & any
 
   return (
     <figure
-      className={`media ${hasRatio ? "media--ratio" : ""}`}
+      className={`ok-media ${hasRatio ? "ok-media--ratio" : ""}`}
       style={
         {
-          borderRadius: c.radius === "main" ? "var(--radius-main)" : undefined,
+          borderRadius: c.radius === "main" ? "var(--ok-radius-main)" : undefined,
           aspectRatio: hasRatio ? ratio : undefined,
           alignSelf: "stretch",
           margin: 0,
-          "--fit": c.objectFit ?? "cover",
+          "--ok-fit": c.objectFit ?? "cover",
         } as React.CSSProperties
       }
       {...editable(ctx.documentId, ctx.documentType, path, block._type)}

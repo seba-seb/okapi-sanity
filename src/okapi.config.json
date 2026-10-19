@@ -1,5 +1,5 @@
 {
-  "$comment": "What this project uses. Written by `npm run okapi:setup`; features can be flipped by hand (blocks that were removed need re-copying from the Okapi repo).",
+  "$comment": "What this project uses. Written by `npm run okapi:setup`; features can be flipped by hand (blocks that were removed need re-copying from the Okapi repo). pagesBase: where editor pages live (\"\" = /<slug>, \"/p\" = /p/<slug>, move src/pages/[slug].astro to match). reservedSlugs: the project's own routes an editor page must never take.",
   "features": {
     "chat": true,
     "components": true
@@ -7,5 +7,7 @@
   "blocks": {
     "slider": true,
     "logo3d": true
-  }
+  },
+  "pagesBase": "",
+  "reservedSlugs": []
 }

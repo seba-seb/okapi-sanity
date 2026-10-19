@@ -26,7 +26,7 @@ export function Slider({ block, path, ctx }: BlockProps<SliderData & any>) {
       tablet: 2,
       desktop: 3,
     }),
-    "--slide-gap": px(c.gap) ?? "24px",
+    "--ok-slide-gap": px(c.gap) ?? "24px",
   } as React.CSSProperties;
 
   // Slides are rendered on the server; the client wrapper only handles Embla.

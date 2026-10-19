@@ -18,5 +18,9 @@
   </script>
 )}
 <script>
-  if (document.querySelector("[data-island]")) import("@/core/render/hydrate");
+  // Module scripts run once per document; with <ClientRouter /> later soft
+  // navigations only fire astro:page-load, so check again on each one.
+  const load = () => document.querySelector("[data-island]") && import("@/core/render/hydrate");
+  load();
+  document.addEventListener("astro:page-load", load);
 </script>

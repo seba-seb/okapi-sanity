@@ -35,7 +35,7 @@ export const buttonWrapper = defineType({
         direction: "horizontal",
       },
     }),
-    // Size applies to EVERY button in the group (cascades via --btn-font-size).
+    // Size applies to EVERY button in the group (cascades via --ok-btn-font-size).
     defineField({
       name: "size",
       title: "Size",

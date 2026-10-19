@@ -19,14 +19,14 @@ export function SiteHeader({
 }) {
   const nav = navigation;
   const items = nav?.header ?? [];
-  if (!items.length) return null;
+  if (!items.length) return <></>; // not null: with a second renderer (Vue, Svelte) Astro can't tell whose component returns null
   return (
-    <header className="site-header">
-      <a className="site-header__brand" href={pageHref("home")}>
+    <header className="ok-site-header">
+      <a className="ok-site-header__brand" href={pageHref("home")}>
         {clean(settings?.siteName) || "Home"}
       </a>
       <nav aria-label="Main">
-        <ul className="site-header__links">
+        <ul className="ok-site-header__links">
           {items.map((item) => (
             <li key={item._key}>
               <a

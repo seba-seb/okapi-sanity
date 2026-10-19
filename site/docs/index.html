@@ -513,7 +513,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>New or existing project</h3>
         <ul>
           <li><strong>Empty folder:</strong> the agent starts from the Okapi repo, which is already an Astro project with example blocks that you replace later.</li>
-          <li><strong>Existing project:</strong> the agent first analyzes it and tells you what fits and what's risky, before installing anything. It stops if the project uses Tailwind 3, Preact or Solid, already has Sanity, or runs Astro older than 7. If it goes ahead, your pages, layout and configuration stay as they are, and editor pages are served on routes that don't exist yet, or wherever you tell it. Your existing pages stay in code: to edit one of their sections in the editor, it has to become a block.</li>
+          <li><strong>Existing project:</strong> the agent first analyzes it and tells you what fits and what's risky, before installing anything. It stops if the project uses Tailwind 3, Preact or Solid, already has Sanity, or runs Astro older than 7.3. If it goes ahead, your pages, layout and configuration stay as they are, and editor pages are served on routes that don't exist yet, or wherever you tell it. Your existing pages stay in code: to edit one of their sections in the editor, it has to become a block.</li>
         </ul>
         <h3>What it will ask you</h3>
         <ul>
@@ -726,7 +726,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       </div>
       <div class="code"><pre><span class="c">&lt;!-- display: contents → doesn't affect the layout --&gt;</span>
 &lt;div data-island='{"section":{…},"ctx":{…},"components":{…}}'&gt;
-  &lt;section class="section" data-theme="dark"&gt;…already-rendered HTML…&lt;/section&gt;
+  &lt;section class="ok-section" data-ok-theme="dark"&gt;…already-rendered HTML…&lt;/section&gt;
 &lt;/div&gt;</pre></div>
       <div class="prose">
         <p><code>Base.astro</code> includes a minimal script. If the page has at least one island, it imports <code>core/render/hydrate.tsx</code>, which runs <code>hydrateRoot</code> on each island with the same props. If there are none, the page doesn't load React.</p>
@@ -820,7 +820,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Product</p>
         <h2>Styles and tokens</h2>
-        <p>All of the design comes from <code>src/theme/tokens.css</code>, the first file you change in every project. It holds the colors per theme (<code>light</code>, <code>dark</code>, <code>brand</code>), the radii, the type scale, spacing and page width. Tailwind 4 exposes them as utilities (<code>bg-surface text-fg gap-md rounded-main</code>), and since colors read the section's <code>data-theme</code>, every block adapts to the theme on its own. Tailwind's default palette is removed on purpose: a new color is added as a token.</p>
+        <p>All of the design comes from <code>src/theme/tokens.css</code>, the first file you change in every project. It holds the colors per theme (<code>light</code>, <code>dark</code>, <code>brand</code>), the radii, the type scale, spacing and page width. Tailwind 4 exposes them as utilities (<code>bg-ok-surface text-ok-fg gap-ok-md rounded-ok-main</code>), and since colors read the section's <code>data-ok-theme</code>, every block adapts to the theme on its own. Tailwind's default palette is removed on purpose: a new color is added as a token. Everything Okapi defines carries a prefix (<code>--ok-*</code> variables, <code>ok-*</code> classes, <code>ok-</code> utilities), so it never clashes with the project's own Tailwind, shadcn or DaisyUI.</p>
         <h3>Style panel</h3>
         <p>Every block has a <code>design</code> field that the editor shows as the style panel. It offers tokens only, no free-form CSS, and each value can be set for all screens, tablet and mobile.</p>
       </div>
@@ -838,9 +838,9 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         </table>
       </div>
       <p class="prose"><code>core/style/stylesheet.ts</code> turns those values into a single stylesheet per page, with one selector per block. Panel values use <code>!important</code> because the panel has the final say over that block:</p>
-      <div class="code"><pre>[data-b="9c2e"][data-b] { padding-top: var(--space-lg) !important; }
+      <div class="code"><pre>[data-b="9c2e"][data-b] { padding-top: var(--ok-space-lg) !important; }
 @media (max-width: 767px) {
-  [data-b="9c2e"][data-b] { padding-top: var(--space-sm) !important; }
+  [data-b="9c2e"][data-b] { padding-top: var(--ok-space-sm) !important; }
 }</pre></div>
       <div class="prose">
         <h3>Box</h3>
@@ -977,7 +977,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Path A: new project</h3>
         <p>The Okapi repo is already a complete Astro project: clone it, remove its <code>.git</code> and run <code>npm install</code>.</p>
         <h3>Path B: existing project</h3>
-        <p>First the agent analyzes the project and shows a report with ✅, ⚠️ and 🛑. 🛑 means it doesn't install: Astro older than 7, Preact or Solid (Okapi sets the project's JSX to React), Tailwind 3 (Okapi needs Tailwind 4 and a project can't have both), or Sanity already set up. ⚠️ means it goes on only if you accept it: Vue or Svelte, several languages, a root <code>[slug]</code> route. A project without Tailwind is fine: Okapi's Tailwind has no preflight and only loads in its own layouts.</p>
+        <p>First the agent analyzes the project and shows a report with ✅, ⚠️ and 🛑. 🛑 means it doesn't install: Astro older than 7.3, Preact or Solid (Okapi sets the project's JSX to React), Tailwind 3 (Okapi needs Tailwind 4 and a project can't have both), or Sanity already set up. ⚠️ means it goes on only if you accept it: Vue or Svelte, several languages, dynamic routes at the root. Okapi's <code>[slug]</code> outranks a blog's or Starlight's <code>[...slug]</code>, so the project's slugs go in <code>reservedSlugs</code>, or editor pages move to <code>/p/&lt;slug&gt;</code> with <code>pagesBase</code>. A project without Tailwind is fine: Okapi's Tailwind has no preflight and only loads in its own layouts. The project's <code>trailingSlash</code> stays as it is: Okapi's routes, links, canonicals and sitemap follow it.</p>
         <p>Then pieces are copied into the project without overwriting anything that already exists. If a route collides, the agent stops and asks.</p>
       </div>
       <div class="table-wrap">
@@ -1111,7 +1111,7 @@ gallery: { title: <span class="k">"Gallery"</span>, js: (b) =&gt; b.layout === <
       <div class="code"><pre><span class="c">// src/blocks/quote/Quote.tsx</span>
 export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
   return (
-    &lt;blockquote className="text-h-lg text-fg"
+    &lt;blockquote className="text-ok-h-lg text-ok-fg"
       {...editable(ctx.documentId, ctx.documentType, path, block._type)}&gt;
       {block.text}
     &lt;/blockquote&gt;

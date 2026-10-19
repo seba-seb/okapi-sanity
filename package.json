@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "typecheck": "astro check && tsc --noEmit",
+    "typecheck": "astro check && node node_modules/typescript/bin/tsc --noEmit",
     "typegen": "sanity typegen generate",
     "verify": "node scripts/verify.mjs",
     "okapi:setup": "node scripts/okapi-setup.mjs"
@@ -41,7 +41,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.160.0",
-    "typescript": "^5.7.0",
+    "typescript": ">=5.7",
     "vite": "*"
   },
   "engines": {

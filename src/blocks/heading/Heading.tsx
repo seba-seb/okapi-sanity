@@ -20,14 +20,14 @@ export function Heading({ block, path, ctx }: BlockProps<HeadingData & any>) {
   if (richTextIsEmpty(block.text)) return null;
   const c = clean(block);
   const Tag = c.level ?? "h2";
-  // Horizontal alignment comes from the section's --alignment via AlignBlock;
+  // Horizontal alignment comes from the section's --ok-alignment via AlignBlock;
   // the heading only owns its max-width and wrap.
   return (
     <AlignBlock space="md" marginBottom={c.marginBottom}>
       {createElement(
         Tag,
         {
-          className: `heading heading--${c.size ?? "xl"} heading--bold`,
+          className: `ok-heading ok-heading--${c.size ?? "xl"} ok-heading--bold`,
           style: {
             textWrap: wrapStyle(c.textWrap ?? "balance"),
             maxWidth: ch(c.maxWidth),

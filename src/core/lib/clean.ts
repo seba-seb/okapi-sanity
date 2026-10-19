@@ -6,7 +6,7 @@ import { stegaClean } from "@sanity/client/stega";
  * In draft mode, fetched strings carry invisible stega characters that power
  * click-to-edit overlays. Those characters are fine to *display*, but they
  * break any string used as data — an HTML tag name, a CSS class, a
- * `data-theme` attribute, an equality check, etc. Wrap such values in `clean`.
+ * `data-ok-theme` attribute, an equality check, etc. Wrap such values in `clean`.
  *
  * We ALSO clean displayed leaf text (heading/paragraph/eyebrow copy, button
  * labels). A stega string rendered as a direct child registers a second

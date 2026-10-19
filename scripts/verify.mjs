@@ -7,7 +7,7 @@
  *   npm run verify -- http://localhost:4321   …plus HTTP checks against a
  *                                          running server (dev or a deploy)
  */
-import { execSync } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -27,12 +27,12 @@ const warn = (msg) => {
   console.log(`  ⚠ ${msg}`);
 };
 
-/** Published pages in the dataset (null if it can't tell). A fresh install has none until someone publishes. */
-async function publishedPages() {
+/** Slugs of the published pages (null if it can't tell). A fresh install has none until someone publishes. */
+async function publishedSlugs() {
   const env = { ...loadEnv("production", process.cwd(), ""), ...process.env };
   const projectId = env.PUBLIC_SANITY_PROJECT_ID;
   if (!projectId) return null;
-  const query = encodeURIComponent('count(*[_type == "page" && defined(slug.current)])');
+  const query = encodeURIComponent('*[_type == "page" && defined(slug.current)].slug.current');
   const token = env.SANITY_API_READ_TOKEN;
   try {
     const res = await fetch(
@@ -46,7 +46,7 @@ async function publishedPages() {
 }
 
 console.log("\n1. Unit checks");
-execSync("node --experimental-strip-types --no-warnings src/core/lib/routes.check.ts", { stdio: "inherit" });
+execSync("npx sanity exec src/core/lib/routes.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // Every block field gets a control in the Okapi Editor panel.
 execSync("npx sanity exec scripts/check-editor-schema.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // Structural edits (insert/move/remove/duplicate) keep the document valid.
@@ -59,10 +59,47 @@ execSync("npx sanity exec src/core/render/overrides.check.ts", { stdio: ["ignore
 execSync("npx sanity exec src/core/editor/chat.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
 // Rich text → canvas HTML escapes text and keys (no attribute break-out).
 execSync("npx sanity exec src/core/editor/richtext.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+// Everything Okapi's CSS defines globally starts with ok- (classes, variables,
+// Tailwind theme keys, data-ok-* attributes, keyframes), so it can't collide
+// with the project's own CSS (Tailwind, shadcn, DaisyUI).
+{
+  const css = ["src/theme/tokens.css", "src/theme/globals.css"]
+    .map((f) => readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, ""))
+    .join("\n");
+  const theme = css.match(/@theme inline \{[\s\S]*?\n\}/)?.[0] ?? "";
+  const rest = css.replace(theme, "");
+  // Theme keys = Tailwind namespace + key: --color-ok-bg, --shadow-ok. The four
+  // basics restored after `--color-*: initial` are Tailwind's own names.
+  const basics = ["--color-transparent", "--color-current", "--color-white", "--color-black"];
+  const keys = [...theme.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]).filter((k) => !/^--[a-z]+-ok(-|$)/.test(k) && !basics.includes(k));
+  const vars = [...rest.matchAll(/(?:^|[;{\s])(--[\w-]+)\s*:/g)].map((m) => m[1]).filter((v) => !v.startsWith("--ok-"));
+  const selectors = [...rest.matchAll(/([^{};]+)\{/g)].map((m) => m[1]).filter((sel) => !sel.trim().startsWith("@"));
+  const classes = selectors.flatMap((sel) => [...sel.matchAll(/\.([a-zA-Z_][\w-]*)/g)].map((m) => `.${m[1]}`)).filter((c) => !c.startsWith(".ok-"));
+  const attrs = selectors.flatMap((sel) => [...sel.matchAll(/\[(data-[\w-]+)/g)].map((m) => m[1])).filter((a) => !a.startsWith("data-ok-"));
+  const frames = [...rest.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]).filter((k) => !k.startsWith("ok-"));
+  const bad = [...new Set([...keys, ...vars, ...classes, ...attrs, ...frames])];
+  check(bad.length === 0, `Okapi CSS names all start with ok-${bad.length ? `: ${bad.join(", ")}` : ""}`);
+}
 
 console.log("\n2. Build");
-execSync("npx astro build", { stdio: ["ignore", "ignore", "inherit"] });
+const build = spawnSync("npx", ["astro", "build"], { encoding: "utf8", shell: process.platform === "win32" });
+if (build.status !== 0) {
+  process.stdout.write(build.stdout ?? "");
+  process.stderr.write(build.stderr ?? "");
+  fail("astro build");
+  process.exit(1);
+}
 ok("astro build");
+// Route conflicts are only a build warning. Okapi's [slug] outranks rest params
+// like the project's [...slug] (Starlight docs, a blog): a page with that slug
+// silently replaces the project's page. List those slugs in reservedSlugs.
+const buildLog = `${build.stdout}\n${build.stderr}`.replace(/\x1b\[[0-9;]*m/g, "");
+const conflicts = buildLog.split("\n").filter((l) => l.includes("conflicts with higher priority route"));
+const stolen = conflicts.filter((l) => /higher priority route `[^`]*\[slug\]`/.test(l));
+const hidden = conflicts.filter((l) => /from route `[^`]*\[slug\]`/.test(l));
+const slugOf = (l) => l.match(/render `([^`]+)`/)?.[1];
+check(stolen.length === 0, `no editor page replaces a project route${stolen.length ? `: ${stolen.map(slugOf).join(", ")} — add them to reservedSlugs in src/okapi.config.json` : ""}`);
+if (hidden.length) warn(`editor pages hidden by a project route: ${hidden.map(slugOf).join(", ")} — rename them in the editor`);
 
 // Static output location (dist/ with no adapter; kept flexible if one is added).
 const outDir = ["dist", "dist/client", ".vercel/output/static", ".netlify/static"].find((d) =>
@@ -108,9 +145,13 @@ function jsGraph(html) {
 const isOkapi = (f) => /data-sanity-path=/.test(readFileSync(f, "utf8"));
 const index = join(outDir, "index.html");
 const pageFile = isOkapi(index) ? index : sitePages.find(isOkapi);
-// The build already fails if Sanity is unreachable; zero pages just means nothing is published yet.
-const noPagesYet = !pageFile && (await publishedPages()) === 0;
-const NOTHING_PUBLISHED = "no page is published yet — create one in the editor and publish it (with the user's OK: it goes live), then re-run";
+// The build already fails if Sanity is unreachable. No rendered page with published
+// pages = only "home" exists and the project keeps its own home: nothing to serve yet.
+const slugs = pageFile ? null : await publishedSlugs();
+const noPagesYet = !!slugs && slugs.every((s) => s === "home");
+const NOTHING_PUBLISHED = slugs?.length
+  ? "the only published page is home, and the home is the project's — create another page in the editor and publish it (with the user's OK: it goes live), then re-run"
+  : "no page is published yet — create one in the editor and publish it (with the user's OK: it goes live), then re-run";
 if (noPagesYet) warn(`Okapi rendered a page: ${NOTHING_PUBLISHED}`);
 else check(!!pageFile, `Okapi rendered a page (${pageFile ? pageFile.slice(outDir.length) : "none — env, dataset or routes?"})`);
 if (pageFile) {
@@ -120,17 +161,27 @@ if (pageFile) {
   const editorLeak = graph.filter((f) => /comlink|xstate/.test(readFileSync(join(outDir, f), "utf8")));
   check(editorLeak.length === 0, `public pages load no visual-editing runtime (comlink/xstate)${editorLeak.length ? `: ${editorLeak.join(", ")}` : ""}`);
   check(gzKB < 250, `page JS ≤ 250 KB gzip (${gzKB} KB, ${graph.length} files)`);
-  check(/<link rel="canonical" href="https?:\/\/[^"]+"/.test(html), "page has an absolute canonical");
+  // Attribute order free: HTML minifiers reorder them.
+  check(/<link\b(?=[^>]*\brel="?canonical"?)(?=[^>]*\bhref="?https?:\/\/)[^>]*>/.test(html), "page has an absolute canonical");
 }
 const home = readFileSync(index, "utf8");
 const welcome = home.includes("Your visual page builder is ready");
 if (welcome && noPagesYet) warn(`home shows the <Welcome> setup screen: ${NOTHING_PUBLISHED}`);
 else check(!welcome, "home is not the <Welcome> setup screen — env + dataset OK");
 check(["sitemap.xml", "sitemap-index.xml"].some((f) => existsSync(join(outDir, f))) && existsSync(join(outDir, "robots.txt")), "sitemap + robots.txt built");
+const sitemaps = readdirSync(outDir).filter((f) => /^sitemap.*\.xml$/.test(f));
+const listed = sitemaps.filter((f) => /\/(studio|edit-canvas)\/?</.test(readFileSync(join(outDir, f), "utf8")));
+check(listed.length === 0, `sitemap leaves out /studio and /edit-canvas${listed.length ? ` (in ${listed.join(", ")}: add the sitemap filter, INSTALL.md B3)` : ""}`);
 
 if (baseUrl) {
   console.log(`\n4. HTTP (${baseUrl})`);
-  const status = async (path, init) => (await fetch(new URL(path, baseUrl), { redirect: "manual", ...init })).status;
+  // A redirect to the same path with a trailing slash (trailingSlash: "always") counts.
+  const status = async (path) => {
+    const res = await fetch(new URL(path, baseUrl), { redirect: "manual" });
+    const to = res.headers.get("location");
+    if (res.status >= 300 && res.status < 400 && to && new URL(to, baseUrl).pathname === `${path}/`) return status(`${path}/`);
+    return res.status;
+  };
   check((await status("/")) === 200, "/ → 200");
   check((await status("/studio")) === 200, "/studio → 200");
   check((await status("/edit-canvas")) === 200, "/edit-canvas → 200");

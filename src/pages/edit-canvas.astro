@@ -3,6 +3,7 @@
 // Static and data-free: it renders only what the authenticated editor posts.
 import "@/theme/globals.css";
 import { CanvasApp } from "@/core/editor/CanvasApp";
+import Head from "@/theme/Head.astro";
 
 export const prerender = true;
 ---
@@ -14,6 +15,7 @@ export const prerender = true;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>Editor canvas</title>
+    <Head />
   </head>
   <body>
     <CanvasApp client:only="react" />

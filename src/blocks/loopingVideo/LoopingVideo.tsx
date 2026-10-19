@@ -35,14 +35,14 @@ export function LoopingVideo({
 
   return (
     <div
-      className={`media ${hasRatio ? "media--ratio" : ""}`}
+      className={`ok-media ${hasRatio ? "ok-media--ratio" : ""}`}
       style={
         {
           maxWidth: px(c.maxWidth),
           borderRadius: px(c.radius),
           aspectRatio: hasRatio ? c.aspectRatio : undefined,
           alignSelf: c.maxWidth ? "flex-start" : "stretch",
-          "--fit": c.objectFit ?? "cover",
+          "--ok-fit": c.objectFit ?? "cover",
         } as React.CSSProperties
       }
       {...editable(ctx.documentId, ctx.documentType, path, block._type)}

@@ -39,10 +39,10 @@ export function Button({
   const showChevron = style !== "link";
 
   const className = [
-    "btn",
-    `btn--${style}`,
-    // Size is inherited from the group's `--btn-font-size` (see ButtonWrapper).
-    c.fullWidth ? "btn--full" : "",
+    "ok-btn",
+    `ok-btn--${style}`,
+    // Size is inherited from the group's `--ok-btn-font-size` (see ButtonWrapper).
+    c.fullWidth ? "ok-btn--full" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -57,9 +57,9 @@ export function Button({
       {...(dragFlow ? { "data-sanity-drag-flow": dragFlow } : {})}
       {...link}
     >
-      <span className="btn__label">{c.label}</span>
+      <span className="ok-btn__label">{c.label}</span>
       {showChevron ? (
-        <span className="btn__chevron" aria-hidden="true">
+        <span className="ok-btn__chevron" aria-hidden="true">
           <svg
             viewBox="0 0 24 24"
             fill="none"

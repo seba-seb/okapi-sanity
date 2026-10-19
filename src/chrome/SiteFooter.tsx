@@ -15,10 +15,10 @@ export function SiteFooter({
 }) {
   const nav = navigation;
   const items = [...(nav?.footer ?? []), ...(settings?.socialLinks ?? [])];
-  if (!items.length) return null;
+  if (!items.length) return <></>; // not null: with a second renderer (Vue, Svelte) Astro can't tell whose component returns null
   return (
-    <footer className="site-footer">
-      <ul className="site-footer__links">
+    <footer className="ok-site-footer">
+      <ul className="ok-site-footer__links">
         {(nav?.footer ?? []).map((item) => (
           <li key={item._key}>
             <a
@@ -35,7 +35,7 @@ export function SiteFooter({
           </li>
         ))}
       </ul>
-      <p className="site-footer__copy">
+      <p className="ok-site-footer__copy">
         © {new Date().getFullYear()} {clean(settings?.siteName)}
       </p>
     </footer>

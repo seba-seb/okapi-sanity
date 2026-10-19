@@ -47,7 +47,7 @@ export function sliderField(opts: {
 }
 
 /**
- * The spacing scale (None + `--space-xs` … `--space-3xl`) as a string enum. The
+ * The spacing scale (None + `--ok-space-xs` … `--ok-space-3xl`) as a string enum. The
  * config renders enum string fields as hoverable segmented buttons
  * (`PreviewSelect`); the front end maps each value with `spaceVar` in lib/style.
  */

@@ -6,6 +6,7 @@ import { pageHref, resolveLink } from "@/core/lib/routes";
 import { SiteHeader } from "@/chrome/SiteHeader";
 import { SiteFooter } from "@/chrome/SiteFooter";
 import Islands from "@/core/render/Islands.astro";
+import Head from "@/theme/Head.astro";
 import type { Site } from "@/core/sanity/site";
 import type { SanityImage } from "@/core/lib/types";
 
@@ -60,7 +61,7 @@ const jsonLd = isHome
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="data:," />
+    <Head />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     {canonical && <link rel="canonical" href={canonical} />}

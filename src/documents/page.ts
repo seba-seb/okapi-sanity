@@ -1,9 +1,10 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { FEATURES } from "@/core/config";
+import { FEATURES, PAGES_BASE, RESERVED_SLUGS as PROJECT_SLUGS } from "@/core/config";
+import { pageHref } from "@/core/lib/routes";
 import { DocumentIcon } from "@sanity/icons/Document";
 
 // Routes Okapi itself serves; a page with one of these slugs would never show.
-const RESERVED_SLUGS = ["studio", "edit-canvas", "api", "sitemap.xml", "robots.txt", "_astro"];
+const OKAPI_SLUGS = ["studio", "edit-canvas", "api", "sitemap.xml", "robots.txt", "_astro"];
 
 export const page = defineType({
   name: "page",
@@ -28,12 +29,13 @@ export const page = defineType({
       type: "slug",
       group: "content",
       options: { source: "title", maxLength: 96 },
-      description: 'Use "home" for the homepage. One level: served at /<slug>.',
+      description: `Use "home" for the homepage. One level: served at ${PAGES_BASE}/<slug>.`,
       validation: (rule) =>
         rule.required().custom((value) => {
           const slug = (value as { current?: string } | undefined)?.current ?? "";
-          if (slug.includes("/")) return 'One level only, no "/": pages are served at /<slug>.';
-          if (RESERVED_SLUGS.includes(slug)) return `"${slug}" is a route of the site itself.`;
+          if (slug.includes("/")) return `One level only, no "/": pages are served at ${PAGES_BASE}/<slug>.`;
+          if (!PAGES_BASE && OKAPI_SLUGS.includes(slug)) return `"${slug}" is a route of the site itself.`;
+          if (PROJECT_SLUGS.includes(slug)) return `"${slug}" is already a page of this site (reservedSlugs in okapi.config.json).`;
           return true;
         }),
     }),
@@ -84,7 +86,7 @@ export const page = defineType({
     select: { title: "title", slug: "slug.current" },
     prepare: ({ title, slug }) => ({
       title: title || "Untitled page",
-      subtitle: slug ? `/${slug === "home" ? "" : slug}` : "No slug",
+      subtitle: slug ? pageHref(slug) : "No slug",
     }),
   },
 });

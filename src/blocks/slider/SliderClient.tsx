@@ -62,11 +62,11 @@ export function SliderClient({
   }, [emblaApi, onSelect]);
 
   return (
-    <div className="embla" style={styleVars} {...editAttr}>
-      <div className="embla__viewport" ref={emblaRef}>
-        <div className="embla__container">
+    <div className="ok-embla" style={styleVars} {...editAttr}>
+      <div className="ok-embla__viewport" ref={emblaRef}>
+        <div className="ok-embla__container">
           {slides.map((slide) => (
-            <div className="embla__slide" key={slide.key}>
+            <div className="ok-embla__slide" key={slide.key}>
               {slide.node}
             </div>
           ))}
@@ -74,14 +74,14 @@ export function SliderClient({
       </div>
 
       {(showArrows || showDots) && (
-        <div className="embla__controls">
+        <div className="ok-embla__controls">
           {showDots ? (
-            <div className="embla__dots">
+            <div className="ok-embla__dots">
               {snaps.map((_, i) => (
                 <button
                   key={i}
                   type="button"
-                  className={`embla__dot ${i === selected ? "embla__dot--selected" : ""}`}
+                  className={`ok-embla__dot ${i === selected ? "ok-embla__dot--selected" : ""}`}
                   aria-label={`Go to slide ${i + 1}`}
                   onClick={() => emblaApi?.scrollTo(i)}
                 />
@@ -92,10 +92,10 @@ export function SliderClient({
           )}
 
           {showArrows ? (
-            <div className="embla__buttons">
+            <div className="ok-embla__buttons">
               <button
                 type="button"
-                className="embla__button"
+                className="ok-embla__button"
                 aria-label="Previous slide"
                 disabled={!canPrev}
                 onClick={() => emblaApi?.scrollPrev()}
@@ -104,7 +104,7 @@ export function SliderClient({
               </button>
               <button
                 type="button"
-                className="embla__button"
+                className="ok-embla__button"
                 aria-label="Next slide"
                 disabled={!canNext}
                 onClick={() => emblaApi?.scrollNext()}

@@ -1,3 +1,4 @@
+// @ts-check
 import { defineConfig, passthroughImageService } from "astro/config";
 import react from "@astrojs/react";
 import sanity from "@sanity/astro";
@@ -16,6 +17,7 @@ const { PUBLIC_SANITY_PROJECT_ID, PUBLIC_SANITY_DATASET, PUBLIC_SANITY_API_VERSI
  * panel produces), and a value without a scheme gets https://.
  */
 function resolveSite() {
+  /** @param {...string} keys */
   const pick = (...keys) => keys.map((k) => (env[k] ?? process.env[k] ?? "").trim()).find(Boolean);
   const raw = pick("PUBLIC_SITE_URL");
   const candidate =
@@ -54,14 +56,19 @@ const chatEnabled = okapi.features?.chat !== false;
 
 async function resolveAdapter() {
   if (!chatEnabled) return undefined;
+  /** @param {string} k */
   const pick = (k) => (env[k] ?? process.env[k] ?? "").trim();
   const host =
     pick("OKAPI_ADAPTER") ||
     (pick("VERCEL") ? "vercel" : pick("NETLIFY") ? "netlify" : pick("CF_PAGES") ? "cloudflare" : "none");
+  // The adapters are optional (okapi:setup removes them with --chat=no): no type check on these imports.
+  // @ts-ignore
   if (host === "vercel") return (await import("@astrojs/vercel")).default();
+  // @ts-ignore
   if (host === "netlify") return (await import("@astrojs/netlify")).default();
   if (host === "cloudflare") {
     // Not installed by default (it pulls wrangler): `npm i @astrojs/cloudflare wrangler`.
+    // @ts-ignore
     const mod = await import("@astrojs/cloudflare").catch(() => {
       throw new Error("Deploying to Cloudflare Pages: run `npm i @astrojs/cloudflare wrangler` once, or set OKAPI_ADAPTER=none.");
     });
@@ -71,11 +78,17 @@ async function resolveAdapter() {
 }
 const adapter = await resolveAdapter();
 
-/** Adds the editor chat's server route when it can run: in dev, or with a host adapter. */
+/**
+ * Hands the project's `trailingSlash` to core (sitePath in core/sanity/env.ts),
+ * whatever it's set to below, and adds the editor chat's server route when it
+ * can run: in dev, or with a host adapter.
+ * @type {import("astro").AstroIntegration}
+ */
 const editorChat = {
   name: "okapi-editor-chat",
   hooks: {
-    "astro:config:setup": ({ command, injectRoute }) => {
+    "astro:config:setup": ({ command, config, injectRoute, updateConfig }) => {
+      updateConfig({ vite: { define: { "import.meta.env.PUBLIC_OKAPI_TRAILING_SLASH": JSON.stringify(config.trailingSlash) } } });
       if (chatEnabled && (command === "dev" || adapter))
         injectRoute({ pattern: "/api/editor-chat", entrypoint: "./src/core/editor/server/chatRoute.ts", prerender: false });
     },
@@ -110,12 +123,16 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // build/check get their own Vite cache: sharing node_modules/.vite with a
+    // running dev server swaps its React runtime for the production one
+    // ("_jsxDEV is not a function", islands and Studio stop hydrating).
+    cacheDir: process.argv.includes("dev") ? undefined : "node_modules/.vite-build",
     optimizeDeps: {
       // Crawl EVERY source file at startup — the public pages, the editor
       // canvas and the Studio — so no dependency is discovered mid-session. A
       // late discovery re-optimizes, and the open tab's lazy chunks then 504
       // (blank Studio after sign-in, or a canvas that never hydrates).
-      entries: ["src/**/*.{ts,tsx,astro}", "sanity.config.ts"],
+      entries: ["src/**/*.{ts,tsx,astro,vue,svelte}", "sanity.config.ts"],
       include: [
         "@sanity/client",
         "@sanity/client/stega",
@@ -133,6 +150,11 @@ export default defineConfig({
         "@sanity/ui",
         "@sanity/icons",
         "styled-components",
+        // <ClientRouter /> (view transitions), if the project uses it: found late otherwise → 504.
+        "astro/virtual-modules/transitions-events.js",
+        "astro/virtual-modules/transitions-router.js",
+        "astro/virtual-modules/transitions-swap-functions.js",
+        "astro/virtual-modules/transitions-types.js",
       ],
     },
   },

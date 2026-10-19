@@ -5,59 +5,77 @@
  * are, and utilities win over them (they're in a later layer). */
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
+/* source(none) + @source: only Okapi's own files. Scanning the whole project
+ * would re-emit the project's classes from this stylesheet too, and in a
+ * project with its own Tailwind the two builds then override each other. */
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../core";
+@source "../blocks";
+@source "../chrome";
+/* "container" appears in Okapi's files as a word, and Tailwind would emit its
+ * .container utility, which can differ from the project's own. */
+@source not inline("container");
 @import "./tokens.css";
 
-/* Tokens → Tailwind. `inline` so utilities reference the variables (and so
- * follow [data-theme]) instead of freezing their values. The default palette
- * is removed on purpose: blocks use the design system's colours only. */
+/* Tokens → Tailwind, every key under `ok-` (bg-ok-bg, text-ok-muted, gap-ok-md,
+ * rounded-ok-main…): a project's own Tailwind/shadcn/DaisyUI never emits those
+ * names, so neither build overrides the other. `inline` so utilities reference
+ * the variables (and so follow [data-ok-theme]) instead of freezing their values.
+ * The default palette is removed on purpose: blocks use the design system's
+ * colours only. */
 @theme inline {
   --color-*: initial;
   --color-transparent: transparent;
   --color-current: currentColor;
   --color-white: #fff;
   --color-black: #000;
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-fg: var(--fg);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --color-brand: var(--brand);
-  --color-brand-contrast: var(--brand-contrast);
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-surface: var(--ok-surface);
+  --color-ok-surface-2: var(--ok-surface-2);
+  --color-ok-fg: var(--ok-fg);
+  --color-ok-muted: var(--ok-muted);
+  --color-ok-border: var(--ok-border);
+  --color-ok-brand: var(--ok-brand);
+  --color-ok-brand-contrast: var(--ok-brand-contrast);
 
-  --spacing-xs: var(--space-xs);
-  --spacing-sm: var(--space-sm);
-  --spacing-md: var(--space-md);
-  --spacing-lg: var(--space-lg);
-  --spacing-xl: var(--space-xl);
-  --spacing-2xl: var(--space-2xl);
-  --spacing-3xl: var(--space-3xl);
-  --spacing-section-x: var(--section-px);
+  --spacing-ok-xs: var(--ok-space-xs);
+  --spacing-ok-sm: var(--ok-space-sm);
+  --spacing-ok-md: var(--ok-space-md);
+  --spacing-ok-lg: var(--ok-space-lg);
+  --spacing-ok-xl: var(--ok-space-xl);
+  --spacing-ok-2xl: var(--ok-space-2xl);
+  --spacing-ok-3xl: var(--ok-space-3xl);
+  --spacing-ok-section: var(--ok-section-px);
 
-  --text-h-sm: var(--h-sm);
-  --text-h-md: var(--h-md);
-  --text-h-lg: var(--h-lg);
-  --text-h-xl: var(--h-xl);
-  --text-h-2xl: var(--h-2xl);
-  --text-h-3xl: var(--h-3xl);
-  --text-h-4xl: var(--h-4xl);
+  --text-ok-h-sm: var(--ok-h-sm);
+  --text-ok-h-md: var(--ok-h-md);
+  --text-ok-h-lg: var(--ok-h-lg);
+  --text-ok-h-xl: var(--ok-h-xl);
+  --text-ok-h-2xl: var(--ok-h-2xl);
+  --text-ok-h-3xl: var(--ok-h-3xl);
+  --text-ok-h-4xl: var(--ok-h-4xl);
 
-  --shadow-theme: var(--shadow);
-  --container-page: var(--maxw-page);
+  --radius-ok-sm: var(--ok-radius-sm);
+  --radius-ok-md: var(--ok-radius-md);
+  --radius-ok-lg: var(--ok-radius-lg);
+  --radius-ok-main: var(--ok-radius-main);
+  --radius-ok-pill: var(--ok-radius-pill);
+
+  --shadow-ok: var(--ok-shadow);
+  --container-ok-page: var(--ok-maxw-page);
 }
 
 @layer components {
 /* Box: free layout container (src/blocks/box). */
-.box { display: flex; flex-direction: column; align-self: stretch; min-width: 0; }
-.box--row { flex-direction: row; }
-.box--grid { display: grid; grid-template-columns: repeat(var(--box-cols, 3), minmax(0, 1fr)); }
-.box--row > *, .box--grid > * { min-width: 0; }
-@media (max-width: 1023px) { .box--grid { grid-template-columns: repeat(min(var(--box-cols, 3), 2), minmax(0, 1fr)); } }
-@media (max-width: 767px) { .box--row { flex-direction: column; } .box--grid { grid-template-columns: 1fr; } }
+.ok-box { display: flex; flex-direction: column; align-self: stretch; min-width: 0; }
+.ok-box--row { flex-direction: row; }
+.ok-box--grid { display: grid; grid-template-columns: repeat(var(--ok-box-cols, 3), minmax(0, 1fr)); }
+.ok-box--row > *, .ok-box--grid > * { min-width: 0; }
+@media (max-width: 1023px) { .ok-box--grid { grid-template-columns: repeat(min(var(--ok-box-cols, 3), 2), minmax(0, 1fr)); } }
+@media (max-width: 767px) { .ok-box--row { flex-direction: column; } .ok-box--grid { grid-template-columns: 1fr; } }
 
 /* Room for ascenders/descenders: tight display line-heights would clip them. */
-.split-line-mask { padding-block: 0.12em; margin-block: -0.12em; }
+.ok-split-line-mask { padding-block: 0.12em; margin-block: -0.12em; }
 * {
   box-sizing: border-box;
 }
@@ -69,7 +87,7 @@ body {
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--ok-font-sans);
   -webkit-font-smoothing: antialiased;
   color: #0b0b0f;
   background: #ffffff;
@@ -89,48 +107,48 @@ a {
 /* ------------------------------------------------------------------ *
  * Section
  * ------------------------------------------------------------------ */
-.section {
+.ok-section {
   position: relative;
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
   width: 100%;
 }
 
-.section__bg {
+.ok-section__bg {
   position: absolute;
   inset: 0;
   overflow: hidden;
   z-index: 0;
 }
 
-.section__bg img {
+.ok-section__bg img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.section__overlay {
+.ok-section__overlay {
   position: absolute;
   inset: 0;
-  background: var(--bg);
+  background: var(--ok-bg);
 }
 
-.section__container {
+.ok-section__container {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: var(--maxw-page);
+  max-width: var(--ok-maxw-page);
   margin-inline: auto;
-  padding-inline: var(--section-px);
+  padding-inline: var(--ok-section-px);
   display: flex;
   flex-direction: column;
 }
 
-.section--fullheight {
+.ok-section--fullheight {
   min-height: 100svh;
   display: flex;
 }
-.section--fullheight .section__container {
+.ok-section--fullheight .ok-section__container {
   flex: 1;
 }
 
@@ -139,27 +157,27 @@ a {
  * ------------------------------------------------------------------ */
 
 /* Wraps a single text block so its horizontal alignment is driven by the
-   section's --alignment custom property, not a per-block control. Full-width
+   section's --ok-alignment custom property, not a per-block control. Full-width
    within the section; the child (heading / paragraph) keeps its own max-width. */
-.align-block {
+.ok-align-block {
   display: flex;
   flex-direction: column;
   align-self: stretch;
-  align-items: var(--alignment, start);
-  text-align: var(--alignment, start);
+  align-items: var(--ok-alignment, start);
+  text-align: var(--ok-alignment, start);
 }
 
 /* Default vertical rhythm for text blocks. The margin lives on the align-block
    (the block's outer element) so a content wrapper / container can trim it at
    the edges, and adjacent block margins collapse to the larger of the two. */
-.align-block--space-lg {
-  margin-bottom: var(--space-lg);
+.ok-align-block--space-lg {
+  margin-bottom: var(--ok-space-lg);
 }
-.align-block--space-md {
-  margin-bottom: var(--space-md);
+.ok-align-block--space-md {
+  margin-bottom: var(--ok-space-md);
 }
-.align-block--space-sm {
-  margin-bottom: var(--space-sm);
+.ok-align-block--space-sm {
+  margin-bottom: var(--ok-space-sm);
 }
 
 /* At the top level, spacing between blocks is the section's flex `gap`, so a
@@ -167,93 +185,93 @@ a {
    vertical-rhythm margins above are for blocks nested in a plain container,
    where there's no gap to collapse against). Declared after those rules so it
    wins on equal specificity — no !important needed. */
-.section__container > * {
+.ok-section__container > * {
   margin: 0;
 }
 
-.eyebrow {
+.ok-eyebrow {
   display: inline-block;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 0;
 }
-.eyebrow--xs {
+.ok-eyebrow--xs {
   font-size: 0.75rem;
 }
-.eyebrow--sm {
+.ok-eyebrow--sm {
   font-size: 0.8125rem;
 }
-.eyebrow--md {
+.ok-eyebrow--md {
   font-size: 0.9375rem;
 }
 
-.heading {
+.ok-heading {
   margin: 0;
   line-height: 1.08;
   letter-spacing: -0.02em;
 }
-.heading--sm {
-  font-size: var(--h-sm);
+.ok-heading--sm {
+  font-size: var(--ok-h-sm);
 }
-.heading--md {
-  font-size: var(--h-md);
+.ok-heading--md {
+  font-size: var(--ok-h-md);
 }
-.heading--lg {
-  font-size: var(--h-lg);
+.ok-heading--lg {
+  font-size: var(--ok-h-lg);
 }
-.heading--xl {
-  font-size: var(--h-xl);
+.ok-heading--xl {
+  font-size: var(--ok-h-xl);
 }
-.heading--2xl {
-  font-size: var(--h-2xl);
+.ok-heading--2xl {
+  font-size: var(--ok-h-2xl);
 }
-.heading--3xl {
-  font-size: var(--h-3xl);
+.ok-heading--3xl {
+  font-size: var(--ok-h-3xl);
 }
-.heading--4xl {
-  font-size: var(--h-4xl);
+.ok-heading--4xl {
+  font-size: var(--ok-h-4xl);
 }
-.heading--regular {
+.ok-heading--regular {
   font-weight: 400;
 }
-.heading--medium {
+.ok-heading--medium {
   font-weight: 500;
 }
-.heading--semibold {
+.ok-heading--semibold {
   font-weight: 600;
 }
-.heading--bold {
+.ok-heading--bold {
   font-weight: 700;
 }
 
-.paragraph {
+.ok-paragraph {
   margin: 0;
   line-height: 1.6;
 }
-.paragraph--sm {
+.ok-paragraph--sm {
   font-size: 0.9375rem;
 }
-.paragraph--md {
+.ok-paragraph--md {
   font-size: 1.0625rem;
 }
-.paragraph--lg {
+.ok-paragraph--lg {
   font-size: 1.25rem;
 }
-.paragraph--xl {
+.ok-paragraph--xl {
   font-size: 1.5rem;
   line-height: 1.5;
 }
 
 /* Shared color tokens for text */
-.c-default {
-  color: var(--fg);
+.ok-c-default {
+  color: var(--ok-fg);
 }
-.c-muted {
-  color: var(--muted);
+.ok-c-muted {
+  color: var(--ok-muted);
 }
-.c-brand {
-  color: var(--brand);
+.ok-c-brand {
+  color: var(--ok-brand);
 }
 
 /* ------------------------------------------------------------------ *
@@ -267,45 +285,45 @@ a {
 
 /* Groups eyebrow / heading / paragraph / button-group as one prose stack.
    `flow-root` contains the child margins; block flow lets them collapse. */
-.content-wrapper {
+.ok-content-wrapper {
   display: flow-root;
   align-self: center;
   width: 100%;
 }
-.content-wrapper > :first-child {
+.ok-content-wrapper > :first-child {
   margin-top: 0;
 }
-.content-wrapper > :last-child {
+.ok-content-wrapper > :last-child {
   margin-bottom: 0;
 }
 
 /* ------------------------------------------------------------------ *
  * Buttons
  * ------------------------------------------------------------------ */
-.btn-group {
+.ok-btn-group {
   display: flex;
   flex-wrap: wrap;
   /* Default rhythm: space the button group away from the text above it. Trimmed
      at the edges by the content wrapper / container. */
-  margin-top: var(--space-lg);
+  margin-top: var(--ok-space-lg);
 }
-.btn-group--column {
+.ok-btn-group--column {
   flex-direction: column;
 }
-.btn-group--nowrap {
+.ok-btn-group--nowrap {
   flex-wrap: nowrap;
 }
 
-.btn {
+.ok-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.75em;
   font-family: inherit;
-  /* Size is set on the Button Group, which sets `--btn-font-size`; it cascades
+  /* Size is set on the Button Group, which sets `--ok-btn-font-size`; it cascades
      here and everything else on the button is em-based, so it all scales.
      Standalone buttons (no group) fall back to the medium step. */
-  font-size: var(--btn-font-size, 0.9375rem);
+  font-size: var(--ok-btn-font-size, 0.9375rem);
   font-weight: 600;
   line-height: 1;
   text-align: center;
@@ -317,26 +335,26 @@ a {
      em-based values scale with each size's font-size. */
   padding: 0.42em 0.42em 0.42em 1.3em;
   transition:
-    background var(--transition),
-    color var(--transition),
-    border-color var(--transition),
-    transform var(--transition),
-    opacity var(--transition);
+    background var(--ok-transition),
+    color var(--ok-transition),
+    border-color var(--ok-transition),
+    transform var(--ok-transition),
+    opacity var(--ok-transition);
 }
-.btn:hover {
+.ok-btn:hover {
   transform: translateY(-1px);
 }
-.btn--full {
+.ok-btn--full {
   width: 100%;
   justify-content: space-between;
 }
 
-.btn__label {
+.ok-btn__label {
   display: inline-block;
 }
 
 /* Trailing chevron chip — a rounded square whose colors invert the button. */
-.btn__chevron {
+.ok-btn__chevron {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
@@ -344,84 +362,84 @@ a {
   height: 2.15em;
   border-radius: 0.45em;
   transition:
-    background var(--transition),
-    color var(--transition);
+    background var(--ok-transition),
+    color var(--ok-transition);
 }
-.btn__chevron svg {
+.ok-btn__chevron svg {
   display: block;
   width: 1.05em;
   height: 1.05em;
 }
 
-/* Sizes — set once on the group as `--btn-font-size`, which cascades to every
-   button inside (see `.btn`). Font-size drives the em-based padding + chip. */
-.btn-group--size-sm {
-  --btn-font-size: 0.8125rem;
+/* Sizes — set once on the group as `--ok-btn-font-size`, which cascades to every
+   button inside (see `.ok-btn`). Font-size drives the em-based padding + chip. */
+.ok-btn-group--size-sm {
+  --ok-btn-font-size: 0.8125rem;
 }
-.btn-group--size-md {
-  --btn-font-size: 0.9375rem;
+.ok-btn-group--size-md {
+  --ok-btn-font-size: 0.9375rem;
 }
-.btn-group--size-lg {
-  --btn-font-size: 1.0625rem;
+.ok-btn-group--size-lg {
+  --ok-btn-font-size: 1.0625rem;
 }
-.btn-group--size-xl {
-  --btn-font-size: 1.1875rem;
+.ok-btn-group--size-xl {
+  --ok-btn-font-size: 1.1875rem;
 }
 
 /* Style variants. The chip is the button inverted: its background is the
    button's text color and its chevron is the button's background color, so it
    flips automatically with the variant and the section theme. */
-.btn--primary {
-  background: var(--fg);
-  color: var(--bg);
+.ok-btn--primary {
+  background: var(--ok-fg);
+  color: var(--ok-bg);
 }
-.btn--primary .btn__chevron {
-  background: var(--bg);
-  color: var(--fg);
+.ok-btn--primary .ok-btn__chevron {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
 }
-.btn--primary:hover {
+.ok-btn--primary:hover {
   opacity: 0.9;
 }
 
-.btn--secondary {
-  background: var(--surface);
-  color: var(--fg);
+.ok-btn--secondary {
+  background: var(--ok-surface);
+  color: var(--ok-fg);
 }
-.btn--secondary .btn__chevron {
-  background: var(--fg);
-  /* Pair with --bg, not --surface: in the brand theme --surface is a
-     translucent white, which vanishes on the --fg (white) chip. --fg/--bg are
+.ok-btn--secondary .ok-btn__chevron {
+  background: var(--ok-fg);
+  /* Pair with --ok-bg, not --ok-surface: in the brand theme --ok-surface is a
+     translucent white, which vanishes on the --ok-fg (white) chip. --ok-fg/--ok-bg are
      the theme's designed contrast pair, so the chevron stays visible in every
      theme. */
-  color: var(--bg);
+  color: var(--ok-bg);
 }
-.btn--secondary:hover {
-  background: var(--surface-2);
-}
-
-.btn--outline {
-  background: transparent;
-  color: var(--fg);
-  border-color: var(--border);
-}
-.btn--outline .btn__chevron {
-  background: var(--fg);
-  color: var(--bg);
-}
-.btn--outline:hover {
-  background: var(--surface);
+.ok-btn--secondary:hover {
+  background: var(--ok-surface-2);
 }
 
-.btn--link {
+.ok-btn--outline {
   background: transparent;
-  color: var(--brand);
+  color: var(--ok-fg);
+  border-color: var(--ok-border);
+}
+.ok-btn--outline .ok-btn__chevron {
+  background: var(--ok-fg);
+  color: var(--ok-bg);
+}
+.ok-btn--outline:hover {
+  background: var(--ok-surface);
+}
+
+.ok-btn--link {
+  background: transparent;
+  color: var(--ok-brand);
   border-radius: 0;
   gap: 0.3em;
   padding: 0.2rem 0;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
-.btn--link:hover {
+.ok-btn--link:hover {
   transform: none;
   opacity: 0.75;
 }
@@ -429,46 +447,46 @@ a {
 /* ------------------------------------------------------------------ *
  * Image + video
  * ------------------------------------------------------------------ */
-.media {
+.ok-media {
   width: 100%;
   overflow: hidden;
 }
-.media img,
-.media video {
+.ok-media img,
+.ok-media video {
   width: 100%;
   height: 100%;
 }
-.media--ratio img,
-.media--ratio video {
-  object-fit: var(--fit, cover);
+.ok-media--ratio img,
+.ok-media--ratio video {
+  object-fit: var(--ok-fit, cover);
 }
 
 /* ------------------------------------------------------------------ *
  * Card
  * ------------------------------------------------------------------ */
-.card {
+.ok-card {
   display: flex;
   flex-direction: column;
   height: 100%;
-  color: var(--fg);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  color: var(--ok-fg);
+  background: var(--ok-surface);
+  border: 1px solid var(--ok-border);
   border-radius: 16px;
   overflow: hidden;
   text-decoration: none;
   transition:
-    transform var(--transition),
-    box-shadow var(--transition),
-    border-color var(--transition);
+    transform var(--ok-transition),
+    box-shadow var(--ok-transition),
+    border-color var(--ok-transition);
 }
 
 /* Image on top — fixed ratio so cards line up in a grid. */
-.card__media {
+.ok-card__media {
   width: 100%;
   aspect-ratio: 3 / 2;
   overflow: hidden;
 }
-.card__media img {
+.ok-card__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -476,31 +494,31 @@ a {
 }
 
 /* Text block. */
-.card__body {
+.ok-card__body {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 24px;
 }
-.card__title {
+.ok-card__title {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.25;
 }
-.card__text {
+.ok-card__text {
   margin: 0;
-  color: var(--muted);
+  color: var(--ok-muted);
   line-height: 1.55;
 }
 
-/* Image background — text overlaid on a scrim; the card runs dark (data-theme). */
-.card--imageBackground {
+/* Image background — text overlaid on a scrim; the card runs dark (data-ok-theme). */
+.ok-card--imageBackground {
   position: relative;
   min-height: 320px;
   justify-content: flex-end;
 }
-.card--imageBackground .card__bg {
+.ok-card--imageBackground .ok-card__bg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -508,7 +526,7 @@ a {
   object-fit: cover;
   z-index: 0;
 }
-.card--imageBackground::after {
+.ok-card--imageBackground::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -520,144 +538,144 @@ a {
     rgba(0, 0, 0, 0.05)
   );
 }
-.card--imageBackground .card__body {
+.ok-card--imageBackground .ok-card__body {
   position: relative;
   z-index: 2;
 }
 /* Background style chosen but no image uploaded yet — keep it a solid dark. */
-.card--imageBackground.card--noimage {
-  background: var(--surface-2);
+.ok-card--imageBackground.ok-card--noimage {
+  background: var(--ok-surface-2);
 }
-.card--imageBackground.card--noimage::after {
+.ok-card--imageBackground.ok-card--noimage::after {
   display: none;
 }
 
-a.card:hover {
+a.ok-card:hover {
   transform: translateY(-3px);
 }
 
 /* ------------------------------------------------------------------ *
  * Grid — column count per breakpoint via custom properties
  * ------------------------------------------------------------------ */
-.grid {
+.ok-grid {
   display: grid;
-  gap: var(--row-gap, 24px) var(--col-gap, 24px);
-  grid-template-columns: repeat(var(--cols-mobile, 1), minmax(0, 1fr));
-  align-items: var(--align-items, stretch);
+  gap: var(--ok-row-gap, 24px) var(--ok-col-gap, 24px);
+  grid-template-columns: repeat(var(--ok-cols-mobile, 1), minmax(0, 1fr));
+  align-items: var(--ok-align-items, stretch);
   width: 100%;
 }
 @media (min-width: 768px) {
-  .grid {
-    grid-template-columns: repeat(var(--cols-tablet, 2), minmax(0, 1fr));
+  .ok-grid {
+    grid-template-columns: repeat(var(--ok-cols-tablet, 2), minmax(0, 1fr));
   }
 }
 @media (min-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(var(--cols-desktop, 3), minmax(0, 1fr));
+  .ok-grid {
+    grid-template-columns: repeat(var(--ok-cols-desktop, 3), minmax(0, 1fr));
   }
 }
 
 /* ------------------------------------------------------------------ *
  * Slider (Embla) — slides-per-view per breakpoint via custom properties
  * ------------------------------------------------------------------ */
-.embla {
+.ok-embla {
   position: relative;
   width: 100%;
 }
-.embla__viewport {
+.ok-embla__viewport {
   overflow: hidden;
 }
-.embla__container {
+.ok-embla__container {
   display: flex;
-  gap: var(--slide-gap, 24px);
+  gap: var(--ok-slide-gap, 24px);
   touch-action: pan-y pinch-zoom;
 }
-.embla__slide {
+.ok-embla__slide {
   min-width: 0;
   display: flex;
   flex: 0 0
     calc(
-      (100% - (var(--slides-mobile, 1) - 1) * var(--slide-gap, 24px)) /
-        var(--slides-mobile, 1)
+      (100% - (var(--ok-slides-mobile, 1) - 1) * var(--ok-slide-gap, 24px)) /
+        var(--ok-slides-mobile, 1)
     );
 }
 /* Let a single child (e.g. a card) fill the slide for equal heights. */
-.embla__slide > * {
+.ok-embla__slide > * {
   width: 100%;
 }
 @media (min-width: 768px) {
-  .embla__slide {
+  .ok-embla__slide {
     flex-basis: calc(
-      (100% - (var(--slides-tablet, 2) - 1) * var(--slide-gap, 24px)) /
-        var(--slides-tablet, 2)
+      (100% - (var(--ok-slides-tablet, 2) - 1) * var(--ok-slide-gap, 24px)) /
+        var(--ok-slides-tablet, 2)
     );
   }
 }
 @media (min-width: 1024px) {
-  .embla__slide {
+  .ok-embla__slide {
     flex-basis: calc(
-      (100% - (var(--slides-desktop, 3) - 1) * var(--slide-gap, 24px)) /
-        var(--slides-desktop, 3)
+      (100% - (var(--ok-slides-desktop, 3) - 1) * var(--ok-slide-gap, 24px)) /
+        var(--ok-slides-desktop, 3)
     );
   }
 }
 
-.embla__controls {
+.ok-embla__controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-top: 20px;
 }
-.embla__buttons {
+.ok-embla__buttons {
   display: flex;
   gap: 10px;
 }
-.embla__button {
+.ok-embla__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--fg);
+  border-radius: var(--ok-radius-pill);
+  border: 1px solid var(--ok-border);
+  background: var(--ok-surface);
+  color: var(--ok-fg);
   cursor: pointer;
   transition:
-    opacity var(--transition),
-    background var(--transition);
+    opacity var(--ok-transition),
+    background var(--ok-transition);
 }
-.embla__button:hover {
-  background: var(--surface-2);
+.ok-embla__button:hover {
+  background: var(--ok-surface-2);
 }
-.embla__button:disabled {
+.ok-embla__button:disabled {
   opacity: 0.35;
   cursor: default;
 }
-.embla__dots {
+.ok-embla__dots {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
-.embla__dot {
+.ok-embla__dot {
   width: 9px;
   height: 9px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-pill);
-  background: var(--border);
+  border-radius: var(--ok-radius-pill);
+  background: var(--ok-border);
   cursor: pointer;
-  transition: background var(--transition);
+  transition: background var(--ok-transition);
 }
-.embla__dot--selected {
-  background: var(--brand);
+.ok-embla__dot--selected {
+  background: var(--ok-brand);
 }
 
 /* ------------------------------------------------------------------ *
  * Draft-mode banner
  * ------------------------------------------------------------------ */
-.draft-banner {
+.ok-draft-banner {
   position: fixed;
   bottom: 16px;
   left: 50%;
@@ -667,13 +685,13 @@ a.card:hover {
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--ok-radius-pill);
   background: #0b0b0f;
   color: #fff;
   font-size: 0.875rem;
   box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.4);
 }
-.draft-banner a {
+.ok-draft-banner a {
   text-decoration: underline;
 }
 
@@ -681,32 +699,32 @@ a.card:hover {
    block-level line inside the semantic <h*>/<p>. Keeps multi-line content
    stacking without introducing block-level children (valid HTML) and lets the
    whole block stay one draggable overlay target. */
-.rt-block {
+.ok-rt-block {
   display: block;
 }
 /* Paragraph spacing between multiple lines (headings stay tight). */
-.paragraph .rt-block + .rt-block {
+.ok-paragraph .ok-rt-block + .ok-rt-block {
   margin-top: 0.75em;
 }
 
 /* ── Site chrome (src/chrome) — restyle per project ───────────────────── */
-.site-header,
-.site-footer {
+.ok-site-header,
+.ok-site-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-md, 16px);
+  gap: var(--ok-space-md, 16px);
   padding: 20px clamp(20px, 4vw, 48px);
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
 }
-.site-header__brand { font-weight: 600; color: inherit; text-decoration: none; }
-.site-header__links,
-.site-footer__links { display: flex; flex-wrap: wrap; gap: 24px; margin: 0; padding: 0; list-style: none; }
-.site-header__links a,
-.site-footer__links a { color: inherit; text-decoration: none; }
-.site-header__links a:hover,
-.site-footer__links a:hover { text-decoration: underline; }
-.site-footer { border-top: 1px solid var(--border); font-size: 0.875rem; }
-.site-footer__copy { margin: 0; opacity: 0.7; }
+.ok-site-header__brand { font-weight: 600; color: inherit; text-decoration: none; }
+.ok-site-header__links,
+.ok-site-footer__links { display: flex; flex-wrap: wrap; gap: 24px; margin: 0; padding: 0; list-style: none; }
+.ok-site-header__links a,
+.ok-site-footer__links a { color: inherit; text-decoration: none; }
+.ok-site-header__links a:hover,
+.ok-site-footer__links a:hover { text-decoration: underline; }
+.ok-site-footer { border-top: 1px solid var(--ok-border); font-size: 0.875rem; }
+.ok-site-footer__copy { margin: 0; opacity: 0.7; }
 } /* @layer components */

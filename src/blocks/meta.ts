@@ -40,7 +40,7 @@ export const BLOCKS = {
   heading: { title: "Heading", margin: true, text: [{ field: "text", kind: "pt" }] },
   paragraph: { title: "Paragraph", margin: true, text: [{ field: "text", kind: "pt", multiline: true }] },
   buttonWrapper: { title: "Button Group", slot: { field: "buttons", accepts: ["button"] } },
-  button: { title: "Button", text: [{ sel: ".btn__label", field: "label", kind: "string" }] },
+  button: { title: "Button", text: [{ sel: ".ok-btn__label", field: "label", kind: "string" }] },
   imageBlock: { title: "Image", imageField: "image" },
   loopingVideo: { title: "Looping Video" },
   contentWrapper: {
@@ -51,8 +51,8 @@ export const BLOCKS = {
     title: "Card",
     imageField: "image",
     text: [
-      { sel: ".card__title", field: "heading", kind: "string" },
-      { sel: ".card__text", field: "body", kind: "string", multiline: true },
+      { sel: ".ok-card__title", field: "heading", kind: "string" },
+      { sel: ".ok-card__text", field: "body", kind: "string", multiline: true },
     ],
   },
   slider: { title: "Slider", slot: { field: "slides", accepts: ["card", "imageBlock"] }, js: true },

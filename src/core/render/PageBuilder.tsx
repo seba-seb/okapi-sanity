@@ -49,7 +49,7 @@ export function PageBuilder({
 }) {
   const ctx = { documentId: baseIdOf(page._id), documentType: page._type ?? "page" };
   const sections = page.sections;
-  if (!sections?.length) return null;
+  if (!sections?.length) return <></>; // not null: with a second renderer (Vue, Svelte) Astro can't tell whose component returns null
   // Styles for the page's blocks AND the blocks of every component it uses.
   const used = sections
     .filter((s) => s._type === "componentRef")

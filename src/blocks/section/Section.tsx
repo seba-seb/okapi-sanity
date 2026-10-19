@@ -14,21 +14,21 @@ import { Blocks } from "@/core/render/BlockRenderer";
 /** Named vertical padding → CSS length (see the `--section-*` vars in globals.css). */
 const SECTION_PAD: Record<SectionPadding, string> = {
   none: "0px",
-  even: "var(--section-px)",
-  small: "var(--section-pad-sm)",
-  medium: "var(--section-pad-md)",
-  large: "var(--section-pad-lg)",
-  pageTop: "var(--section-pad-page-top)",
+  even: "var(--ok-section-px)",
+  small: "var(--ok-section-pad-sm)",
+  medium: "var(--ok-section-pad-md)",
+  large: "var(--ok-section-pad-lg)",
+  pageTop: "var(--ok-section-pad-page-top)",
 };
 
 /** T-shirt gap → CSS length (the `--space-*` scale in globals.css). */
 const GAP: Record<GapSize, string> = {
-  xs: "var(--space-xs)",
-  sm: "var(--space-sm)",
-  md: "var(--space-md)",
-  lg: "var(--space-lg)",
-  xl: "var(--space-xl)",
-  "2xl": "var(--space-2xl)",
+  xs: "var(--ok-space-xs)",
+  sm: "var(--ok-space-sm)",
+  md: "var(--ok-space-md)",
+  lg: "var(--ok-space-lg)",
+  xl: "var(--ok-space-xl)",
+  "2xl": "var(--ok-space-2xl)",
 };
 
 export function Section({
@@ -58,9 +58,9 @@ export function Section({
     // Full-height (hero) sections center their content vertically.
     justifyContent: fullHeight ? "center" : undefined,
     // Cascades to text blocks (AlignBlock) and the button group, which read
-    // `var(--alignment)`. Normalized to start | center | end | stretch — valid
+    // `var(--ok-alignment)`. Normalized to start | center | end | stretch — valid
     // for align-items / justify-content / text-align alike.
-    "--alignment": alignToken(c.contentAlign),
+    "--ok-alignment": alignToken(c.contentAlign),
   } as React.CSSProperties;
 
   const bgRef = section.backgroundImage?.asset?._ref;
@@ -69,8 +69,8 @@ export function Section({
 
   return (
     <section
-      className={`section ${fullHeight ? "section--fullheight" : ""}`}
-      data-theme={theme}
+      className={`ok-section ${fullHeight ? "ok-section--fullheight" : ""}`}
+      data-ok-theme={theme}
       {...editable(
         ctx.documentId,
         ctx.documentType,
@@ -80,14 +80,14 @@ export function Section({
       )}
     >
       {bgSrc && (
-        <div className="section__bg" aria-hidden="true">
+        <div className="ok-section__bg" aria-hidden="true">
           <img src={bgSrc} alt="" />
           {overlay > 0 && (
-            <div className="section__overlay" style={{ opacity: overlay }} />
+            <div className="ok-section__overlay" style={{ opacity: overlay }} />
           )}
         </div>
       )}
-      <div className="section__container" style={containerStyle}>
+      <div className="ok-section__container" style={containerStyle}>
         <Blocks
           blocks={section.content}
           pathPrefix={`${path}.content`}

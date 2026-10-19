@@ -34,7 +34,7 @@ export function justifyContent(token?: string): string {
 /**
  * Normalizes a horizontal-alignment token to a CSS box-alignment keyword
  * (start | center | end | stretch), accepting legacy left/right. Used for the
- * `--alignment` custom property the Section sets, which feeds `align-items`,
+ * `--ok-alignment` custom property the Section sets, which feeds `align-items`,
  * `justify-content`, and `text-align` alike — so the value must be valid for
  * all three (ruling out left/right, which `align-items` rejects).
  */
@@ -84,7 +84,7 @@ export function spaceVar(value?: string | number): string | undefined {
   if (value == null) return undefined;
   if (typeof value === "number") return `${value}px`;
   if (value === "none") return "0";
-  return `var(--space-${value})`;
+  return `var(--ok-space-${value})`;
 }
 
 /** Turns a ch number into a CSS length, falling back to `undefined`. */
@@ -104,9 +104,9 @@ export function responsiveVars(
   fallback: { mobile: number; tablet: number; desktop: number },
 ): Record<string, string> {
   return {
-    [`--${prefix}-mobile`]: String(value?.mobile ?? fallback.mobile),
-    [`--${prefix}-tablet`]: String(value?.tablet ?? value?.mobile ?? fallback.tablet),
-    [`--${prefix}-desktop`]: String(
+    [`--ok-${prefix}-mobile`]: String(value?.mobile ?? fallback.mobile),
+    [`--ok-${prefix}-tablet`]: String(value?.tablet ?? value?.mobile ?? fallback.tablet),
+    [`--ok-${prefix}-desktop`]: String(
       value?.desktop ?? value?.tablet ?? value?.mobile ?? fallback.desktop,
     ),
   };

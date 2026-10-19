@@ -46,7 +46,7 @@ export function collectStyles(root: unknown, out: [string, BlockStyle][] = []): 
 export function stylesheet(root: unknown): string {
   const rules: Record<keyof typeof BREAKPOINTS, string[]> = { base: [], tablet: [], mobile: [] };
   for (const [key, style] of collectStyles(root)) {
-    // Doubled attribute = specificity (0,2,0): beats `.section__container > *`.
+    // Doubled attribute = specificity (0,2,0): beats `.ok-section__container > *`.
     const sel = `[data-b="${key.replace(/"/g, "")}"][data-b]`;
     for (const bp of Object.keys(BREAKPOINTS) as (keyof typeof BREAKPOINTS)[]) {
       const decl = declarations(style[bp]);

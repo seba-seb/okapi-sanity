@@ -76,7 +76,7 @@ async function collect() {
 // ── File edits (each one idempotent) ─────────────────────────────────────────
 const plan = [];
 const edits = new Map();
-const read = (p) => edits.get(p) ?? readFileSync(p, "utf8");
+const read = (p) => edits.get(p) ?? (existsSync(p) ? readFileSync(p, "utf8") : "");
 const write = (p, s) => (read(p) !== s ? edits.set(p, s) : null);
 const removed = new Set();
 
@@ -101,12 +101,19 @@ function filterSeed(types) {
     Array.isArray(v) ? v.filter((x) => !(x && typeof x === "object" && types.has(x._type))).map(strip) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, strip(x)])) : v;
   const p = "sanity/seed.ndjson";
   if (!existsSync(p)) return;
-  write(p, read(p).trim().split("\n").map((l) => JSON.stringify(strip(JSON.parse(l)))).join("\n") + "\n");
+  // Only lines that actually change are re-serialized, so an untouched seed stays byte-identical.
+  const line = (l) => {
+    const doc = JSON.parse(l);
+    const out = JSON.stringify(strip(doc));
+    return out === JSON.stringify(doc) ? l : out;
+  };
+  write(p, read(p).trim().split("\n").map(line).join("\n") + "\n");
 }
 
 function policyFile(roles, f, blocks) {
   const can = (list) => list.filter((p) => (p !== "chat" || f.chat) && (p !== "components" || f.components)).map((p) => `"${p}"`).join(", ");
-  const clientBlocks = ["section", "eyebrow", "heading", "paragraph", "buttonWrapper", "button", "imageBlock", "card", "contentWrapper", "grid"].filter((b) => blocks.has(b));
+  // The optional blocks the person kept (slider, logo3d) are for the client too.
+  const clientBlocks = ["section", "eyebrow", "heading", "paragraph", "buttonWrapper", "button", "imageBlock", "card", "contentWrapper", "grid", "slider", "logo3d"].filter((b) => blocks.has(b));
   const rows = [
     `  administrator: {\n    label: "Administrator",\n    can: [${can(["text", "images", "style", "settings", "reorder", "structure", "components", "publish", "chat"])}],\n  },`,
   ];
@@ -164,15 +171,31 @@ if (args.roles !== "keep") {
   plan.push(`permisos: ${ROLES[args.roles]}`);
 }
 
+// The project's own package manager, so a pnpm/yarn/bun project doesn't get a package-lock.json.
+const pm = ["pnpm-lock.yaml:pnpm", "yarn.lock:yarn", "bun.lock:bun", "bun.lockb:bun"]
+  .map((e) => e.split(":")).find(([f]) => existsSync(f))?.[1] ?? "npm";
+// pnpm doesn't hoist what @sanity/astro asks Vite to pre-bundle; unresolved, the
+// Studio re-optimizes mid-session (blank Studio, 504 Outdated Optimize Dep).
+if (pm === "pnpm") {
+  const npmrc = read(".npmrc");
+  const need = ["public-hoist-pattern[]=lodash", "public-hoist-pattern[]=react-compiler-runtime"].filter((l) => !npmrc.includes(l));
+  if (need.length) write(".npmrc", `${npmrc}${npmrc && !npmrc.endsWith("\n") ? "\n" : ""}${need.join("\n")}\n`);
+}
+
 const pkg = JSON.parse(read("package.json"));
 const gone = deps.filter((d) => pkg.dependencies?.[d] || pkg.devDependencies?.[d]);
 for (const d of gone) delete pkg.dependencies?.[d], delete pkg.devDependencies?.[d];
 if (gone.length) {
   write("package.json", JSON.stringify(pkg, null, 2) + "\n");
   // …and from Vite's pre-bundle list, or it warns about packages that aren't there.
-  let cfgFile = read("astro.config.mjs");
-  for (const d of gone) cfgFile = cfgFile.replace(new RegExp(`^\\s*"${d.replace("/", "\\/")}",\\n`, "m"), "");
-  write("astro.config.mjs", cfgFile);
+  const cfgPath = ["astro.config.mjs", "astro.config.ts", "astro.config.js", "astro.config.mts", "astro.config.cjs"].find((p) => existsSync(p));
+  if (cfgPath) {
+    let cfgFile = read(cfgPath);
+    for (const d of gone) cfgFile = cfgFile.replace(new RegExp(`^\\s*["']${d.replace("/", "\\/")}["'],\\n`, "m"), "");
+    write(cfgPath, cfgFile);
+  }
+  const stale = cfgPath ? gone.filter((d) => new RegExp(`^\\s*["']${d.replace("/", "\\/")}["'],?\\s*$`, "m").test(read(cfgPath))) : [];
+  if (stale.length) plan.push(`revisar a mano ${cfgPath ?? "astro.config"}: sigue nombrando ${stale.join(", ")} (optimizeDeps.include)`);
   plan.push(`quitar dependencias: ${gone.join(", ")}`);
 }
 for (const p of edits.keys()) plan.push(`editar ${p}`);
@@ -194,8 +217,7 @@ for (const [p, s] of edits) writeFileSync(p, s);
 for (const t of removed) rmSync(`src/blocks/${t}`, { recursive: true, force: true });
 for (const p of DEV_TOOLING) rmSync(p, { recursive: true, force: true });
 if (!demo) rmSync("sanity/seed.ndjson", { force: true });
-// The project's own package manager, so a pnpm/yarn/bun project doesn't get a package-lock.json.
-const pm = ["pnpm-lock.yaml:pnpm", "yarn.lock:yarn", "bun.lock:bun", "bun.lockb:bun"]
-  .map((e) => e.split(":")).find(([f]) => existsSync(f))?.[1] ?? "npm";
-if (gone.length && !args["no-install"]) execSync(pm === "npm" ? "npm install --no-audit --no-fund" : `${pm} install`, { stdio: "inherit" });
-console.log(`\nListo. Siguiente: ${pm} run verify`);
+// Always install: in path B the dependencies added by hand (INSTALL.md B3) aren't installed yet either.
+const install = pm === "npm" ? "npm install --no-audit --no-fund" : `${pm} install`;
+if (!args["no-install"]) execSync(install, { stdio: "inherit" });
+console.log(`\nListo. Siguiente: ${args["no-install"] ? `${pm} install && ` : ""}${pm} run verify`);

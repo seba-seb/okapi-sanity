@@ -34,8 +34,8 @@ export function Logo3d({ block, path, ctx }: BlockProps<Logo3dData & any>) {
 
   const svg = resolveSvg(c.preset, c.customSvg);
   // Primary → brand color (orange in light/dark, tierra in Brand theme);
-  // Secondary → the text color. Both resolve per the section's data-theme.
-  const color = c.color === "secondary" ? "var(--fg)" : "var(--brand)";
+  // Secondary → the text color. Both resolve per the section's data-ok-theme.
+  const color = c.color === "secondary" ? "var(--ok-fg)" : "var(--ok-brand)";
 
   // Build (and only rebuild) the scene when the SHAPE changes. The <canvas> is
   // keyed by `svg`, so each shape gets a fresh canvas + WebGL context — reusing

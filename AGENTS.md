@@ -30,7 +30,9 @@ src/blocks/     The project's blocks. One folder per type: schema.ts + Component
   components.tsx type → component (typed against meta.ts)
   defaults.ts   what a block contains when inserted
 src/theme/      Per project. tokens.css = the design tokens (edit this first);
-                globals.css = Tailwind 4 wiring + the starter's base CSS.
+                globals.css = Tailwind 4 wiring + the starter's base CSS
+                (scans only core/blocks/chrome); Head.astro = fonts, favicon and
+                project CSS, in the layout AND the editor canvas.
 src/chrome/     Header/footer. Per project — restyle or replace.
 src/documents/  Document types: page, settings (singleton), navigation (singleton)
 src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
@@ -66,8 +68,21 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   private package so fixes arrive with `npm update`.)
 - **Every URL goes through `pageHref()` / `resolveLink()`** (`core/lib/routes.ts`).
   Links, sitemap, canonicals. Adding i18n later = changing those two functions.
+  Both, and core's own routes (`/studio`, `/edit-canvas`, `/api/editor-chat`),
+  go through `sitePath()` (`core/sanity/env.ts`), which follows the project's
+  `trailingSlash` (handed over by the `editorChat` integration in astro.config).
+  Where pages live is config, not a core edit: `pagesBase` in
+  `src/okapi.config.json` ("" → `/<slug>`, "/p" → `/p/<slug>`; the route file
+  moves to match). `reservedSlugs` = the project's own routes: Okapi's `[slug]`
+  outranks `[...rest]` routes (a blog, Starlight docs), so a page with one of
+  those slugs would replace the project's page. The Studio rejects them,
+  `[slug].astro` skips them and verify fails on a route conflict.
 - **Internal links are references, never typed paths.** Use the `link` type
   (buttons, rich text, menus). `rel` is derived — never add it as a field.
+- **A React component an `.astro` file renders directly** (`SiteHeader`,
+  `SiteFooter`, `PageBuilder`, a project's own) **returns `<></>`, never
+  `null`.** With a second renderer installed (Vue, Svelte) Astro can't tell
+  whose component returned null and the page renders blank.
 - **Blocks get their data as props and stamp `editable(...)` on their root.**
   Never fetch inside a block: the editor canvas renders the same components
   from the document it is sent, and selects blocks by `data-sanity-path`.
@@ -79,19 +94,26 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   won't see the new nodes. Never rewrite the DOM of the element that carries
   `data-sanity-path` (split text inside an inner wrapper keyed by the text).
   The editor canvas doesn't need to play animations.
-- **Styling: Tailwind 4 utilities built from the tokens** — `bg-bg text-fg
-  bg-surface text-muted border-border bg-brand text-brand-contrast`,
-  `rounded-main`, `gap-md p-lg` (the t-shirt spacing), `text-h-xl`,
-  `px-section-x`, `max-w-page`. Colour utilities read the section's
-  `[data-theme]`, so blocks restyle per theme for free. Tailwind's default
-  palette is removed on purpose (no `bg-red-500`): add colours to tokens.css
-  + the `@theme inline` map. No preflight, so the starter's base CSS is
-  untouched; it lives in `@layer components`, so utilities override it.
+- **Styling: Tailwind 4 utilities built from the tokens, all under `ok-`** —
+  `bg-ok-bg text-ok-fg bg-ok-surface text-ok-muted border-ok-border bg-ok-brand
+  text-ok-brand-contrast`, `rounded-ok-main`, `gap-ok-md p-ok-lg` (the t-shirt
+  spacing), `text-ok-h-xl`, `px-ok-section`, `max-w-ok-page`, `shadow-ok`.
+  Plain Tailwind (`flex`, `gap-4`, `max-w-md`) works as usual. Colour utilities
+  read the section's `[data-ok-theme]`, so blocks restyle per theme for free.
+  Tailwind's default palette is removed on purpose (no `bg-red-500`): add
+  colours to tokens.css + the `@theme inline` map. Everything Okapi defines
+  globally is prefixed — CSS vars `--ok-*`, classes `ok-*` (`ok-section`,
+  `ok-btn`, `ok-card`…), utility keys `ok-` — so a project's own Tailwind,
+  shadcn or DaisyUI CSS can't override it, nor Okapi theirs. Keep that prefix
+  on anything you add to globals.css/tokens.css. No preflight, so the starter's
+  base CSS is untouched; it lives in `@layer components`, so utilities override
+  it.
 - **Public pages are plain HTML; only sections that need JS hydrate.** A block
   with `js` in `meta.ts` (slider, WebGL, a project's own animations — or a
   predicate on the block's fields) turns its top-level section into an island
   (`PageBuilder islands` → `[data-island]` → `core/render/hydrate.tsx`, loaded
-  by `<Islands />` — put it in every layout that renders PageBuilder). A page without such blocks ships
+  by `<Islands />` — put it in every layout that renders PageBuilder; it re-hydrates
+  on `astro:page-load`, so `<ClientRouter />` works). A page without such blocks ships
   ~1 KB of JS. **A block with hooks/effects/handlers MUST declare `js`**, or it
   renders but never runs on the public site. The editor canvas is unaffected.
 - **Design assets don't go in the CMS** (logos, textures): they're code.
@@ -275,3 +297,8 @@ Follow `INSTALL.md` (any agent). Claude Code users can install the
   failure within 15s is left alone, so a real broken module can't loop.
 - Sanity UI fonts only its own components: plain HTML in custom tools inherits
   the root, which `sanity.config.ts` sets to Sanity's sans stack.
+- `astro build`/`astro check` use their own Vite cache (`vite.cacheDir` in
+  astro.config): sharing `node_modules/.vite` with a running dev server swapped
+  its React runtime for the production one (`_jsxDEV is not a function`).
+- The editor canvas has its own `<head>`: fonts/CSS go in `src/theme/Head.astro`
+  (used by the layout and the canvas), or the canvas won't match the site.

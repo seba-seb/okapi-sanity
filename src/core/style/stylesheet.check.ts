@@ -18,8 +18,8 @@ const doc = {
 
 assert.deepEqual(collectStyles(doc).map(([k]) => k), ["s1", "h1"]);
 const css = stylesheet(doc);
-assert.match(css, /\[data-b="s1"\]\[data-b\]\{padding:var\(--space-lg\)!important;background:var\(--surface\)!important\}/);
-assert.match(css, /\[data-b="h1"\]\[data-b\]\{margin-bottom:var\(--space-md\)!important;text-align:center!important\}/);
+assert.match(css, /\[data-b="s1"\]\[data-b\]\{padding:var\(--ok-space-lg\)!important;background:var\(--ok-surface\)!important\}/);
+assert.match(css, /\[data-b="h1"\]\[data-b\]\{margin-bottom:var\(--ok-space-md\)!important;text-align:center!important\}/);
 assert.match(css, /@media \(max-width: 767px\)\{\[data-b="h1"\]\[data-b\]\{display:none!important\}\}/);
 assert.doesNotMatch(css, /p1/);
 assert.doesNotMatch(css, /max-width: 1023px/); // no tablet rules → no empty media block

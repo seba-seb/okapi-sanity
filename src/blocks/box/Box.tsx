@@ -10,7 +10,7 @@ type Data = { layout?: "stack" | "row" | "grid"; columns?: number; gap?: string;
 const JUSTIFY: Record<string, string> = { start: "flex-start", center: "center", end: "flex-end", between: "space-between" };
 const ALIGN: Record<string, string> = { start: "flex-start", center: "center", end: "flex-end", stretch: "stretch" };
 
-/** Free layout container. Mobile/tablet collapse lives in globals.css (.box--*). */
+/** Free layout container. Mobile/tablet collapse lives in globals.css (.ok-box--*). */
 export function Box({ block, path, ctx }: BlockProps<Data & Block>) {
   const c = clean(block);
   const layout = c.layout ?? "stack";
@@ -19,10 +19,10 @@ export function Box({ block, path, ctx }: BlockProps<Data & Block>) {
     alignItems: c.align ? ALIGN[c.align] : undefined,
     justifyContent: layout !== "grid" && c.justify ? JUSTIFY[c.justify] : undefined,
     flexWrap: layout === "row" ? (c.wrap === false ? "nowrap" : "wrap") : undefined,
-    "--box-cols": layout === "grid" ? (c.columns ?? 3) : undefined,
+    "--ok-box-cols": layout === "grid" ? (c.columns ?? 3) : undefined,
   } as React.CSSProperties;
   return (
-    <div className={`box box--${layout}`} style={style} {...editable(ctx.documentId, ctx.documentType, path, block._type, c.name ? `Box — ${c.name}` : undefined)}>
+    <div className={`ok-box ok-box--${layout}`} style={style} {...editable(ctx.documentId, ctx.documentType, path, block._type, c.name ? `Box — ${c.name}` : undefined)}>
       <Blocks blocks={block.items} pathPrefix={`${path}.items`} ctx={ctx} />
     </div>
   );

@@ -24,11 +24,11 @@ export function ButtonWrapper({
   const isRow = (c.direction ?? "row") === "row";
 
   const className = [
-    "btn-group",
-    // Size cascades to every button via `--btn-font-size` (see globals.css).
-    `btn-group--size-${c.size ?? "md"}`,
-    isRow ? "" : "btn-group--column",
-    c.wrap === false ? "btn-group--nowrap" : "",
+    "ok-btn-group",
+    // Size cascades to every button via `--ok-btn-font-size` (see globals.css).
+    `ok-btn-group--size-${c.size ?? "md"}`,
+    isRow ? "" : "ok-btn-group--column",
+    c.wrap === false ? "ok-btn-group--nowrap" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -38,13 +38,13 @@ export function ButtonWrapper({
       className={className}
       style={{
         flexDirection: isRow ? "row" : "column",
-        // Horizontal alignment comes from the section's --alignment. For a row
+        // Horizontal alignment comes from the section's --ok-alignment. For a row
         // that's the main axis (justify-content); for a column it's the cross
         // axis (align-items). A row keeps its buttons vertically centered.
-        justifyContent: isRow ? "var(--alignment, start)" : undefined,
-        alignItems: isRow ? "center" : "var(--alignment, start)",
-        gap: spaceVar(c.gap) ?? "var(--space-sm)",
-        // Falls back to the `.btn-group` default (--space-lg) when unset.
+        justifyContent: isRow ? "var(--ok-alignment, start)" : undefined,
+        alignItems: isRow ? "center" : "var(--ok-alignment, start)",
+        gap: spaceVar(c.gap) ?? "var(--ok-space-sm)",
+        // Falls back to the `.ok-btn-group` default (--ok-space-lg) when unset.
         marginTop: spaceVar(c.marginTop),
         alignSelf: "stretch",
       }}

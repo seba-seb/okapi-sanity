@@ -17,12 +17,12 @@ type ParagraphData = {
 export function Paragraph({ block, path, ctx }: BlockProps<ParagraphData & any>) {
   if (richTextIsEmpty(block.text)) return null;
   const c = clean(block);
-  // Horizontal alignment comes from the section's --alignment via AlignBlock;
+  // Horizontal alignment comes from the section's --ok-alignment via AlignBlock;
   // the paragraph only owns its max-width and wrap.
   return (
     <AlignBlock space="sm" marginBottom={c.marginBottom}>
       <p
-        className={`paragraph paragraph--${c.size ?? "md"} c-${c.color ?? "muted"}`}
+        className={`ok-paragraph ok-paragraph--${c.size ?? "md"} ok-c-${c.color ?? "muted"}`}
         style={{
           maxWidth: ch(c.maxWidth),
           // Preserve author line breaks (the `pre-line` half that matters) via

@@ -12,7 +12,7 @@ function RichLink({ value, children }: { value?: LinkValue; children: ReactNode 
  * Renders a text block's rich-text value (Portable Text) — Bold / Italic and
  * links, plus multiple lines.
  *
- * Each block is rendered as a block-level `<span class="rt-block">` (see
+ * Each block is rendered as a block-level `<span class="ok-rt-block">` (see
  * globals.css) rather than the default `<p>`, so multiple lines stack while the
  * content stays valid *inside* the parent's semantic `<h*>`/`<p>` and the whole
  * block remains a single draggable overlay target (see clean.ts / RichText's
@@ -20,7 +20,7 @@ function RichLink({ value, children }: { value?: LinkValue; children: ReactNode 
  */
 const components: PortableTextComponents = {
   block: {
-    normal: ({ children }) => <span className="rt-block">{children}</span>,
+    normal: ({ children }) => <span className="ok-rt-block">{children}</span>,
   },
   marks: {
     link: ({ value, children }) => <RichLink value={value}>{children}</RichLink>,

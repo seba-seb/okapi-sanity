@@ -1,12 +1,15 @@
 import { createContext, useContext } from "react";
 
+import { PAGES_BASE } from "@/core/config";
+import { sitePath } from "@/core/sanity/env";
+
 /**
  * Every URL on the site comes from here. Single choke point on purpose: adding
  * a locale prefix or translated slugs later means changing these two functions,
  * not hunting hrefs across components, the sitemap and the canonicals.
  */
 export function pageHref(slug: string | undefined | null): string {
-  return !slug || slug === "home" ? "/" : `/${slug}`;
+  return !slug || slug === "home" ? "/" : sitePath(`${PAGES_BASE}/${slug}`);
 }
 
 /** Published page id → slug. Built once per render (see ROUTES_QUERY). */

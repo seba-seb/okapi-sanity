@@ -513,7 +513,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Proyecto nuevo o existente</h3>
         <ul>
           <li><strong>Carpeta vacía:</strong> el agente parte del repo de Okapi, que ya es un proyecto Astro con bloques de ejemplo que después reemplazás.</li>
-          <li><strong>Proyecto existente:</strong> antes de instalar nada, el agente lo analiza y te dice qué encaja y qué es riesgoso. Frena si el proyecto usa Tailwind 3, Preact o Solid, ya tiene Sanity o está en un Astro anterior al 7. Si sigue, tus páginas, tu layout y tu configuración quedan, y las páginas del editor se sirven en las rutas que no existan, o donde le indiques. Tus páginas actuales siguen en código: para editar una de sus secciones en el editor, hay que pasarla a bloque.</li>
+          <li><strong>Proyecto existente:</strong> antes de instalar nada, el agente lo analiza y te dice qué encaja y qué es riesgoso. Frena si el proyecto usa Tailwind 3, Preact o Solid, ya tiene Sanity o está en un Astro anterior al 7.3. Si sigue, tus páginas, tu layout y tu configuración quedan, y las páginas del editor se sirven en las rutas que no existan, o donde le indiques. Tus páginas actuales siguen en código: para editar una de sus secciones en el editor, hay que pasarla a bloque.</li>
         </ul>
         <h3>Qué te va a preguntar</h3>
         <ul>
@@ -726,7 +726,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       </div>
       <div class="code"><pre><span class="c">&lt;!-- display: contents → no altera el layout --&gt;</span>
 &lt;div data-island='{"section":{…},"ctx":{…},"components":{…}}'&gt;
-  &lt;section class="section" data-theme="dark"&gt;…HTML ya renderizado…&lt;/section&gt;
+  &lt;section class="ok-section" data-ok-theme="dark"&gt;…HTML ya renderizado…&lt;/section&gt;
 &lt;/div&gt;</pre></div>
       <div class="prose">
         <p><code>Base.astro</code> incluye un script mínimo. Si la página tiene al menos una isla, importa <code>core/render/hydrate.tsx</code>, que hace <code>hydrateRoot</code> sobre cada isla con los mismos props. Si no tiene ninguna, la página no carga React.</p>
@@ -820,7 +820,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
       <div class="prose">
         <p class="eyebrow">Producto</p>
         <h2>Estilos y tokens</h2>
-        <p>Todo el diseño sale de <code>src/theme/tokens.css</code>, el primer archivo que se toca en cada proyecto. Ahí están los colores por tema (<code>light</code>, <code>dark</code>, <code>brand</code>), los radios, la escala tipográfica, el espaciado y el ancho de página. Tailwind 4 los expone como utilities (<code>bg-surface text-fg gap-md rounded-main</code>), y como los colores leen el <code>data-theme</code> de la sección, cada bloque se adapta solo al tema. La paleta por defecto de Tailwind no está, a propósito: un color nuevo se agrega como token.</p>
+        <p>Todo el diseño sale de <code>src/theme/tokens.css</code>, el primer archivo que se toca en cada proyecto. Ahí están los colores por tema (<code>light</code>, <code>dark</code>, <code>brand</code>), los radios, la escala tipográfica, el espaciado y el ancho de página. Tailwind 4 los expone como utilities (<code>bg-ok-surface text-ok-fg gap-ok-md rounded-ok-main</code>), y como los colores leen el <code>data-ok-theme</code> de la sección, cada bloque se adapta solo al tema. La paleta por defecto de Tailwind no está, a propósito: un color nuevo se agrega como token. Todo lo que define Okapi lleva prefijo (variables <code>--ok-*</code>, clases <code>ok-*</code>, utilities <code>ok-</code>), así que no choca con el Tailwind, shadcn o DaisyUI del proyecto.</p>
         <h3>Panel de estilo</h3>
         <p>Cada bloque tiene un campo <code>design</code> que el editor muestra como panel de estilo. Hay solo tokens, no CSS libre, y se puede definir para todas las pantallas, tablet y mobile.</p>
       </div>
@@ -838,9 +838,9 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         </table>
       </div>
       <p class="prose"><code>core/style/stylesheet.ts</code> convierte esos valores en una sola hoja de estilos por página, con un selector por bloque. Los valores del panel van con <code>!important</code> porque el panel es la autoridad final sobre ese bloque:</p>
-      <div class="code"><pre>[data-b="9c2e"][data-b] { padding-top: var(--space-lg) !important; }
+      <div class="code"><pre>[data-b="9c2e"][data-b] { padding-top: var(--ok-space-lg) !important; }
 @media (max-width: 767px) {
-  [data-b="9c2e"][data-b] { padding-top: var(--space-sm) !important; }
+  [data-b="9c2e"][data-b] { padding-top: var(--ok-space-sm) !important; }
 }</pre></div>
       <div class="prose">
         <h3>Box</h3>
@@ -977,7 +977,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Camino A: proyecto nuevo</h3>
         <p>El repo de Okapi ya es un proyecto Astro completo: se clona, se le saca el <code>.git</code> y se corre <code>npm install</code>.</p>
         <h3>Camino B: proyecto existente</h3>
-        <p>Primero el agente analiza el proyecto y muestra un informe con ✅, ⚠️ y 🛑. 🛑 es que no instala: Astro anterior al 7, Preact o Solid (Okapi pone el JSX del proyecto en React), Tailwind 3 (Okapi necesita Tailwind 4 y un proyecto no puede tener los dos) o Sanity ya montado. ⚠️ es que sigue solo si lo aceptás: Vue o Svelte, varios idiomas, una ruta <code>[slug]</code> en la raíz. Un proyecto sin Tailwind no tiene problema: el Tailwind de Okapi va sin preflight y solo en sus layouts.</p>
+        <p>Primero el agente analiza el proyecto y muestra un informe con ✅, ⚠️ y 🛑. 🛑 es que no instala: Astro anterior al 7.3, Preact o Solid (Okapi pone el JSX del proyecto en React), Tailwind 3 (Okapi necesita Tailwind 4 y un proyecto no puede tener los dos) o Sanity ya montado. ⚠️ es que sigue solo si lo aceptás: Vue o Svelte, varios idiomas, rutas dinámicas en la raíz. El <code>[slug]</code> de Okapi le gana al <code>[...slug]</code> de un blog o de Starlight, así que los slugs del proyecto van en <code>reservedSlugs</code>, o las páginas del editor pasan a <code>/p/&lt;slug&gt;</code> con <code>pagesBase</code>. Un proyecto sin Tailwind no tiene problema: el Tailwind de Okapi va sin preflight y solo en sus layouts. El <code>trailingSlash</code> del proyecto queda como está: las rutas, links, canonicals y sitemap de Okapi lo siguen.</p>
         <p>Después se copian piezas al proyecto sin pisar nada que ya exista. Si una ruta choca, el agente frena y pregunta.</p>
       </div>
       <div class="table-wrap">
@@ -1111,7 +1111,7 @@ gallery: { title: <span class="k">"Gallery"</span>, js: (b) =&gt; b.layout === <
       <div class="code"><pre><span class="c">// src/blocks/quote/Quote.tsx</span>
 export function Quote({ block, path, ctx }: BlockProps&lt;QuoteData&gt;) {
   return (
-    &lt;blockquote className="text-h-lg text-fg"
+    &lt;blockquote className="text-ok-h-lg text-ok-fg"
       {...editable(ctx.documentId, ctx.documentType, path, block._type)}&gt;
       {block.text}
     &lt;/blockquote&gt;

@@ -19,15 +19,15 @@ export function Grid({ block, path, ctx }: BlockProps<GridData & any>) {
 
   const style = {
     ...responsiveVars("cols", c.columns, { mobile: 1, tablet: 2, desktop: 2 }),
-    "--col-gap": px(c.columnGap) ?? "24px",
-    "--row-gap": px(c.rowGap) ?? "24px",
-    "--align-items": alignItems(c.alignItems),
+    "--ok-col-gap": px(c.columnGap) ?? "24px",
+    "--ok-row-gap": px(c.rowGap) ?? "24px",
+    "--ok-align-items": alignItems(c.alignItems),
     alignSelf: "stretch",
   } as React.CSSProperties;
 
   return (
     <div
-      className="grid"
+      className="ok-grid"
       style={style}
       {...editable(ctx.documentId, ctx.documentType, path, block._type)}
     >

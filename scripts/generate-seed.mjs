@@ -5,7 +5,7 @@
 //
 // Kept in sync with the schema: copy blocks (eyebrow/heading/paragraph/button
 // group) live inside a `contentWrapper` for clean margin rhythm; alignment is
-// set on the section (contentAlign → --alignment), not per block; cards are the
+// set on the section (contentAlign → --ok-alignment), not per block; cards are the
 // structured layout/heading/body composition.
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";

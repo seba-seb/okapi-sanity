@@ -4,6 +4,7 @@ import type { SanityClient } from "sanity";
 import type { ApplyResult, AttachedImages, Catalog, ChatTurn } from "./chat";
 import type { Grant } from "./policy";
 import { STUDIO_ACCENT, STUDIO_RADIUS_CONTROL, STUDIO_RADIUS_PANEL } from "@/theme/studio";
+import { sitePath } from "@/core/sanity/env";
 
 type Message = ChatTurn & { applied?: string[]; rejected?: string[]; error?: boolean; model?: string; thumbs?: string[] };
 /** An image attached to the next message: uploading to Sanity, plus a small copy for the model to see. */
@@ -108,7 +109,7 @@ export function EditorChat({
   };
   useEffect(() => {
     fetch(ENDPOINT)
-      .then((r) => (r.ok ? r.json() : { available: false, reason: r.status === 404 ? "NO_ROUTE" : `HTTP ${r.status}` }))
+      .then((r) => (r.ok ? r.json() : { available: false, reason: r.status === 404 ? (import.meta.env.DEV ? "NO_ROUTE_DEV" : "NO_ROUTE") : `HTTP ${r.status}` }))
       .then(setStatus, () => setStatus({ available: false, reason: "NO_ROUTE" }));
   }, []);
   const end = useRef<HTMLDivElement>(null);
@@ -170,7 +171,12 @@ export function EditorChat({
     return (
       <div style={{ fontSize: 12, display: "grid", gap: 8, opacity: 0.85 }}>
         <strong>The chat isn't available here</strong>
-        {status.reason === "NO_ROUTE" ? (
+        {status.reason === "NO_ROUTE_DEV" ? (
+          <p style={{ margin: 0 }}>
+            <code>{ENDPOINT}</code> answered 404 in <code>npm run dev</code>, so the route isn't there: the chat is off in{" "}
+            <code>src/okapi.config.json</code>, or <code>astro.config.mjs</code> changed (e.g. <code>trailingSlash</code>) and the dev server needs a restart.
+          </p>
+        ) : status.reason === "NO_ROUTE" ? (
           <p style={{ margin: 0 }}>
             This site is deployed on a host that can't run its chat function. It works on Vercel, Netlify and Cloudflare Pages (and in{" "}
             <code>npm run dev</code>).
@@ -335,7 +341,7 @@ export function EditorChat({
   );
 }
 
-const ENDPOINT = "/api/editor-chat";
+const ENDPOINT = sitePath("/api/editor-chat");
 const border = "1px solid color-mix(in srgb, currentColor 14%, transparent)";
 const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL, whiteSpace: "nowrap", flexShrink: 0 } as const;
 const chipOn = { background: STUDIO_ACCENT, borderColor: STUDIO_ACCENT, color: "#fff" } as const;

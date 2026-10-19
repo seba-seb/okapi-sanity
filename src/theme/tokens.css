@@ -1,98 +1,96 @@
 /* ------------------------------------------------------------------ *
  * DESIGN TOKENS — the file you change per project.
  *
- * Plain CSS variables. globals.css exposes them to Tailwind (@theme inline),
- * so utilities like `bg-bg text-fg bg-brand rounded-main gap-md` read these
- * and follow each section's [data-theme] automatically.
+ * Plain CSS variables, all prefixed `--ok-` so they never clash with a
+ * project's own (shadcn's --muted/--border/--radius, DaisyUI, Bootstrap…).
+ * globals.css exposes them to Tailwind (@theme inline) as `ok-` utilities —
+ * `bg-ok-bg text-ok-fg bg-ok-brand rounded-ok-main gap-ok-md` — which follow
+ * each section's [data-ok-theme] automatically.
  * ------------------------------------------------------------------ */
-/* Same names as Tailwind's theme keys → declared in @theme directly: one
- * value, used by both the starter CSS (var(--radius-main)) and utilities
- * (rounded-main). */
-@theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-main: 16px;
-  --radius-pill: 999px;
-}
-
 :root {
-  --maxw-page: 1200px;
+  --ok-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 
-  --transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ok-radius-sm: 8px;
+  --ok-radius-md: 12px;
+  --ok-radius-lg: 20px;
+  --ok-radius-main: 16px;
+  --ok-radius-pill: 999px;
+
+  --ok-maxw-page: 1200px;
+
+  --ok-transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Fluid heading scale */
-  --h-sm: 1.25rem;
-  --h-md: 1.5rem;
-  --h-lg: 2rem;
-  --h-xl: clamp(2rem, 1.4rem + 2.6vw, 3rem);
-  --h-2xl: clamp(2.4rem, 1.6rem + 3.4vw, 3.75rem);
-  --h-3xl: clamp(2.8rem, 1.8rem + 4.6vw, 4.5rem);
-  --h-4xl: clamp(3.2rem, 1.8rem + 6.4vw, 6rem);
+  --ok-h-sm: 1.25rem;
+  --ok-h-md: 1.5rem;
+  --ok-h-lg: 2rem;
+  --ok-h-xl: clamp(2rem, 1.4rem + 2.6vw, 3rem);
+  --ok-h-2xl: clamp(2.4rem, 1.6rem + 3.4vw, 3.75rem);
+  --ok-h-3xl: clamp(2.8rem, 1.8rem + 4.6vw, 4.5rem);
+  --ok-h-4xl: clamp(3.2rem, 1.8rem + 6.4vw, 6rem);
 
   /* T-shirt spacing scale — used for the gap between blocks in a section. */
-  --space-xs: 0.5rem; /* 8px */
-  --space-sm: 1rem; /* 16px */
-  --space-md: 1.5rem; /* 24px */
-  --space-lg: 2.5rem; /* 40px */
-  --space-xl: 4rem; /* 64px */
-  --space-2xl: 6rem; /* 96px */
-  --space-3xl: 9rem; /* 144px */
+  --ok-space-xs: 0.5rem; /* 8px */
+  --ok-space-sm: 1rem; /* 16px */
+  --ok-space-md: 1.5rem; /* 24px */
+  --ok-space-lg: 2.5rem; /* 40px */
+  --ok-space-xl: 4rem; /* 64px */
+  --ok-space-2xl: 6rem; /* 96px */
+  --ok-space-3xl: 9rem; /* 144px */
 
   /* Section horizontal inset. Reused as the "even" vertical padding so a
    * section can have matching space on all four sides. */
-  --section-px: clamp(20px, 5vw, 48px);
+  --ok-section-px: clamp(20px, 5vw, 48px);
 
   /* Space reserved for a fixed site nav — used by the "Page top" padding so a
    * section at the very top of the page clears the nav. */
-  --nav-h: 72px;
+  --ok-nav-h: 72px;
 
   /* Section vertical padding scale (top / bottom). */
-  --section-pad-sm: clamp(2.5rem, 5vw, 3.5rem); /* 40–56px */
-  --section-pad-md: clamp(4rem, 8vw, 6rem); /* 64–96px (default) */
-  --section-pad-lg: clamp(6rem, 12vw, 9rem); /* 96–144px */
-  --section-pad-page-top: calc(var(--nav-h) + var(--section-pad-md));
+  --ok-section-pad-sm: clamp(2.5rem, 5vw, 3.5rem); /* 40–56px */
+  --ok-section-pad-md: clamp(4rem, 8vw, 6rem); /* 64–96px (default) */
+  --ok-section-pad-lg: clamp(6rem, 12vw, 9rem); /* 96–144px */
+  --ok-section-pad-page-top: calc(var(--ok-nav-h) + var(--ok-section-pad-md));
 }
 
 /* ------------------------------------------------------------------ *
- * Theme palettes — set via [data-theme] on each <section>.
+ * Theme palettes — set via [data-ok-theme] on each <section>.
  * Everything inside reads these variables, so buttons, cards and text
  * restyle automatically when the section theme changes.
  * ------------------------------------------------------------------ */
-[data-theme="light"] {
-  --bg: #f2eee3; /* crema */
-  --surface: #e9e3d6;
-  --surface-2: #dfd7c7;
-  --fg: #16100d; /* tierra */
-  --muted: #6e625b;
-  --border: #d9d0c0;
-  --brand: #c2562c; /* naranja */
-  --brand-contrast: #f2eee3;
-  --shadow: 0 10px 30px -12px rgba(22, 16, 13, 0.25);
+[data-ok-theme="light"] {
+  --ok-bg: #f2eee3; /* crema */
+  --ok-surface: #e9e3d6;
+  --ok-surface-2: #dfd7c7;
+  --ok-fg: #16100d; /* tierra */
+  --ok-muted: #6e625b;
+  --ok-border: #d9d0c0;
+  --ok-brand: #c2562c; /* naranja */
+  --ok-brand-contrast: #f2eee3;
+  --ok-shadow: 0 10px 30px -12px rgba(22, 16, 13, 0.25);
 }
 
-[data-theme="dark"] {
-  --bg: #16100d;
-  --surface: #1f1713;
-  --surface-2: #2a201a;
-  --fg: #f2eee3;
-  --muted: #a8988f;
-  --border: #33271f;
-  --brand: #f29b6b; /* naranja claro: reads on tierra */
-  --brand-contrast: #16100d;
-  --shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
+[data-ok-theme="dark"] {
+  --ok-bg: #16100d;
+  --ok-surface: #1f1713;
+  --ok-surface-2: #2a201a;
+  --ok-fg: #f2eee3;
+  --ok-muted: #a8988f;
+  --ok-border: #33271f;
+  --ok-brand: #f29b6b; /* naranja claro: reads on tierra */
+  --ok-brand-contrast: #16100d;
+  --ok-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
 }
 
-[data-theme="brand"] {
-  --bg: #c2562c;
-  --surface: rgba(242, 238, 227, 0.1);
-  --surface-2: rgba(242, 238, 227, 0.18);
-  --fg: #f2eee3;
-  --muted: rgba(242, 238, 227, 0.8);
-  --border: rgba(242, 238, 227, 0.28);
-  --brand: #16100d;
-  --brand-contrast: #f2eee3;
-  --shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.4);
+[data-ok-theme="brand"] {
+  --ok-bg: #c2562c;
+  --ok-surface: rgba(242, 238, 227, 0.1);
+  --ok-surface-2: rgba(242, 238, 227, 0.18);
+  --ok-fg: #f2eee3;
+  --ok-muted: rgba(242, 238, 227, 0.8);
+  --ok-border: rgba(242, 238, 227, 0.28);
+  --ok-brand: #16100d;
+  --ok-brand-contrast: #f2eee3;
+  --ok-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.4);
 }

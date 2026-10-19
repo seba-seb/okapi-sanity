@@ -29,23 +29,23 @@ export function Card({ block, path, ctx }: BlockProps<CardData & any>) {
   const isBackground = layout === "imageBackground" && showImage;
   const alt = c.image?.alt ?? "";
 
-  const className = `card card--${layout}${showImage ? "" : " card--noimage"}`;
+  const className = `ok-card ok-card--${layout}${showImage ? "" : " ok-card--noimage"}`;
   const edit = editable(ctx.documentId, ctx.documentType, path, block._type);
 
   const inner = (
     <>
       {isBackground && src ? (
-        <img className="card__bg" src={src} alt={alt} loading="lazy" />
+        <img className="ok-card__bg" src={src} alt={alt} loading="lazy" />
       ) : null}
       {!isBackground && src ? (
-        <div className="card__media">
+        <div className="ok-card__media">
           <img src={src} alt={alt} loading="lazy" />
         </div>
       ) : null}
       {/* Cleaned (stega-free) text so the card stays a single overlay target. */}
-      <div className="card__body">
-        {c.heading ? <h3 className="card__title">{c.heading}</h3> : null}
-        {c.body ? <p className="card__text">{c.body}</p> : null}
+      <div className="ok-card__body">
+        {c.heading ? <h3 className="ok-card__title">{c.heading}</h3> : null}
+        {c.body ? <p className="ok-card__text">{c.body}</p> : null}
       </div>
     </>
   );
@@ -53,7 +53,7 @@ export function Card({ block, path, ctx }: BlockProps<CardData & any>) {
   // Background image → flip the card to a dark theme so text stays readable.
   const props = {
     className,
-    "data-theme": isBackground ? "dark" : undefined,
+    "data-ok-theme": isBackground ? "dark" : undefined,
     ...edit,
   };
 
