@@ -513,7 +513,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>New or existing project</h3>
         <ul>
           <li><strong>Empty folder:</strong> the agent starts from the Okapi repo, which is already an Astro project with example blocks that you replace later.</li>
-          <li><strong>Existing project:</strong> the agent adds Okapi to your project. Your pages, layout and configuration stay as they are. Editor pages are served on routes that don't exist yet, or wherever you tell it.</li>
+          <li><strong>Existing project:</strong> the agent first analyzes it and tells you what fits and what's risky, before installing anything. It stops if the project uses Tailwind 3, Preact or Solid, already has Sanity, or runs Astro older than 7. If it goes ahead, your pages, layout and configuration stay as they are, and editor pages are served on routes that don't exist yet, or wherever you tell it. Your existing pages stay in code: to edit one of their sections in the editor, it has to become a block.</li>
         </ul>
         <h3>What it will ask you</h3>
         <ul>
@@ -977,7 +977,8 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Path A: new project</h3>
         <p>The Okapi repo is already a complete Astro project: clone it, remove its <code>.git</code> and run <code>npm install</code>.</p>
         <h3>Path B: existing project</h3>
-        <p>Pieces are copied into the project without overwriting anything that already exists. If a route collides, the agent stops and asks.</p>
+        <p>First the agent analyzes the project and shows a report with ✅, ⚠️ and 🛑. 🛑 means it doesn't install: Astro older than 7, Preact or Solid (Okapi sets the project's JSX to React), Tailwind 3 (Okapi needs Tailwind 4 and a project can't have both), or Sanity already set up. ⚠️ means it goes on only if you accept it: Vue or Svelte, several languages, a root <code>[slug]</code> route. A project without Tailwind is fine: Okapi's Tailwind has no preflight and only loads in its own layouts.</p>
+        <p>Then pieces are copied into the project without overwriting anything that already exists. If a route collides, the agent stops and asks.</p>
       </div>
       <div class="table-wrap">
         <table>

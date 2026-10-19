@@ -513,7 +513,7 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Proyecto nuevo o existente</h3>
         <ul>
           <li><strong>Carpeta vacía:</strong> el agente parte del repo de Okapi, que ya es un proyecto Astro con bloques de ejemplo que después reemplazás.</li>
-          <li><strong>Proyecto existente:</strong> el agente suma Okapi a tu proyecto. Tus páginas, tu layout y tu configuración quedan. Las páginas del editor se sirven en las rutas que no existan, o donde le indiques.</li>
+          <li><strong>Proyecto existente:</strong> antes de instalar nada, el agente lo analiza y te dice qué encaja y qué es riesgoso. Frena si el proyecto usa Tailwind 3, Preact o Solid, ya tiene Sanity o está en un Astro anterior al 7. Si sigue, tus páginas, tu layout y tu configuración quedan, y las páginas del editor se sirven en las rutas que no existan, o donde le indiques. Tus páginas actuales siguen en código: para editar una de sus secciones en el editor, hay que pasarla a bloque.</li>
         </ul>
         <h3>Qué te va a preguntar</h3>
         <ul>
@@ -977,7 +977,8 @@ footer.end { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--li
         <h3>Camino A: proyecto nuevo</h3>
         <p>El repo de Okapi ya es un proyecto Astro completo: se clona, se le saca el <code>.git</code> y se corre <code>npm install</code>.</p>
         <h3>Camino B: proyecto existente</h3>
-        <p>Se copian piezas al proyecto sin pisar nada que ya exista. Si una ruta choca, el agente frena y pregunta.</p>
+        <p>Primero el agente analiza el proyecto y muestra un informe con ✅, ⚠️ y 🛑. 🛑 es que no instala: Astro anterior al 7, Preact o Solid (Okapi pone el JSX del proyecto en React), Tailwind 3 (Okapi necesita Tailwind 4 y un proyecto no puede tener los dos) o Sanity ya montado. ⚠️ es que sigue solo si lo aceptás: Vue o Svelte, varios idiomas, una ruta <code>[slug]</code> en la raíz. Un proyecto sin Tailwind no tiene problema: el Tailwind de Okapi va sin preflight y solo en sus layouts.</p>
+        <p>Después se copian piezas al proyecto sin pisar nada que ya exista. Si una ruta choca, el agente frena y pregunta.</p>
       </div>
       <div class="table-wrap">
         <table>

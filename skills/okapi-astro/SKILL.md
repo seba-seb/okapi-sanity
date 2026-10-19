@@ -17,13 +17,14 @@ sigue, así Claude Code y cualquier otro agente hacen lo mismo.
 
 1. Traé Okapi a una carpeta temporal:
    ```bash
-   gh repo clone seba-seb/okapi-sanity /tmp/okapi -- --depth 1
+   git clone --depth 1 https://github.com/seba-seb/okapi-sanity /tmp/okapi
    ```
    - El branch por defecto es `main`. Si el usuario indica otro branch o tag,
      agregá `--branch <ref>`.
    - Si `/tmp/okapi` ya existe, borralo antes: puede ser una versión vieja.
-2. Leé `/tmp/okapi/INSTALL.md` completo y seguilo en orden. **Empezá por las
-   preguntas del Paso 0** (incluidas las de "Qué instalar"), hacelas todas
+2. Leé `/tmp/okapi/INSTALL.md` completo y seguilo en orden. **Si el proyecto
+   ya existe, primero analizalo y mostrá los riesgos** (Paso 0, "Proyecto
+   existente"); con algún 🛑 no instalás. **Después, las preguntas del Paso 0** (incluidas las de "Qué instalar"), hacelas todas
    juntas con AskUserQuestion y no instales nada hasta tener las respuestas:
    - **Camino A** si la carpeta actual no tiene `astro.config.*`.
    - **Camino B** si es un proyecto Astro existente.

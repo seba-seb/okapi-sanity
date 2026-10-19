@@ -44,6 +44,49 @@ Preguntá todo en una sola tanda; si tu herramienta tiene un selector de
 opciones, usalo. No elijas por la persona: si dice "no sé", explicale en una
 línea qué hace cada opción y recomendá.
 
+### Proyecto existente: analizar y avisar antes de preguntar
+
+Si la carpeta tiene `astro.config.*`, el proyecto ya existe. Antes de
+cualquier pregunta, revisá `package.json`, `astro.config.*`, `tsconfig.json`,
+`src/pages/` y `src/layouts/`, y mostrale a la persona qué encontraste.
+No cambies nada todavía.
+
+| Qué mirar | Si encontrás | Nivel | Qué decir |
+|---|---|---|---|
+| `astro` | versión < 7 | 🛑 | Okapi necesita Astro 7. Actualizar Astro es un trabajo aparte que la persona tiene que aprobar |
+| Integraciones de UI | `@astrojs/preact` o `@astrojs/solid-js` | 🛑 | Okapi necesita React y pone el JSX del `tsconfig` en React: los componentes del proyecto dejan de compilar. Se puede convivir separando cada JSX por carpeta, pero es un trabajo aparte |
+| | `@astrojs/vue` o `@astrojs/svelte` | ⚠️ | Conviven: Okapi suma React solo para sus bloques. Los componentes del proyecto no sirven como bloques sin pasarlos a React |
+| `tailwindcss` | versión 3, `@astrojs/tailwind` o `tailwind.config.*` | 🛑 | Okapi usa Tailwind 4 y un proyecto no puede tener dos versiones del mismo paquete. Primero hay que migrar el proyecto a Tailwind 4 (trabajo aparte) |
+| | versión 4 | ✅ | Se comparte; no se agrega el plugin dos veces (B3) |
+| | no tiene (CSS, SCSS, CSS modules…) | ✅ | Conviven: el Tailwind de Okapi va sin preflight y solo en sus layouts, y las páginas del proyecto no cambian. Para que las páginas del editor se vean como el sitio, colores, espaciados y fuentes se pasan a `tokens.css` (B6) |
+| Sanity | `@sanity/astro`, `sanity.config.*` o una ruta `/studio` | 🛑 | Okapi trae su propio Studio en `/studio` y su schema. Hay que decidir si reemplaza la integración actual o va en otro proyecto de Sanity; no se mezclan solas |
+| `i18n` en `astro.config`, rutas `[lang]` | sitio en varios idiomas | ⚠️ | Las páginas del editor salen en un solo idioma, en `/<slug>`. Traducirlas es un cambio en core que hoy no existe |
+| `src/pages/[slug].astro`, `[...slug].astro` | ruta dinámica en la raíz | ⚠️ | Choca con las páginas del editor: van en otra ruta (B4) |
+| `trailingSlash: "always"` | — | ⚠️ | Los links de Okapi salen sin barra final (B3) |
+| `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` | otro gestor | ✅ | Se usa ese en todos los comandos de esta guía |
+
+Siempre, aunque todo dé ✅, aclará: **las páginas que ya existen siguen en
+código.** El editor maneja las páginas nuevas que se armen ahí. Para editar
+una sección que ya existe hay que pasarla a bloque ("Hacer editable algo que
+el proyecto ya tiene"), y eso es trabajo de desarrollo.
+
+Mostrá el resultado así:
+
+```
+Okapi en <proyecto>
+✅ Astro 7.3 · sin Tailwind (conviven) · pnpm
+⚠️ i18n: las páginas del editor van a salir en un solo idioma
+🛑 Tailwind 3: hay que migrar a Tailwind 4 antes
+Las páginas actuales siguen en código; el editor maneja las nuevas.
+Recomendación: …
+```
+
+- **Algún 🛑:** no instales. Ofrecé dos caminos y recomendá uno: resolverlo
+  primero (trabajo aparte, con su OK) o arrancar un proyecto nuevo con el
+  camino A y traer el diseño.
+- **Algún ⚠️:** seguí solo si la persona confirma que lo entiende.
+- **Todo ✅:** seguí con las preguntas.
+
 ### Sobre el proyecto
 
 Preguntá solo lo que no puedas deducir del proyecto:
@@ -83,8 +126,6 @@ Necesitás:
 - Node ≥ 22.12 y el gestor de paquetes que ya use el proyecto (npm, pnpm o
   yarn). En un proyecto nuevo, npm.
 - `git`.
-- Acceso de lectura al repo `seba-seb/okapi-sanity` (mientras sea privado)
-  (`gh auth status`).
 
 ## Camino A — proyecto nuevo
 
@@ -92,7 +133,7 @@ El repo de Okapi ya es un proyecto Astro completo. Incluye bloques de
 ejemplo, tema y header/footer que después se reemplazan.
 
 ```bash
-gh repo clone seba-seb/okapi-sanity <carpeta> -- --depth 1
+git clone --depth 1 https://github.com/seba-seb/okapi-sanity <carpeta>
 cd <carpeta> && rm -rf .git && git init -q
 npm install
 ```
@@ -103,8 +144,8 @@ Seguí con los **pasos comunes**.
 
 ### B1. Revisar
 
-- **Astro ≥ 7.** Si es más viejo, frená: actualizar Astro es un trabajo aparte
-  que el usuario tiene que aprobar.
+El análisis del Paso 0 ya está hecho: no hay ningún 🛑 y la persona aceptó los ⚠️.
+
 - **Árbol de git limpio.** Así el usuario ve el diff completo de la
   instalación. Si el proyecto no es un repo, proponé `git init` y un commit
   base con todo lo actual, y hacelo solo con su OK.
@@ -112,16 +153,12 @@ Seguí con los **pasos comunes**.
   `@/`.
   - Si no existe, agregalo.
   - Si existe y apunta a otro lado, frená y preguntá.
-- **Tailwind.** Las páginas de Okapi traen su propio CSS: Tailwind 4 sin
-  preflight, solo en sus layouts.
-  - Si el proyecto usa Tailwind 3, avisá. Conviven, pero hay que revisar que
-    la build no mezcle configuraciones.
 
 ### B2. Traer Okapi
 
 ```bash
 rm -rf /tmp/okapi   # una copia vieja daría una versión vieja
-gh repo clone seba-seb/okapi-sanity /tmp/okapi -- --depth 1   # --branch <ref> si el usuario pide otra versión
+git clone --depth 1 https://github.com/seba-seb/okapi-sanity /tmp/okapi   # --branch <ref> si el usuario pide otra versión
 ```
 
 Copiá desde `/tmp/okapi` **sin pisar nada que ya exista**. Revisá primero
@@ -201,7 +238,8 @@ Copiá los bloques tal cual: cada línea tiene su razón documentada en ese arch
 - La lectura de `.env` con `loadEnv`.
 - La integración `sanity({ …, useCdn: false, studioBasePath: "/studio", studioRouterHistory: "hash" })`.
 - `react()`.
-- `vite.plugins: [tailwindcss()]`.
+- `vite.plugins: [tailwindcss()]`. Si el proyecto ya usa Tailwind 4, el
+  plugin ya está: no lo agregues de nuevo.
 - `image.remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }]`.
 - `resolveAdapter()`, la const `adapter` y la integración `editorChat`: crean
   la ruta `/api/editor-chat` del chat. Si el proyecto ya tiene un `adapter`,
@@ -274,6 +312,10 @@ alias `@/*` (B1).
     incluir `<Islands />` (de `@/core/render/Islands.astro`) al final del
     `<body>`.
   - Ese layout importa `@/theme/globals.css`.
+  - **Fuentes del proyecto:** traé a ese layout lo que las carga (los
+    `<link>` o el `@font-face`) y asignalas en `--font-sans` de `tokens.css`.
+    No importes el CSS global entero del proyecto: no tiene capa
+    (`@layer`), así que le gana a los estilos de los bloques.
 
 ### B5. Reglas para agentes
 

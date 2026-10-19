@@ -194,5 +194,8 @@ for (const [p, s] of edits) writeFileSync(p, s);
 for (const t of removed) rmSync(`src/blocks/${t}`, { recursive: true, force: true });
 for (const p of DEV_TOOLING) rmSync(p, { recursive: true, force: true });
 if (!demo) rmSync("sanity/seed.ndjson", { force: true });
-if (gone.length && !args["no-install"]) execSync("npm install --no-audit --no-fund", { stdio: "inherit" });
-console.log("\nListo. Siguiente: npm run verify");
+// The project's own package manager, so a pnpm/yarn/bun project doesn't get a package-lock.json.
+const pm = ["pnpm-lock.yaml:pnpm", "yarn.lock:yarn", "bun.lock:bun", "bun.lockb:bun"]
+  .map((e) => e.split(":")).find(([f]) => existsSync(f))?.[1] ?? "npm";
+if (gone.length && !args["no-install"]) execSync(pm === "npm" ? "npm install --no-audit --no-fund" : `${pm} install`, { stdio: "inherit" });
+console.log(`\nListo. Siguiente: ${pm} run verify`);
