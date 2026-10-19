@@ -124,8 +124,10 @@ export function initLogo3dScene(
   // The dither block size at grain = 1; the hover slider scales this live.
   const baseBlock = svgMax * (0.1 / 42);
 
+  // Depth off the short side, so a wide wordmark doesn't extrude into bricks.
+  const svgMin = Math.min(maxX - minX || 1, maxY - minY || 1);
   const extrudeSettings = {
-    depth: svgMax * (8 / 42),
+    depth: svgMin * (8 / 42),
     bevelEnabled: false,
     curveSegments: 72,
     steps: 1,

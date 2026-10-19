@@ -113,7 +113,7 @@ const DEFAULTS = {
   contentWrapper: () => ({ content: defaultContentWrapperContent() }),
   card: () => ({ layout: "imageTop", heading: CARD_HEADING, body: CARD_BODY }),
   grid: () => ({ items: [defaultCard()] }),
-  logo3d: () => ({ preset: "shape1", maxWidth: 35 }),
+  logo3d: () => ({ preset: "isologo", maxWidth: 35 }),
   box: () => ({
     layout: "stack",
     gap: "md",
