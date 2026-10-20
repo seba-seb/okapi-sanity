@@ -69,6 +69,9 @@ encontraste. No cambies nada todavía.
 | `trailingSlash: "always"` | en el config o puesto por una integración | ✅ | La integración `okapi()` le pasa el valor final a core (`sitePath()`): `/studio/`, `/edit-canvas/`, `/api/editor-chat/`, links, canonicals y sitemap salen con barra. Si se cambia con el dev prendido, reiniciarlo (B3) |
 | Starlight | `@astrojs/starlight` | ⚠️ | Trae su propio sitemap, idiomas y `[...slug]`: ver las filas de idiomas y rutas, y "Sitemap y robots" en B3 |
 | `<ClientRouter />` | en el layout | ✅ | Las islas de Okapi vuelven a hidratar en cada navegación. Para tener transiciones también en las páginas del editor, sumalo a su layout (B4) |
+| `tsconfig.json` | `"jsx": "preserve"` (lo pone `astro add vue`) | ✅ | Pasa a `react-jsx` (B3); Vue y Svelte siguen compilando |
+| `output` y adapter | `output: "server"`, un adapter propio | ✅ | Se respetan: las páginas de Okapi son estáticas igual y el adapter del proyecto corre el chat (`okapi({ adapter })`, B3) |
+| `src/middleware.ts` | — | ✅ | Corre también en `/api/editor-chat`. Si exige login o redirige, que deje pasar `/studio`, `/edit-canvas` y `/api/editor-chat` |
 | `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` | otro gestor | ✅ | Se usa ese en todos los comandos de esta guía. Con pnpm, `okapi:setup` escribe un `.npmrc` para que el Studio no se quede en blanco |
 
 Siempre, aunque todo dé ✅, aclará: **las páginas que ya existen siguen en
@@ -191,15 +194,21 @@ done
   (`cp $R/src/layouts/Base.astro src/layouts/OkapiBase.astro`) y cambiá el
   import en `[slug].astro` e `index.astro`.
 - `src/pages/[slug].astro` existe → el nuestro va en `src/pages/p/[slug].astro`
-  (B4).
+  y `pagesBase: "/p"` (B4). El del proyecto no se toca.
+- Choques esperados, que se resuelven más adelante: `src/pages/index.astro` (si
+  la home queda la del proyecto, no se copia), `src/pages/robots.txt.ts` y
+  `sitemap.xml.ts` (B3), `AGENTS.md` y `CLAUDE.md` (B5), `.env.example` (se
+  suman líneas).
 - Cualquier otro → frená y preguntá.
 
 ```bash
 mkdir -p src/layouts src/pages scripts sanity public
 cp -Rn $R/src/core $R/src/blocks $R/src/documents $R/src/theme $R/src/chrome src/
 cp -n  $R/src/schema.ts $R/src/okapi.config.json $R/src/okapi.policy.ts src/
-cp -n  $R/src/layouts/Base.astro src/layouts/
-cp -n  $R/src/pages/edit-canvas.astro "$R/src/pages/[slug].astro" src/pages/
+cp -n  $R/src/pages/edit-canvas.astro src/pages/
+# Base.astro y [slug].astro: con los choques de arriba resueltos.
+[ -e src/layouts/Base.astro ] && cp $R/src/layouts/Base.astro src/layouts/OkapiBase.astro || cp $R/src/layouts/Base.astro src/layouts/
+[ -e "src/pages/[slug].astro" ] && { mkdir -p src/pages/p && cp "$R/src/pages/[slug].astro" "src/pages/p/[slug].astro"; } || cp "$R/src/pages/[slug].astro" src/pages/
 cp -n  $R/sanity.config.ts $R/sanity.cli.ts .
 cp -n  $R/scripts/verify.mjs $R/scripts/check-editor-schema.ts $R/scripts/okapi-setup.mjs scripts/
 cp -n  $R/sanity/seed.ndjson sanity/
@@ -246,7 +255,7 @@ referencia que queda.
 "dependencies": {
   "@astrojs/react": "^7.0.0", "@portabletext/react": "^6.2.0",
   "@sanity/astro": "^3.5.1", "@sanity/client": "^8.9.0", "@sanity/icons": "^5.2.3",
-  "@sanity/image-url": "^2.1.1", "@sanity/ui": "^4.4.9", "@sanity/themer": "0.10.4", "groq": "^6.19.0",
+  "@sanity/image-url": "^2.1.1", "@sanity/ui": "^4.4.9", "@sanity/themer": "^0.10.4", "groq": "^6.19.0",
   "react": "^19.2.0", "react-dom": "^19.2.0", "react-is": "^19.2.0",
   "sanity": "^6.19.0", "styled-components": "^6.6.0",
   "tailwindcss": "^4.3.3", "@tailwindcss/vite": "^4.3.3",
@@ -264,6 +273,9 @@ referencia que queda.
 - `typecheck` llama al `tsc` del proyecto por su ruta: el `tsc` de
   `node_modules/.bin` puede ser otra versión, que llega con `sanity`.
 - `typescript` hasta la 6: `astro check` todavía no corre con TypeScript 7.
+- `@astrojs/sitemap` solo si hace falta (Starlight, ver "Sitemap y robots").
+- `npm install` avisa que `@sanity/visual-editing` (dentro de `@sanity/astro`)
+  pide `@sanity/client` 7. Es un aviso de ellos: Okapi usa la 8 y anda.
 
 **`astro.config.*`** (`.mjs` o `.ts`): lo de Okapi está en
 `src/core/astro/okapi.ts` (tipado, ya copiado con `src/core/`). En el config
@@ -320,8 +332,11 @@ alias `@/*` (B1).
   - No copies `sitemap.xml.ts`.
   - Agregale
     `filter: (p) => !/\/(edit-canvas|studio)(\/|$)/.test(new URL(p).pathname)`.
-  - Copiá `robots.txt.ts` y cambiá `/sitemap.xml` por `/sitemap-index.xml`,
-    ahí y en el `<link rel="sitemap">` de `Base.astro`.
+  - Cambiá `/sitemap.xml` por `/sitemap-index.xml` en el `<link rel="sitemap">`
+    de `Base.astro`.
+  - Si **no** tiene `public/robots.txt` propio (primer punto), copiá
+    `robots.txt.ts` y cambiá ahí también `/sitemap.xml` por `/sitemap-index.xml`.
+    Si lo tiene, ya está: no copies `robots.txt.ts`.
   - Avisá al usuario: con esa integración, las páginas marcadas `noindex` en
     Sanity igual entran al sitemap.
 
@@ -356,9 +371,12 @@ alias `@/*` (B1).
       vive en `/<slug>`). El Studio no deja crearlos y `[slug].astro` los
       saltea. Si el proyecto suma rutas después, hay que sumarlas acá.
     - **o `pagesBase: "/p"`:** las páginas del editor salen en `/p/<slug>` y
-      no chocan con nada. Mové `src/pages/[slug].astro` a
-      `src/pages/p/[slug].astro`. **Obligatorio si el proyecto ya tiene un
-      `[slug].astro`.** No hay que tocar core.
+      no chocan con nada. El `[slug].astro` **de Okapi** va en
+      `src/pages/p/[slug].astro` (el bloque de copia de B2 ya lo hace si el
+      proyecto tiene el suyo; si no, movelo:
+      `mkdir -p src/pages/p && git mv "src/pages/[slug].astro" "src/pages/p/[slug].astro"`,
+      solo si ese archivo es el de Okapi). **Obligatorio si el proyecto ya
+      tiene un `[slug].astro`.** No hay que tocar core.
 - **Layout:** las páginas del editor usan `Base.astro` (u `OkapiBase.astro`, B2).
   - Cualquier layout que renderice `<PageBuilder islands … />` tiene que
     incluir `<Islands />` (de `@/core/render/Islands.astro`) al final del
@@ -371,25 +389,38 @@ alias `@/*` (B1).
       (`var(--font-inter, system-ui)`);
     - el favicon del proyecto;
     - el CSS del proyecto, si hace falta (abajo).
-  - **El CSS del proyecto entra siempre en la capa `project`.** Creá
-    `src/theme/project.css` con `@import "../styles/global.css" layer(project);`
-    (la ruta del CSS del proyecto) e importalo en `Head.astro`
-    (`import "./project.css";`). Así:
-    - le gana a los estilos base de Okapi (`body`, `a`, `img`), que están en
-      la capa `base`;
-    - los componentes de Okapi (`ok-btn`, `ok-section`…) le ganan a él, aunque
-      tenga reglas como `a { color: … }`.
-
-    Importado sin capa, cualquier regla del proyecto le gana a todo Okapi, sin
-    importar la especificidad: los botones cambian de color.
+  - **El CSS del proyecto** va en `src/theme/project.css`, importado desde
+    `Head.astro` (`import "./project.css";`), así llega también al canvas.
+    Cómo se importa depende de qué es:
+    - **CSS plano** (sin Tailwind: CSS, SCSS compilado, CSS modules globales):
+      `@import "../styles/global.css" layer(project);`. Así le gana a los
+      estilos base de Okapi (`body`, `a`, `img`, en la capa `base`) y los
+      componentes `ok-` le ganan a él, aunque tenga reglas como
+      `a { color: … }`. Sin capa, cualquier regla suya le gana a todo Okapi y
+      los botones cambian de color.
+    - **El CSS de entrada de Tailwind 4** (el que tiene `@import "tailwindcss"`):
+      **sin capa**, `@import "../styles/tailwind.css";`. Tailwind no se puede
+      meter dentro de otra capa (el build falla con `@custom-variant cannot be
+      nested`), y sus reglas ya van en las capas `base`, `components` y
+      `utilities`, que se combinan con las de Okapi. Como se carga después de
+      `globals.css`, sus utilities y variantes (`lg:hidden`) le ganan a las de
+      Okapi con el mismo nombre. `verify` falla si encuentra Tailwind dentro de
+      una capa.
   - **Header y footer del proyecto (opcional):** si los querés en las páginas
     del editor, reemplazá `SiteHeader` y `SiteFooter` en el layout por los del
     proyecto. Traé también lo que necesitan:
-    - su CSS, en la capa `project` (arriba);
-    - los scripts del `<head>` que cambian la página (modo oscuro, estilos de
-      tema): en el layout, no en `Head.astro`, porque el canvas no los necesita;
-    - las clases del `<body>` y lo que el layout del proyecto pone al final del
-      `<body>`.
+    - su CSS, en `project.css` (arriba);
+    - las variables CSS del tema y las fuentes (por ejemplo el `CustomStyles`
+      de AstroWind): en `Head.astro`, porque el canvas también las usa;
+    - los scripts del `<head>` que cambian la página (modo oscuro): en el
+      layout, no en `Head.astro`;
+    - los atributos y clases de `<html>` y `<body>`, y lo que el layout del
+      proyecto pone al final del `<body>`.
+
+    Si el header del proyecto está escrito dentro de su layout y no es un
+    componente, extraelo a uno (`src/components/Header.astro`) y usalo en los
+    dos layouts, en vez de duplicar el markup. `src/chrome/` puede quedar:
+    no molesta, y sirve si después se vuelve al header de Okapi.
 
     Lo de SEO no: lo pone Okapi. Listale a la persona qué trajiste.
   - **Después de traer el CSS** (más si es Tailwind con tokens shadcn,
@@ -460,8 +491,10 @@ npm run okapi:setup -- --slider=yes --logo3d=no --components=yes \
 Mostrale a la persona la lista que imprime (qué se borra, qué dependencias se
 van, qué roles quedan). Si está de acuerdo, corré lo mismo cambiando
 `--dry-run` por `--yes`. El script borra los bloques y sus dependencias,
-escribe `src/okapi.config.json` y `src/okapi.policy.ts`, saca las herramientas
-internas del repo de Okapi y corre el install del gestor del proyecto (con
+escribe `src/okapi.config.json` y `src/okapi.policy.ts`, saca los archivos del
+repo de Okapi que el proyecto no necesita (`skills/`, `INSTALL.md`, el
+generador del seed; en el camino A cambia el README de Okapi por uno corto del
+proyecto) y corre el install del gestor del proyecto (con
 pnpm, antes escribe el `.npmrc` e instala sin pedir confirmación). Si el
 install no deja `node_modules/sanity`, falla.
 
@@ -691,4 +724,5 @@ del proyecto. Si el proyecto se instaló antes, renombrá en sus archivos
 | `astro check does not currently support TypeScript 7.0` | `typescript` quedó en la 7: `npm i -D typescript@^6` (B3) |
 | `_jsxDEV is not a function` en dev, las islas no hidratan | Un build pisó la caché del dev server: falta `okapi()` en las integraciones (B3). Pará el server, `rm -rf node_modules/.vite`, arrancá |
 | `Unable to render SiteHeader` / página del editor en blanco, con Vue o Svelte en el proyecto | Un componente de `src/chrome` (o uno propio que renderiza una `.astro`) devuelve `null`: que devuelva `<></>` |
+| Con `<ClientRouter />`, solo en dev: después de la segunda navegación a una página del editor, el header del proyecto se desarma (por ejemplo, la hamburguesa en desktop) | En dev el ClientRouter reordena los estilos y las utilities de Okapi con el mismo nombre (`.flex`) quedan últimas. En el build no pasa. Recargá la página |
 | Botones de Okapi sin fondo o texto `muted` invisible | Un nombre sin el prefijo `ok-` en `globals.css`/`tokens.css` o en un bloque (`.btn`, `--muted`, `text-muted`): el CSS del proyecto lo pisa. Ver B4 |

@@ -53,7 +53,8 @@ their deps; **core features** are flags in `src/okapi.config.json`
 (`FEATURES`): chat off = no host adapter, no `/api/editor-chat`, no Chat tab;
 components off = no `component` document, no `componentRef`, no Make
 component. It also writes `src/okapi.policy.ts` from a roles preset and removes
-the Okapi repo's own tooling (seed generators). It refuses to run in the
+the Okapi repo's own files (seed generator, `skills/`, `INSTALL.md`; Okapi's
+README becomes a short one for the project, LICENSE stays). It refuses to run in the
 Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
 
 ## Rules

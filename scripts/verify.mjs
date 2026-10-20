@@ -14,6 +14,10 @@ import { gzipSync } from "node:zlib";
 import { loadEnv } from "vite";
 
 const baseUrl = process.argv[2];
+// Local binaries through the project's own package manager (npx would offer to
+// download from npm when a bin is missing).
+const pm = ["pnpm-lock.yaml:pnpm exec", "yarn.lock:yarn", "bun.lock:bunx", "bun.lockb:bunx"]
+  .map((e) => e.split(":")).find(([f]) => existsSync(f))?.[1] ?? "npx";
 let failed = 0;
 const ok = (msg) => console.log(`  ✓ ${msg}`);
 const fail = (msg) => {
@@ -46,19 +50,19 @@ async function publishedSlugs() {
 }
 
 console.log("\n1. Unit checks");
-execSync("npx sanity exec src/core/lib/routes.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+execSync(`${pm} sanity exec src/core/lib/routes.check.ts`, { stdio: ["ignore", "inherit", "inherit"] });
 // Every block field gets a control in the Okapi Editor panel.
-execSync("npx sanity exec scripts/check-editor-schema.ts", { stdio: ["ignore", "inherit", "inherit"] });
+execSync(`${pm} sanity exec scripts/check-editor-schema.ts`, { stdio: ["ignore", "inherit", "inherit"] });
 // Structural edits (insert/move/remove/duplicate) keep the document valid.
-execSync("npx sanity exec src/core/editor/ops.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+execSync(`${pm} sanity exec src/core/editor/ops.check.ts`, { stdio: ["ignore", "inherit", "inherit"] });
 // Style tokens → per-block CSS (breakpoints, specificity, no selector injection).
-execSync("npx sanity exec src/core/style/stylesheet.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+execSync(`${pm} sanity exec src/core/style/stylesheet.check.ts`, { stdio: ["ignore", "inherit", "inherit"] });
 // Component instance overrides apply to the right block and never touch the master.
-execSync("npx sanity exec src/core/render/overrides.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+execSync(`${pm} sanity exec src/core/render/overrides.check.ts`, { stdio: ["ignore", "inherit", "inherit"] });
 // AI chat: role permissions (okapi.policy.ts) gate every change the model proposes.
-execSync("npx sanity exec src/core/editor/chat.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+execSync(`${pm} sanity exec src/core/editor/chat.check.ts`, { stdio: ["ignore", "inherit", "inherit"] });
 // Rich text → canvas HTML escapes text and keys (no attribute break-out).
-execSync("npx sanity exec src/core/editor/richtext.check.ts", { stdio: ["ignore", "inherit", "inherit"] });
+execSync(`${pm} sanity exec src/core/editor/richtext.check.ts`, { stdio: ["ignore", "inherit", "inherit"] });
 // Everything Okapi's CSS defines globally starts with ok- (classes, variables,
 // Tailwind theme keys, data-ok-* attributes, keyframes), so it can't collide
 // with the project's own CSS (Tailwind, shadcn, DaisyUI).
@@ -80,9 +84,17 @@ execSync("npx sanity exec src/core/editor/richtext.check.ts", { stdio: ["ignore"
   const bad = [...new Set([...keys, ...vars, ...classes, ...attrs, ...frames])];
   check(bad.length === 0, `Okapi CSS names all start with ok-${bad.length ? `: ${bad.join(", ")}` : ""}`);
 }
+// A Tailwind 4 entry can't be imported into a layer (INSTALL.md B4): the build
+// fails ("@custom-variant cannot be nested") or Okapi's utilities beat the project's.
+if (existsSync("src/theme/project.css")) {
+  const layered = [...readFileSync("src/theme/project.css", "utf8").matchAll(/@import\s+(?:url\()?["']([^"']+)["']\)?[^;]*\blayer\b/g)]
+    .map((m) => join("src/theme", m[1]))
+    .filter((f) => existsSync(f) && /@import\s+["']tailwindcss|@tailwind\b/.test(readFileSync(f, "utf8")));
+  check(layered.length === 0, `project CSS: Tailwind imported without a layer${layered.length ? ` (${layered.join(", ")} is inside one: drop layer(...), INSTALL.md B4)` : ""}`);
+}
 
 console.log("\n2. Build");
-const build = spawnSync("npx", ["astro", "build"], { encoding: "utf8", shell: process.platform === "win32" });
+const build = spawnSync(`${pm} astro build`, { encoding: "utf8", shell: true });
 if (build.status !== 0) {
   process.stdout.write(build.stdout ?? "");
   process.stderr.write(build.stderr ?? "");
@@ -145,6 +157,17 @@ function jsGraph(html) {
 const isOkapi = (f) => /data-sanity-path=/.test(readFileSync(f, "utf8"));
 const index = join(outDir, "index.html");
 const pageFile = isOkapi(index) ? index : sitePages.find(isOkapi);
+// An editor page at /<slug> on top of a folder of project pages (a locale like
+// /es/, a docs folder without an index): no route conflict, so Astro doesn't warn.
+{
+  const rel = (f) => f.slice(outDir.length + 1).split(sep).join("/");
+  const topSlugs = sitePages.map(rel).map((r) => r.match(/^([^/]+)(?:\/index)?\.html$/)?.[1]).filter((s) => s && s !== "index" && s !== "404");
+  const covers = topSlugs.filter(
+    (slug) => isOkapi(join(outDir, existsSync(join(outDir, slug, "index.html")) ? `${slug}/index.html` : `${slug}.html`)) &&
+      sitePages.some((f) => rel(f).startsWith(`${slug}/`) && rel(f) !== `${slug}/index.html` && !isOkapi(f)),
+  );
+  check(covers.length === 0, `no editor page sits on a folder of project pages${covers.length ? `: /${covers.join(", /")} — add to reservedSlugs in src/okapi.config.json` : ""}`);
+}
 // The build already fails if Sanity is unreachable. No rendered page with published
 // pages = only "home" exists and the project keeps its own home: nothing to serve yet.
 const slugs = pageFile ? null : await publishedSlugs();

@@ -70,6 +70,13 @@
 
 /* Element defaults for Okapi pages. In `base`, so the project's CSS wins. */
 @layer base {
+/* Smoothing only on Okapi's own parts: on <body> it would also thin the
+ * project's header and footer when they're brought into Okapi pages. */
+.ok-section,
+.ok-site-header,
+.ok-site-footer {
+  -webkit-font-smoothing: antialiased;
+}
 * {
   box-sizing: border-box;
 }
@@ -82,7 +89,6 @@ body {
 
 body {
   font-family: var(--ok-font-sans);
-  -webkit-font-smoothing: antialiased;
   color: #0b0b0f;
   background: #ffffff;
 }

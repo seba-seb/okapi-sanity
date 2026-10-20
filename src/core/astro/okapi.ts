@@ -12,7 +12,7 @@
  *
  * Loaded by Astro's config loader (Node), so relative imports only, no `@/`.
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import type { AstroIntegration } from "astro";
 import sanity from "@sanity/astro";
 import { loadEnv, type Plugin } from "vite";
@@ -31,6 +31,31 @@ const config: OkapiConfig = (() => {
   }
 })();
 const chatEnabled = config.features?.chat !== false;
+
+/**
+ * Every `@sanity/icons/<Icon>`, `@sanity/ui/<part>` and `@sanity/themer` import
+ * in src/ and sanity.config.ts. Each subpath is its own entry for Vite: listed
+ * up front, so the first /studio load doesn't discover them and re-optimize
+ * (504 Outdated Optimize Dep, blank Studio).
+ */
+function sanitySubpaths(): string[] {
+  const src = new URL("../../", import.meta.url);
+  const files = (readdirSync(src, { recursive: true }) as string[])
+    .filter((f) => /\.(ts|tsx)$/.test(f) && !f.includes("node_modules"))
+    .map((f) => new URL(f, src));
+  files.push(new URL("../sanity.config.ts", src));
+  const found = new Set<string>();
+  for (const f of files) {
+    let code = "";
+    try {
+      code = readFileSync(f, "utf8");
+    } catch {
+      continue;
+    }
+    for (const m of code.matchAll(/from\s+["'](@sanity\/(?:icons|ui)\/[\w/-]+|@sanity\/themer)["']/g)) found.add(m[1]);
+  }
+  return [...found].sort();
+}
 
 /**
  * The absolute origin for canonicals, og:url and the sitemap. PUBLIC_SITE_URL
@@ -134,7 +159,9 @@ export function okapi({ adapter }: { adapter?: unknown } = {}): AstroIntegration
               // canvas and the Studio — so no dependency is discovered mid-session. A
               // late discovery re-optimizes, and the open tab's lazy chunks then 504
               // (blank Studio after sign-in, or a canvas that never hydrates).
-              entries: ["src/**/*.{ts,tsx,astro,vue,svelte}", "sanity.config.ts"],
+              // Not core/astro: it's config code (Node), and its optional adapter
+              // imports would fail the whole scan when they aren't installed.
+              entries: ["src/**/*.{ts,tsx,astro,vue,svelte}", "!src/core/astro/**", "sanity.config.ts"],
               include: [
                 "@sanity/client",
                 "@sanity/client/stega",
@@ -152,6 +179,7 @@ export function okapi({ adapter }: { adapter?: unknown } = {}): AstroIntegration
                 "@sanity/ui",
                 "@sanity/icons",
                 "styled-components",
+                ...sanitySubpaths(),
                 // <ClientRouter /> (view transitions), if the project uses it: found late otherwise → 504.
                 "astro/virtual-modules/transitions-events.js",
                 "astro/virtual-modules/transitions-router.js",

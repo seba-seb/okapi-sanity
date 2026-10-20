@@ -31,7 +31,9 @@ const ROLES = {
   "administrator+editor+contributor": "Administrator + Editor + Contributor (alguien que solo deja borradores)",
   keep: "Dejar src/okapi.policy.ts como está",
 };
-const DEV_TOOLING = ["scripts/generate-seed.mjs"];
+// The Okapi repo's own files: a new project cloned from it (INSTALL.md, path A)
+// doesn't keep them. LICENSE stays: MIT asks to keep the notice with the code.
+const DEV_TOOLING = ["scripts/generate-seed.mjs", "skills", "INSTALL.md"];
 
 // ── Answers ───────────────────────────────────────────────────────────────────
 const args = Object.fromEntries(
@@ -180,6 +182,24 @@ if (pm === "pnpm") {
   const npmrc = read(".npmrc");
   const need = ["public-hoist-pattern[]=lodash", "public-hoist-pattern[]=react-compiler-runtime"].filter((l) => !npmrc.includes(l));
   if (need.length) write(".npmrc", `${npmrc}${npmrc && !npmrc.endsWith("\n") ? "\n" : ""}${need.join("\n")}\n`);
+}
+
+// Okapi's README (path A) → a short one for the project. A project's own README is left alone.
+if (read("README.md").includes("Okapi started as a port of [Remarkable]")) {
+  const name = process.cwd().split(/[\\/]/).pop();
+  write(
+    "README.md",
+    `# ${name}\n\n` +
+      "Astro site with **Okapi**: Sanity as the database + the Okapi Editor, a visual\n" +
+      "editor at `/studio#/editor`. Pages built in the editor ship as static HTML.\n\n" +
+      "```bash\n" +
+      `${pm} run dev        # http://localhost:4321 · Studio at /studio\n` +
+      `${pm} run verify     # unit checks + build\n` +
+      `${pm} run build\n` +
+      "```\n\n" +
+      "- Rules for working in the code (people and agents): [`AGENTS.md`](AGENTS.md).\n" +
+      "- Okapi itself, its install guide and updates: https://github.com/seba-seb/okapi-sanity\n",
+  );
 }
 
 const pkg = JSON.parse(read("package.json"));

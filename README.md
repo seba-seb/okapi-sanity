@@ -6,8 +6,8 @@ already started. Pages built in the editor ship as static HTML; only sections
 that need JS (slider, 3D) hydrate.
 
 - **Install** into a project, with any coding agent: [`INSTALL.md`](INSTALL.md).
-  Tell your agent: *"Cloná seba-seb/okapi-sanity en /tmp/okapi y seguí su
-  INSTALL.md para sumar Okapi a este proyecto."*
+  Tell your agent: *"Seguí el INSTALL.md de github.com/seba-seb/okapi-sanity
+  para sumar Okapi a este proyecto."*
   Claude Code shortcut: the [`okapi-astro` skill](skills/okapi-astro/SKILL.md)
   (`cp -R skills/okapi-astro ~/.claude/skills/`).
 - **It asks before it installs.** The agent asks which modules you want (slider,

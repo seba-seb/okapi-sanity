@@ -17,12 +17,14 @@ sigue, así Claude Code y cualquier otro agente hacen lo mismo.
 
 1. Traé Okapi a una carpeta temporal:
    ```bash
-   git clone --depth 1 https://github.com/seba-seb/okapi-sanity /tmp/okapi
+   R="$(mktemp -d)/okapi"
+   git clone --depth 1 https://github.com/seba-seb/okapi-sanity "$R"
    ```
    - El branch por defecto es `main`. Si el usuario indica otro branch o tag,
      agregá `--branch <ref>`.
-   - Si `/tmp/okapi` ya existe, borralo antes: puede ser una versión vieja.
-2. Leé `/tmp/okapi/INSTALL.md` completo y seguilo en orden. **Si el proyecto
+   - Una carpeta temporal nueva cada vez: nunca una copia vieja, y dos
+     instalaciones en paralelo no se pisan. Usá el mismo `$R` en toda la guía.
+2. Leé `$R/INSTALL.md` completo y seguilo en orden. **Si el proyecto
    ya existe, primero analizalo y mostrá los riesgos** (Paso 0, "Proyecto
    existente"); con algún 🛑 no instalás. **Después, las preguntas del Paso 0** (incluidas las de "Qué instalar"), hacelas todas
    juntas con AskUserQuestion y no instales nada hasta tener las respuestas:
