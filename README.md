@@ -16,8 +16,8 @@ that need JS (slider, 3D) hydrate.
   `src/okapi.config.json`. Okapi ships no animation library; projects that
   already animate keep their own.
 - **Rules** for working in the code: [`AGENTS.md`](AGENTS.md) (`CLAUDE.md` imports it).
-- **Docs**: [`site/docs/index.html`](site/docs/index.html) (English) and
-  [`site/es/docs/index.html`](site/es/docs/index.html) (Spanish), each with a
+- **Docs**: in the [okapi-site](https://github.com/seba-seb/okapi-site) repo — `docs/` (English) and
+  `es/docs/` (Spanish), each with a
   "vibe coding" view and a technical one.
 
 ## This repo

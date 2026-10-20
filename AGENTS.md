@@ -8,8 +8,9 @@ history, images and CDN. Pages it renders are **static HTML**; only sections
 that need JS (slider, 3D) hydrate.
 
 This file is for any coding agent (Claude Code reads it through `CLAUDE.md`).
-Installing Okapi into a project: **`INSTALL.md`**. Team docs: `site/docs/index.html`
-(both live in the Okapi repo, github.com/seba-seb/okapi-sanity).
+Installing Okapi into a project: **`INSTALL.md`** (Okapi repo,
+github.com/seba-seb/okapi-sanity). Team docs: `docs/` in the okapi-site repo
+(github.com/seba-seb/okapi-site, English + Spanish) — keep them in sync with this file.
 
 ## Layout
 
@@ -40,8 +41,6 @@ src/documents/  Document types: page, settings (singleton), navigation (singleto
 src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
 # Only in the Okapi repo (not in an installed project):
 skills/         okapi-astro: the Claude Code skill that starts a new project
-site/           the public site: landing + docs in English (site/) and Spanish (site/es/); keep both docs in sync with this file
-brand/          the Okapi mark (SVG) and brand notes
 ```
 
 ## What a project uses (`npm run okapi:setup`)

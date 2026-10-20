@@ -7,7 +7,7 @@
  * The path fill colors don't matter — only the shape outlines are used; the
  * rendered color comes from the block's Color control (see `Logo3d`).
  *
- * Both are Okapi's own marks: the isologo is `site/favicon.svg` (evenodd: the
+ * Both are Okapi's own marks: the isologo is the okapi-site `favicon.svg` (evenodd: the
  * eye and the leg stripes are cut out, the pupil is an island), the wordmark is
  * "Okapi" in Unbounded 700 at -0.05em tracking, the site's logo type, as outlines.
  */

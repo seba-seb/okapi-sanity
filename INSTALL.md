@@ -410,9 +410,8 @@ alias `@/*` (B1).
   - Sacale el título `#` al nuestro y bajá cada encabezado un nivel
     (`##` → `###`). Solo los encabezados: el árbol de *Layout* tiene una
     línea con `#` dentro de un bloque de código, que no se toca.
-  - Nuestro texto menciona `INSTALL.md`, `site/docs/index.html`, el comando
-    `generate-seed` y, en *Layout*, `skills/`, `site/` y `brand/`, que no
-    existen en un proyecto instalado. Sacá esas líneas o reemplazalas por el
+  - Nuestro texto menciona `INSTALL.md`, el comando `generate-seed` y, en
+    *Layout*, `skills/`, que no existen en un proyecto instalado. Sacá esas líneas o reemplazalas por el
     link al repo de Okapi.
   - Agregá arriba de la sección: "Estas reglas aplican a `src/core`,
     `src/blocks`, `src/theme` y `src/chrome`". Así no chocan con las reglas
