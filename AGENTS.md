@@ -210,8 +210,10 @@ horizontal inside rows/grids). Validated like any move (`moveNextTo`).
   insert's `fields`); `applyOps` maps the id to the uploaded asset. Without the
   `images` permission they're reference only. Sanity Agent Actions is text-only
   (it gets the ids, not the pixels). Removed attachments stay as unused assets.
-- Not yet: references, text inside component instances, rich-text formatting
-  (the chat writes plain paragraphs). `chat.check.ts` runs in verify.
+- Rich text reaches the model as markdown (`**bold**`, `*italic*`,
+  `[text](https://…)`, `[text](page:<id>)`; `core/editor/text.ts`) and comes
+  back the same way: existing links keep their markDef, new ones are external.
+- Not yet: references, text inside component instances. `chat.check.ts` runs in verify.
 
 ### Compose & style (phase 2)
 - **Style panel** (`design` field on every block, added in `blocks/schemas.ts`):

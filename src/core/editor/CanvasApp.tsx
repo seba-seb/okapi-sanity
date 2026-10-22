@@ -90,6 +90,11 @@ export function CanvasApp() {
     const from = selected;
     if (!from) return;
     e.preventDefault();
+    // Capture: without it, a release outside the iframe never arrives and the drag sticks.
+    const grip = e.currentTarget as Element;
+    try {
+      grip.setPointerCapture(e.pointerId);
+    } catch {}
     let target: { path: string; position: "before" | "after" } | null = null;
     const onMove = (ev: PointerEvent) => {
       const under = document.elementFromPoint(ev.clientX, ev.clientY);
@@ -116,10 +121,14 @@ export function CanvasApp() {
     const finish = (ev: Event) => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      window.removeEventListener("blur", finish);
       window.removeEventListener("keydown", onEsc);
       setDropLine(null);
       document.body.style.cursor = "";
-      if (ev.type === "pointerup" && target) post(window.parent, { type: "move", from, target: target.path, position: target.position });
+      const p = ev as PointerEvent;
+      const inside = p.clientX >= 0 && p.clientY >= 0 && p.clientX <= window.innerWidth && p.clientY <= window.innerHeight;
+      if (ev.type === "pointerup" && inside && target) post(window.parent, { type: "move", from, target: target.path, position: target.position });
     };
     const onEsc = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") {
@@ -130,6 +139,8 @@ export function CanvasApp() {
     document.body.style.cursor = "grabbing";
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    window.addEventListener("blur", finish);
     window.addEventListener("keydown", onEsc);
   };
   const [boxes, setBoxes] = useState<{ hover: Box; sel: Box; drop: Box; bar: Box; multi: Box[] }>({ hover: null, sel: null, drop: null, bar: null, multi: [] });
@@ -207,6 +218,7 @@ export function CanvasApp() {
       const original = rich ? JSON.stringify(current ?? []) : read();
       let timer: number | undefined;
       let suspendBlur = false;
+      let originalHtml = "";
       const pt = () => htmlToPt(el, current);
       const value = () => (rich ? JSON.stringify(pt()) : read().replace(/\n+$/, ""));
       const send = (final: boolean) => {
@@ -254,7 +266,8 @@ export function CanvasApp() {
         el.removeEventListener("keydown", onKey);
         el.removeEventListener("blur", onBlur);
         el.removeAttribute("contenteditable");
-        if (commit && value() !== original) send(true);
+        const changed = rich ? el.innerHTML !== originalHtml : value() !== original;
+        if (commit && changed) send(true);
         else if (!commit)
           post(window.parent, rich
             ? { type: "text", path, field, kind, value: "", pt: JSON.parse(original), final: true }
@@ -272,6 +285,7 @@ export function CanvasApp() {
       const onBlur = () => !suspendBlur && finish(true);
       if (rich) {
         el.innerHTML = ptToHtml(current);
+        originalHtml = el.innerHTML;
         el.setAttribute("contenteditable", "true");
       } else {
         el.setAttribute("contenteditable", "plaintext-only");

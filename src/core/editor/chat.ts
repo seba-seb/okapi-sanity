@@ -13,7 +13,7 @@ import { ALIGN, COLORS, RADII, SPACE, WIDTHS } from "@/core/style/tokens";
 import type { Block } from "@/core/lib/types";
 import { canPlace, duplicate, insert, insertTarget, layers, newBlock, nudge, remove, setAt, type Doc, type LayerNode } from "./ops";
 import { may, mayAdd, mayReorder, PERMISSIONS, type FieldKind, type Grant } from "./policy";
-import { plainToPt } from "./text";
+import { mdToPt, ptToMd } from "./text";
 
 // ── Catalog: what each block type's fields are (built from the Studio schema) ──
 
@@ -52,16 +52,9 @@ export type AttachedImages = Record<string, unknown>;
 export type PageRef = { id: string; slug?: string; title?: string };
 
 const clip = (s: string, n = 160) => (s.length > n ? `${s.slice(0, n)}…` : s);
-const ptText = (v: unknown): string =>
-  Array.isArray(v)
-    ? (v as { children?: { text?: string }[] }[]).map((b) => (b.children ?? []).map((c) => c.text ?? "").join("")).join("\n")
-    : typeof v === "string"
-      ? v
-      : "";
-
 function valueForPrompt(f: CatalogField, v: unknown): string | null {
   if (v === undefined || v === null || v === "") return null;
-  if (f.control === "pt") return JSON.stringify(clip(ptText(v)));
+  if (f.control === "pt") return JSON.stringify(clip(ptToMd(v)));
   if (f.control === "lines") return JSON.stringify((v as string[]).map((x) => clip(x, 60)));
   if (f.control === "link") {
     const l = v as { kind?: string; url?: string; page?: { _ref?: string } };
@@ -162,7 +155,7 @@ export function buildInstruction(input: {
     "",
     'Respond in JSON with exactly this shape: {"reply": "<message to the person>", "ops": [<operations>]}',
     "Operations:",
-    '{"op":"set","path":"<block path>","field":"<field>","value":<value>} — rich text and text take a plain string (\\n = new line); "one of" fields take one listed value; links take {"url":"https://…"} or {"page":"<page id>"}',
+    '{"op":"set","path":"<block path>","field":"<field>","value":<value>} — text takes a plain string; rich text takes a string with **bold**, *italic* and [text](https://…) links, \\n = new paragraph (keep existing formatting and [text](page:…) links unless asked to change them); "one of" fields take one listed value; links take {"url":"https://…"} or {"page":"<page id>"}',
     '{"op":"style","path":"<block path>","prop":"<prop>","value":<token>,"breakpoint":"base"}',
     '{"op":"insert","type":"<block type>","after":"<block path or null>","into":"<container path or null>","fields":{"<field>":<value>}}',
     '{"op":"remove","path":"<block path>"}',
@@ -188,7 +181,7 @@ function coerce(f: CatalogField, value: unknown, current: unknown, images: Attac
   switch (f.control) {
     case "pt":
       if (typeof value !== "string") throw new Error("expects text");
-      return plainToPt(value);
+      return mdToPt(value, current);
     case "text":
     case "textarea":
       if (typeof value !== "string") throw new Error("expects text");

@@ -163,4 +163,11 @@ const av = JSON.parse(buildRequest({ provider: "anthropic", model: "", apiKey: "
 assert.deepEqual(av.messages[0].content[0], { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "AAAA" } });
 const ov = JSON.parse(buildRequest({ provider: "openai", model: "m", apiKey: "k" }, "hi", vis).init.body as string);
 assert.equal(ov.messages[0].content[1].image_url.url, "data:image/jpeg;base64,AAAA");
+// Rich text from the chat keeps its formatting (markdown → marks), not plain paragraphs
+r = applyOps(doc, [{ op: "set", path: H1, field: "text", value: "**Hola** [mundo](https://m.com)" }], { catalog, grant: admin });
+const rich = (r.doc.sections![0].content as { text: { markDefs: { url: string }[]; children: { text: string; marks: string[] }[] }[] }[])[0].text[0];
+assert.deepEqual(rich.children.map((c) => c.text), ["Hola", " ", "mundo"]);
+assert.deepEqual(rich.children[0].marks, ["strong"]);
+assert.equal(rich.markDefs[0].url, "https://m.com");
+assert.match(buildInstruction({ doc, catalog, grant: admin, selection: [], pages: [], history: [], request: "x" }), /\*\*bold\*\*/);
 console.log("chat.check: ok");

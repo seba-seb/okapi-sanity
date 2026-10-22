@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useClient, useCurrentUser, useDocumentOperation, useEditState, useSchema, type ObjectSchemaType } from "sanity";
+import { useClient, useCurrentUser, useDocumentOperation, useDocumentOperationEvent, useEditState, useSchema, useValidationStatus, type ObjectSchemaType } from "sanity";
 
 import { apiVersion } from "@/core/sanity/env";
 import { pageHref, toRoutes, type Routes } from "@/core/lib/routes";
@@ -7,7 +7,7 @@ import { reKey, resolveSelection } from "@/core/editor/paths";
 import { blockMeta, blockTypes } from "@/blocks/meta";
 import type { Block, Page } from "@/core/lib/types";
 import type { Components } from "@/core/render/components";
-import { splitInstancePath, type Override } from "@/core/render/overrides";
+import { applyOverrides, splitInstancePath, type Override } from "@/core/render/overrides";
 import { randomKey } from "./paths";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
@@ -133,6 +133,8 @@ function PageEditor({
   const docRef = useRef(doc);
   docRef.current = doc;
   const ops = useDocumentOperation(id, docType);
+  const opEvent = useDocumentOperationEvent(id, docType);
+  const { validation } = useValidationStatus(id, docType, false);
   const schema = useSchema();
   const user = useCurrentUser();
   // What this person may do (src/okapi.policy.ts). Admins can preview any role.
@@ -305,23 +307,31 @@ function PageEditor({
     if (!r || r.item._type !== "section") return;
     const title = window.prompt("Component name", (r.item.name as string) || "New component");
     if (!title) return;
-    // Published right away: instances render from published components on the site.
-    const created = await client.create({ _type: "component", title, sections: [reKey(r.item)] });
-    await onLibraryChange();
-    act((d) => {
-      const out = remove(d, selected!);
-      return insert(out, r.parentArrayPath, r.index, { ...newBlock("componentRef"), component: { _type: "reference", _ref: created._id } });
-    });
-    setStatus(`Saved “${title}” to the library`);
+    try {
+      // Published right away: instances render from published components on the site.
+      const created = await client.create({ _type: "component", title, sections: [reKey(r.item)] });
+      await onLibraryChange();
+      act((d) => {
+        const at = resolveSelection(d, selected!); // the page may have changed while saving
+        if (!at) throw new Error("The section moved while saving — insert the component from + Add");
+        const out = remove(d, selected!);
+        return insert(out, at.parentArrayPath, at.index, { ...newBlock("componentRef"), component: { _type: "reference", _ref: created._id } });
+      });
+      setStatus(`Saved “${title}” to the library`);
+    } catch (e) {
+      setStatus(`Couldn't make the component: ${(e as Error).message}`);
+    }
   }, [act, client, onLibraryChange, selected]);
   const detach = useCallback(() => {
     const r = selected && docRef.current ? resolveSelection(docRef.current, selected) : null;
     const ref = (r?.item.component as { _ref?: string } | undefined)?._ref;
     const comp = ref ? components[ref] : undefined;
     if (!r || !comp?.sections?.length) return;
+    // The copy carries what this instance overrode (texts, images), not the master's.
+    const sections = applyOverrides(comp.sections, r.item.overrides as Override[] | undefined);
     act((d) => {
       let out = remove(d, selected!);
-      comp.sections!.forEach((s, i) => {
+      sections.forEach((s, i) => {
         out = insert(out, r.parentArrayPath, r.index + i, reKey(s as Block)).doc;
       });
       return { doc: out, path: null };
@@ -399,7 +409,7 @@ function PageEditor({
 
   useEffect(() => {
     if (!status) return;
-    const t = setTimeout(() => setStatus(null), 3000);
+    const t = setTimeout(() => setStatus(null), /failed|couldn't/i.test(status) ? 8000 : 3000); // errors stay longer
     return () => clearTimeout(t);
   }, [status]);
 
@@ -410,7 +420,17 @@ function PageEditor({
     [doc, components],
   );
   const addable = useMemo(() => (doc ? blockTypes.filter((t) => mayAdd(grant, t) && insertTarget(doc, selected, t)) : []), [doc, grant, selected]);
-  const publishDisabled = may(grant, "publish") ? ops.publish.disabled : "Your role doesn't publish — a teammate will";
+  const invalid = validation.find((m) => m.level === "error");
+  const publishDisabled = !may(grant, "publish")
+    ? "Your role doesn't publish — a teammate will"
+    : invalid
+      ? `Fix before publishing: ${invalid.message}`
+      : ops.publish.disabled;
+  // Publish runs in the background: say how it went (a failure used to look like success).
+  useEffect(() => {
+    if (opEvent?.op !== "publish") return;
+    setStatus(opEvent.type === "error" ? `Publish failed: ${opEvent.error.message}` : "Published — the site rebuilds now");
+  }, [opEvent]);
   const applyChat = useCallback(
     (proposed: unknown[], images: AttachedImages) => {
       const d = docRef.current;
@@ -508,7 +528,7 @@ function PageEditor({
             </div>
           ) : null}
           <span style={{ flex: 1 }} />
-          <span style={{ opacity: 0.6, fontSize: 12 }}>{status ?? (!ready ? "Loading…" : draft ? "Unpublished changes" : "Published")}</span>
+          <span style={{ opacity: 0.6, fontSize: 12 }}>{status ?? (!ready ? "Loading…" : draft && invalid ? `Can't publish yet: ${invalid.message}` : draft ? "Unpublished changes" : "Published")}</span>
           <button
             type="button"
             disabled={!!publishDisabled}

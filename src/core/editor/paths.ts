@@ -97,14 +97,15 @@ export function randomKey(length = 12): string {
 /**
  * Deep-clones `value`, assigning a fresh `_key` to every object that has one
  * (the item itself and every nested array member), so the clone is safe to
- * insert alongside the original.
+ * insert alongside the original. Rich text `markDefs` keep their keys: the
+ * spans' `marks` point at them, and they only need to be unique per paragraph.
  */
 export function reKey<T>(value: T): T {
   if (Array.isArray(value)) return value.map((v) => reKey(v)) as unknown as T;
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[k] = k === "_key" ? randomKey() : reKey(v);
+      out[k] = k === "_key" ? randomKey() : k === "markDefs" ? structuredClone(v) : reKey(v);
     }
     return out as T;
   }
