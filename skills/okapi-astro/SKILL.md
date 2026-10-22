@@ -18,10 +18,11 @@ sigue, así Claude Code y cualquier otro agente hacen lo mismo.
 1. Traé Okapi a una carpeta temporal:
    ```bash
    R="$(mktemp -d)/okapi"
-   git clone --depth 1 https://github.com/seba-seb/okapi-sanity "$R"
+   V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed 's|.*/||' | grep -v -- - | head -1)   # la última versión publicada
+   git clone --depth 1 --branch "$V" https://github.com/seba-seb/okapi-sanity "$R"
    ```
-   - El branch por defecto es `main`. Si el usuario indica otro branch o tag,
-     agregá `--branch <ref>`.
+   - Siempre la última versión publicada (tag `vX.Y.Z`), no `main`. Si el
+     usuario pide otra versión, `V=<tag>`.
    - Una carpeta temporal nueva cada vez: nunca una copia vieja, y dos
      instalaciones en paralelo no se pisan. Usá el mismo `$R` en toda la guía.
 2. Leé `$R/INSTALL.md` completo y seguilo en orden. **Si el proyecto

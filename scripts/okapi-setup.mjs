@@ -34,6 +34,9 @@ const ROLES = {
 // The Okapi repo's own files: a new project cloned from it (INSTALL.md, path A)
 // doesn't keep them. LICENSE stays: MIT asks to keep the notice with the code.
 const DEV_TOOLING = ["scripts/generate-seed.mjs", "skills", "INSTALL.md"];
+// Okapi's CI builds against Okapi's demo dataset; a project's own ci.yml is left alone.
+const CI = ".github/workflows/ci.yml";
+if (existsSync(CI) && readFileSync(CI, "utf8").includes("PUBLIC_SANITY_PROJECT_ID: c61hvvlb")) DEV_TOOLING.push(CI);
 
 // ── Answers ───────────────────────────────────────────────────────────────────
 const args = Object.fromEntries(

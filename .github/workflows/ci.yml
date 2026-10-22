@@ -1,0 +1,26 @@
+# Runs on every push to main and every pull request: typecheck, then verify
+# (unit checks + build + static output checks) against Okapi's demo dataset.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # The demo dataset is public: project id and dataset are not secrets.
+      PUBLIC_SANITY_PROJECT_ID: c61hvvlb
+      PUBLIC_SANITY_DATASET: production
+      PUBLIC_SANITY_API_VERSION: "2024-10-01"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run verify

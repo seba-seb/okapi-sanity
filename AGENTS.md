@@ -120,6 +120,11 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   on `astro:page-load`, so `<ClientRouter />` works). A page without such blocks ships
   ~1 KB of JS. **A block with hooks/effects/handlers MUST declare `js`**, or it
   renders but never runs on the public site. The editor canvas is unaffected.
+- **No third-party scripts on the Studio's domain** (GTM, chat widgets,
+  pixels, analytics): the editor session lives in the browser's storage for
+  that origin and any script there can read it. `vercel.json` and
+  `public/_headers` keep `/studio` and `/edit-canvas` from being framed by
+  other sites; a project that adds its own headers merges them in.
 - **Design assets don't go in the CMS** (logos, textures): they're code.
 - **Sanity stays current** (`sanity` ^6.19, `@sanity/client` 8, `@sanity/ui` 4,
   `@sanity/icons` 5) — no pins, no patches. Import icons from their subpath

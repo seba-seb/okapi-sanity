@@ -144,7 +144,8 @@ El repo de Okapi ya es un proyecto Astro completo. Incluye bloques de
 ejemplo, tema y header/footer que después se reemplazan.
 
 ```bash
-git clone --depth 1 https://github.com/seba-seb/okapi-sanity <carpeta>
+V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed 's|.*/||' | grep -v -- - | head -1)   # la última versión publicada
+git clone --depth 1 --branch "$V" https://github.com/seba-seb/okapi-sanity <carpeta>
 cd <carpeta> && rm -rf .git && git init -q
 npm install
 ```
@@ -172,8 +173,14 @@ Usá el mismo `$R` en el resto de la guía:
 
 ```bash
 R="$(mktemp -d)/okapi"
-git clone --depth 1 https://github.com/seba-seb/okapi-sanity "$R"   # --branch <ref> si el usuario pide otra versión
+V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed 's|.*/||' | grep -v -- - | head -1)   # la última versión publicada
+git clone --depth 1 --branch "$V" https://github.com/seba-seb/okapi-sanity "$R"
 ```
+
+Se instala siempre una versión publicada (un tag `vX.Y.Z`), nunca `main`, que
+es donde se trabaja. Si el usuario pide otra versión, `V=v1.2.0`; lo que
+cambió en cada una está en las Releases del repo. Anotá `$V` para el
+reporte final.
 
 Copiá desde `$R` **sin pisar nada que ya exista**. `cp -n` saltea en
 silencio lo que ya está, así que primero listá los choques:
@@ -185,7 +192,7 @@ for p in src/core src/blocks src/documents src/theme src/chrome src/schema.ts \
   src/pages/index.astro src/pages/sitemap.xml.ts src/pages/robots.txt.ts \
   sanity.config.ts sanity.cli.ts sanity/seed.ndjson public/placeholder.svg \
   scripts/verify.mjs scripts/check-editor-schema.ts scripts/okapi-setup.mjs \
-  .env.example AGENTS.md CLAUDE.md; do
+  vercel.json public/_headers .env.example AGENTS.md CLAUDE.md; do
   if [ -e "$p" ]; then echo "YA EXISTE: $p"; fi
 done
 ```
@@ -198,7 +205,8 @@ done
 - Choques esperados, que se resuelven más adelante: `src/pages/index.astro` (si
   la home queda la del proyecto, no se copia), `src/pages/robots.txt.ts` y
   `sitemap.xml.ts` (B3), `AGENTS.md` y `CLAUDE.md` (B5), `.env.example` (se
-  suman líneas).
+  suman líneas), `vercel.json` y `public/_headers` (se suman los headers de
+  Okapi a los del proyecto).
 - Cualquier otro → frená y preguntá.
 
 ```bash
@@ -212,7 +220,8 @@ cp -n  $R/src/pages/edit-canvas.astro src/pages/
 cp -n  $R/sanity.config.ts $R/sanity.cli.ts .
 cp -n  $R/scripts/verify.mjs $R/scripts/check-editor-schema.ts $R/scripts/okapi-setup.mjs scripts/
 cp -n  $R/sanity/seed.ndjson sanity/
-cp -n  $R/public/placeholder.svg public/
+cp -n  $R/public/placeholder.svg $R/public/_headers public/
+cp -n  $R/vercel.json .
 # Según la tabla de abajo:
 # cp -n $R/src/pages/index.astro src/pages/                         # solo si la home sale del editor
 # cp -n $R/src/pages/sitemap.xml.ts $R/src/pages/robots.txt.ts src/pages/   # ver "Sitemap y robots" (B3)
@@ -242,6 +251,7 @@ referencia que queda.
 | `scripts/verify.mjs`, `scripts/check-editor-schema.ts` | Chequeos | Sí |
 | `sanity/seed.ndjson` | Página demo | Opcional |
 | `public/placeholder.svg` | Imagen por defecto de los bloques nuevos | Sí: sin ella, insertar una imagen muestra un ícono roto |
+| `vercel.json`, `public/_headers` | Headers de seguridad (Vercel; Netlify y Cloudflare Pages). Si ya existen, sumá los de Okapi | Sí |
 | `AGENTS.md` | Reglas para agentes | Sí (ver B5) |
 | `INSTALL.md`, `docs/` | Esta guía y la documentación | Opcional |
 
@@ -618,6 +628,16 @@ al invitar (sanity.io/manage → el proyecto → **Members** → **Invite**, o
   - Si el proyecto usa `astro:assets` (con `sharp`), la función del chat lo
     lleva adentro y pesa bastante más (~25 MB en Vercel). Anda igual; avisalo.
 - **CORS:** el dominio de producción, con credenciales.
+- **Headers de seguridad:** `vercel.json` (Vercel) y `public/_headers`
+  (Netlify, Cloudflare Pages) hacen que `/studio` y `/edit-canvas` solo se
+  puedan mostrar dentro del mismo sitio, y suman `nosniff` y
+  `Referrer-Policy`. Comprobalo después del deploy:
+  `curl -sI https://<dominio>/studio | grep -i frame`.
+- **Scripts de terceros:** la sesión del editor se guarda en el navegador y
+  la puede leer cualquier script que corra en el mismo dominio que
+  `/studio`. Avisale al usuario: nada de Google Tag Manager, chats de
+  soporte, píxeles ni analytics de terceros en ese dominio. Si los
+  necesita, que el sitio público y el Studio vivan en dominios distintos.
 - **Publicar = rebuild** (lo configura el usuario, la URL del hook es
   secreta):
   1. Crea un *deploy hook* en el host.
@@ -635,6 +655,7 @@ al invitar (sanity.io/manage → el proyecto → **Members** → **Invite**, o
 Reportá al usuario:
 - qué se copió y qué se cambió del proyecto;
 - el ID del proyecto de Sanity;
+- la versión de Okapi instalada (`$V`);
 - qué le toca a él: importar el contenido demo, invitar usuarios y
   configurar el webhook;
 - el resultado de verify.
@@ -679,9 +700,11 @@ Reglas completas para bloques, animaciones y estilos: `AGENTS.md`.
 
 ## Actualizar un proyecto que ya tiene Okapi
 
-Traé la versión nueva igual que en B2 (`R="$(mktemp -d)/okapi"` y el clone) y
-reemplazá **`src/core/`** entero: es igual en todos los proyectos. El resto es
-del proyecto: se actualiza a mano, mirando el diff de la versión nueva.
+Traé la versión nueva igual que en B2 (`R="$(mktemp -d)/okapi"`, `V` y el
+clone). Leé las Releases entre la versión instalada y la nueva: ahí dice qué
+hay que tocar a mano. Después reemplazá **`src/core/`** entero: es igual en
+todos los proyectos. El resto es del proyecto: se actualiza a mano, mirando
+el diff de la versión nueva.
 
 ### Nombres con prefijo `ok-` (octubre 2026)
 
