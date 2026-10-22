@@ -18,7 +18,7 @@ sigue, así Claude Code y cualquier otro agente hacen lo mismo.
 1. Traé Okapi a una carpeta temporal:
    ```bash
    R="$(mktemp -d)/okapi"
-   V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed 's|.*/||' | grep -v -- - | head -1)   # la última versión publicada
+   V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed -e 's|.*/||' -e '/-/d' | head -1)   # la última versión publicada
    git clone --depth 1 --branch "$V" https://github.com/seba-seb/okapi-sanity "$R"
    ```
    - Siempre la última versión publicada (tag `vX.Y.Z`), no `main`. Si el

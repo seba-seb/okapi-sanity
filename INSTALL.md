@@ -144,7 +144,7 @@ El repo de Okapi ya es un proyecto Astro completo. Incluye bloques de
 ejemplo, tema y header/footer que después se reemplazan.
 
 ```bash
-V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed 's|.*/||' | grep -v -- - | head -1)   # la última versión publicada
+V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed -e 's|.*/||' -e '/-/d' | head -1)   # la última versión publicada
 git clone --depth 1 --branch "$V" https://github.com/seba-seb/okapi-sanity <carpeta>
 cd <carpeta> && rm -rf .git && git init -q
 npm install
@@ -173,7 +173,7 @@ Usá el mismo `$R` en el resto de la guía:
 
 ```bash
 R="$(mktemp -d)/okapi"
-V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed 's|.*/||' | grep -v -- - | head -1)   # la última versión publicada
+V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed -e 's|.*/||' -e '/-/d' | head -1)   # la última versión publicada
 git clone --depth 1 --branch "$V" https://github.com/seba-seb/okapi-sanity "$R"
 ```
 
