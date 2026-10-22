@@ -238,3 +238,21 @@ export function moveNextTo(doc: Doc, from: string, target: string, position: "be
   const index = siblings.findIndex((x) => x._key === t.item._key) + (position === "after" ? 1 : 0);
   return move(doc, from, t.parentArrayPath, index);
 }
+
+/** Every block type in `block`, nested slot children included. */
+export function typesIn(block: Block): string[] {
+  const field = blockMeta(block._type)?.slot?.field;
+  const kids = (field ? (block[field] as Block[] | undefined) : undefined) ?? [];
+  return [block._type, ...kids.flatMap(typesIn)];
+}
+
+/** Split pasted blocks by what the role may add (`allowed` = policy's mayAdd), nested blocks included. */
+export function splitAllowed(blocks: Block[], allowed: (type: string) => boolean): { ok: Block[]; denied: string[] } {
+  const denied = new Set<string>();
+  const ok = blocks.filter((b) => {
+    const no = typesIn(b).filter((t) => !allowed(t));
+    no.forEach((t) => denied.add(t));
+    return !no.length;
+  });
+  return { ok, denied: [...denied] };
+}

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 
 import { BLOCKS, needsJs } from "../../blocks/meta.ts";
 import { FEATURES } from "../config.ts";
-import { canPlace, duplicate, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, topmost } from "./ops.ts";
+import { canPlace, duplicate, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudge, nudgeMany, parentBlock, remove, removeMany, splitAllowed, topmost, typesIn } from "./ops.ts";
+import { grantFor, mayAdd, type Policy } from "./policy.ts";
 
 const h = (k: string) => ({ _type: "heading", _key: k, text: [] });
 const doc = {
@@ -97,4 +98,12 @@ assert.equal(parentBlock(S1), null);
 const tree = layers(doc);
 assert.equal(tree.length, 2);
 assert.equal(tree[0].children[1].children[0].path, C1);
+// Paste respects the role's block list, nested blocks included
+assert.deepEqual(typesIn(doc.sections[0]), ["section", "heading", "grid", "card"]);
+const pastePolicy: Policy = { default: { label: "V", can: [] }, editor: { label: "E", can: ["structure"], blocks: ["section", "heading", "grid"] } };
+const g = grantFor(["editor"], pastePolicy);
+const split = splitAllowed([doc.sections[0], doc.sections[1], h("h9")], (t) => mayAdd(g, t));
+assert.deepEqual(split.ok.map((b) => b._key), ["s2", "h9"]); // s1 holds a card the role can't add
+assert.deepEqual(split.denied, ["card"]);
+assert.deepEqual(splitAllowed([h("h9")], (t) => mayAdd(grantFor([], pastePolicy), t)).ok, []); // no structure, no paste
 console.log("ops.check: ok");

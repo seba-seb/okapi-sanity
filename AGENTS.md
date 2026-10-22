@@ -167,6 +167,13 @@ copy/paste and ▲▼ apply to all of them.
 line shows where it lands (before/after the block under the pointer,
 horizontal inside rows/grids). Validated like any move (`moveNextTo`).
 
+**Known limitation — two people on one page:** every edit (typing, + Add,
+move, chat, undo) writes the whole `sections` array, so if two people change
+the same page at the same moment, the last save wins. Each person sees the
+other's changes live; when someone else writes, the editor shows a warning
+and clears undo (an old snapshot would revert their work). Writing per-path
+patches instead would mean diffing every op in `ops.ts`; not done yet.
+
 ### Permissions and the AI chat
 
 - **`src/okapi.policy.ts` (per project, the agency decides):** keyed by the
@@ -175,7 +182,8 @@ horizontal inside rows/grids). Validated like any move (`moveNextTo`).
   permissions (`text images style settings reorder structure components
   publish chat`) + optional `blocks` a role may add. It gates the panel
   fields (`FieldControls.fieldKind`), the actions, canvas edits, publish and
-  the chat. Pure logic in `core/editor/policy.ts`. **It is not a security
+  the chat (and paste: blocks a role can't add, nested ones included, are
+  left out). Pure logic in `core/editor/policy.ts`. **It is not a security
   boundary:** it shapes the editor UI, and the server only checks `chat`.
   Anyone can still write whatever their Sanity role allows from
   `#/structure` or the API — use Sanity roles for real limits.

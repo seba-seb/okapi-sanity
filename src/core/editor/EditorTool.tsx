@@ -17,7 +17,7 @@ import { applyOps, type AttachedImages } from "./chat";
 import { grantFor, may, mayAdd, mayReorder } from "./policy";
 import { POLICY } from "@/okapi.policy";
 import { FEATURES } from "@/core/config";
-import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, topmost, type Doc, type LayerNode } from "./ops";
+import { canPlace, duplicateMany, moveNextTo, insert, insertMany, insertTarget, layers, move, newBlock, nudgeMany, parentBlock, remove, removeMany, splitAllowed, topmost, type Doc, type LayerNode } from "./ops";
 import { plainToPt } from "./text";
 import { STUDIO_ACCENT, STUDIO_RADIUS_CONTROL, STUDIO_RADIUS_PANEL } from "@/theme/studio";
 
@@ -147,6 +147,9 @@ function PageEditor({
   const canChat = FEATURES.chat && may(grant, "chat");
   const catalog = useMemo(() => buildCatalog(schema, blockTypes), [schema]);
   const [tab, setTab] = useState<"properties" | "chat">("properties");
+  // Once opened, the chat stays mounted (hidden) so switching tabs keeps the conversation.
+  const chatOpened = useRef(false);
+  if (tab === "chat") chatOpened.current = true;
   const [device, setDevice] = useState<keyof typeof DEVICES>("Desktop");
   // Selection: several blocks; the last one is the primary (panel, + Add anchor).
   const [selection, setSelection] = useState<string[]>([]);
@@ -156,7 +159,8 @@ function PageEditor({
   const [status, setStatus] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
-  const [canvasReady, setCanvasReady] = useState(false);
+  // Bumped on every `ready`: the canvas reloads (deploy, stale chunk) and must get the page again.
+  const [canvasReady, setCanvasReady] = useState(0);
 
   // ── History: snapshots of `sections` (everything the editor changes lives there).
   const past = useRef<Block[][]>([]);
@@ -218,6 +222,23 @@ function PageEditor({
     },
     [ops.patch],
   );
+  // Every edit rewrites the whole `sections` array, so with two people on one
+  // page the last write wins (AGENTS.md → Known limitations). Warn when someone
+  // else writes, and drop undo steps: they'd restore sections without that change.
+  const [conflict, setConflict] = useState(false);
+  useEffect(() => {
+    if (!user?.id) return;
+    const sub = client
+      .listen("*[_id in $ids]", { ids: [id, `drafts.${id}`] }, { includeResult: false, events: ["mutation"] })
+      .subscribe((e) => {
+        if (e.type !== "mutation" || e.identity === user.id) return;
+        past.current = [];
+        future.current = [];
+        bump((n) => n + 1);
+        setConflict(true);
+      });
+    return () => sub.unsubscribe();
+  }, [client, id, user?.id]);
   const undo = useCallback(() => travel(past, future), [travel]);
   const redo = useCallback(() => travel(future, past), [travel]);
 
@@ -270,13 +291,17 @@ function PageEditor({
     const raw = localStorage.getItem(CLIPBOARD);
     if (!raw) return;
     const parsed = JSON.parse(raw) as Block | Block[];
-    const items = (Array.isArray(parsed) ? parsed : [parsed]).map((b) => reKey(b));
+    // The role's block list applies to pasted blocks too, nested ones included.
+    const { ok, denied } = splitAllowed(Array.isArray(parsed) ? parsed : [parsed], (t) => mayAdd(grant, t));
+    const why = `Your role can't add ${denied.map((t) => blockMeta(t)?.title ?? t).join(", ")}`;
+    if (!ok.length) return setStatus(why);
     act((d) => {
-      const r = insertMany(d, selected, items);
+      const r = insertMany(d, selected, ok.map((b) => reKey(b)));
       if (!r.paths.length) throw new Error("Nothing can be pasted here");
       return r;
     });
-  }, [act, canStructure, selected]);
+    if (denied.length) setStatus(`${why} — pasted the rest`);
+  }, [act, canStructure, grant, selected]);
   const doAdd = useCallback(
     (type: string) => {
       setAdding(false);
@@ -374,7 +399,7 @@ function PageEditor({
     () =>
       listen<ToEditor>(async (msg, source) => {
         if (source !== frame.current?.contentWindow) return;
-        if (msg.type === "ready") setCanvasReady(true);
+        if (msg.type === "ready") setCanvasReady((n) => n + 1);
         else if (msg.type === "select") {
           if (msg.add && msg.path) toggle(msg.path);
           else select(msg.path);
@@ -406,6 +431,10 @@ function PageEditor({
   useEffect(() => {
     if (canvasReady && doc) post(frame.current?.contentWindow, { type: "render", doc, routes, components });
   }, [canvasReady, doc, routes, components]);
+  useEffect(() => {
+    const paths = selectionRef.current;
+    if (canvasReady) post(frame.current?.contentWindow, { type: "select", path: paths.at(-1) ?? null, paths });
+  }, [canvasReady]);
 
   useEffect(() => {
     if (!status) return;
@@ -539,6 +568,16 @@ function PageEditor({
             Publish
           </button>
         </div>
+        {conflict ? (
+          <div role="alert" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderBottom: border, fontSize: 12, background: "color-mix(in srgb, #f5a524 18%, transparent)" }}>
+            <span style={{ flex: 1 }}>
+              Someone else is editing this page. You see their changes, but if you both edit at the same moment the last save wins — agree on who edits. Undo was reset so it can't revert their work.
+            </span>
+            <button type="button" onClick={() => setConflict(false)} style={chip}>
+              OK
+            </button>
+          </div>
+        ) : null}
         <div style={{ flex: 1, minHeight: 0, display: "flex", justifyContent: "center", overflow: "auto" }}>
           <iframe ref={frame} src={CANVAS_PATH} title="Canvas" style={{ width: DEVICES[device], height: "100%", border: 0, background: "#fff", transition: "width 200ms ease" }} />
         </div>
@@ -574,7 +613,8 @@ function PageEditor({
             </select>
           ) : null}
         </div>
-        {tab === "chat" && canChat ? (
+        {canChat && chatOpened.current ? (
+          <div style={{ display: tab === "chat" ? "flex" : "none", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <EditorChat
             client={client}
             documentId={id}
@@ -586,7 +626,9 @@ function PageEditor({
             onApply={applyChat}
             onUndo={undo}
           />
-        ) : (
+          </div>
+        ) : null}
+        {tab === "chat" && canChat ? null : (
         <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
         {target ? <div style={{ ...heading, margin: "0 0 10px" }}>{type?.title ?? target.item._type}</div> : null}
         {selection.length > 1 ? (
