@@ -26,10 +26,36 @@ export async function loadQuery<T>(query: string, params: QueryParams = {}): Pro
     return null;
   }
   try {
-    return ((await client.fetch<T>(query, params)) ?? null) as T | null;
+    return withImageAlt(((await client.fetch<T>(query, params)) ?? null) as T | null);
   } catch (error) {
     if (import.meta.env.PROD) throw new Error(`[loadQuery] Sanity fetch failed — build stopped so the live site stays as it is. ${error}`);
     console.error("[loadQuery] Sanity fetch failed:", error);
     return null;
   }
+}
+
+type ImageLike = { alt?: string; asset: { _ref: string } };
+
+/**
+ * Alt text belongs to the image: the editor saves it on the asset
+ * (`sanity.imageAsset.altText`). Any image value in the result gets it as
+ * `alt` — one extra query, only when there are images. An image without
+ * asset alt keeps whatever `alt` the block stored (older content).
+ */
+export async function withImageAlt<T>(data: T): Promise<T> {
+  const images: ImageLike[] = [];
+  const walk = (v: unknown): void => {
+    if (Array.isArray(v)) return v.forEach(walk);
+    if (!v || typeof v !== "object") return;
+    const ref = (v as { asset?: { _ref?: unknown } }).asset?._ref;
+    if (typeof ref === "string" && ref.startsWith("image-")) images.push(v as ImageLike);
+    Object.values(v).forEach(walk);
+  };
+  walk(data);
+  if (!images.length) return data;
+  const ids = [...new Set(images.map((i) => i.asset._ref))];
+  const rows = await client.fetch<{ _id: string; altText: string }[]>(`*[_id in $ids && defined(altText) && altText != ""]{ _id, altText }`, { ids });
+  const alt = new Map(rows.map((r) => [r._id, r.altText]));
+  for (const i of images) i.alt = alt.get(i.asset._ref) ?? i.alt;
+  return data;
 }

@@ -1,0 +1,8 @@
+# pnpm doesn't hoist what @sanity/astro asks Vite to pre-bundle; unresolved,
+# the Studio renders blank.
+publicHoistPattern:
+  - lodash
+  - react-compiler-runtime
+allowBuilds:
+  esbuild: true
+  sharp: true

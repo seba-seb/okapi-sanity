@@ -11,8 +11,19 @@ import { applyOverrides, splitInstancePath, type Override } from "@/core/render/
 import { randomKey } from "./paths";
 
 import { CANVAS_PATH, listen, post, type ToEditor } from "./protocol";
-import { buildCatalog, FieldList, PagesContext, UploadContext } from "./FieldControls";
+import { buildCatalog, FieldList, ImageFieldContext, PagesContext, UploadContext } from "./FieldControls";
 import { EditorChat } from "./EditorChat";
+import { BlockPicker, renderIcon, type PickItem } from "./BlockPicker";
+import { ChevronDownIcon } from "@sanity/icons/ChevronDown";
+import { ChevronRightIcon } from "@sanity/icons/ChevronRight";
+import { ComponentIcon } from "@sanity/icons/Component";
+import { DocumentIcon } from "@sanity/icons/Document";
+import { HomeIcon } from "@sanity/icons/Home";
+import { ImagesIcon } from "@sanity/icons/Images";
+import { DocumentsIcon } from "@sanity/icons/Documents";
+import { Button } from "@sanity/ui";
+import { Menu, MenuButton, MenuItem } from "@sanity/ui/menu";
+import { ImageField, MediaLibrary } from "./MediaLibrary";
 import { applyOps, type AttachedImages } from "./chat";
 import { grantFor, may, mayAdd, mayReorder } from "./policy";
 import { POLICY } from "@/okapi.policy";
@@ -84,6 +95,7 @@ export function EditorTool() {
   return (
     <PagesContext.Provider value={refOptions}>
       <UploadContext.Provider value={upload}>
+      <ImageFieldContext.Provider value={ImageField}>
         <div style={{ position: "relative", display: "grid", gridTemplateColumns: `${cols.left}px 1fr ${cols.right}px`, height: "100%", minHeight: 0, fontSize: 13 }}>
           {pageId ? (
             <PageEditor
@@ -103,6 +115,7 @@ export function EditorTool() {
           <Resizer side="left" width={cols.left} onChange={(left) => setCols((c) => ({ ...c, left }))} />
           <Resizer side="right" width={cols.right} onChange={(right) => setCols((c) => ({ ...c, right }))} />
         </div>
+      </ImageFieldContext.Provider>
       </UploadContext.Provider>
     </PagesContext.Provider>
   );
@@ -147,6 +160,7 @@ function PageEditor({
   const canChat = FEATURES.chat && may(grant, "chat");
   const catalog = useMemo(() => buildCatalog(schema, blockTypes), [schema]);
   const [tab, setTab] = useState<"properties" | "chat">("properties");
+  const [leftTab, setLeftTab] = useState<"layers" | "components" | "images">("layers");
   // Once opened, the chat stays mounted (hidden) so switching tabs keeps the conversation.
   const chatOpened = useRef(false);
   if (tab === "chat") chatOpened.current = true;
@@ -203,6 +217,14 @@ function PageEditor({
       setField(`${inst.instancePath}.overrides`, next, coalesce ?? `override:${inst.instancePath}:${target}`);
     },
     [setField],
+  );
+  /** Put an image in `path.field`, keeping the field's alt text (and the rest) when it isn't an instance override. */
+  const setImage = useCallback(
+    (path: string, field: string, img: Record<string, unknown>) => {
+      const cur = !splitInstancePath(path) && docRef.current ? resolveSelection(docRef.current, path)?.item[field] : undefined;
+      writeField(path, field, { ...((cur as Record<string, unknown> | undefined) ?? {}), ...img }, "image");
+    },
+    [writeField],
   );
   const setSections = useCallback(
     (next: Doc) => {
@@ -417,14 +439,18 @@ function PageEditor({
           if (!may(grant, "images")) return setStatus("Your role can't change images");
           setStatus(`Uploading ${msg.file.name}…`);
           try {
-            writeField(msg.path, msg.field, await upload(msg.file), "image");
+            setImage(msg.path, msg.field, (await upload(msg.file)) as Record<string, unknown>);
             setStatus("Image uploaded");
           } catch (e) {
             setStatus(`Upload failed: ${(e as Error).message}`);
           }
         }
+        else if (msg.type === "dropAsset") {
+          if (!may(grant, "images")) return setStatus("Your role can't change images");
+          setImage(msg.path, msg.field, assetImage(msg.assetId));
+        }
       }),
-    [act, canReorder, grant, setField, upload, writeField],
+    [act, canReorder, grant, setImage, upload, writeField],
   );
 
   // ── Editor → canvas: every local edit re-renders the canvas immediately.
@@ -444,11 +470,36 @@ function PageEditor({
 
   const target = useMemo(() => (doc && selected ? resolveSelection(doc, selected) : null), [doc, selected]);
   const type = target ? (schema.get(target.item._type) as ObjectSchemaType | undefined) : undefined;
+  // Page settings (title + SEO) when nothing is selected; slug stays in Structure (it needs validation).
+  const pageType = useMemo(() => {
+    const t = docType === "page" ? (schema.get("page") as ObjectSchemaType | undefined) : undefined;
+    return t ? { ...t, fields: t.fields.filter((f) => f.name !== "slug") } : undefined;
+  }, [schema, docType]);
   const tree = useMemo(
-    () => (doc ? layers(doc).map((n) => (n.type === "componentRef" ? { ...n, title: `◆ ${components[n.ref ?? ""]?.title ?? "Missing component"}` } : n)) : []),
+    () => (doc ? layers(doc).map((n) => (n.type === "componentRef" ? { ...n, title: components[n.ref ?? ""]?.title ?? "Missing component" } : n)) : []),
     [doc, components],
   );
   const addable = useMemo(() => (doc ? blockTypes.filter((t) => mayAdd(grant, t) && insertTarget(doc, selected, t)) : []), [doc, grant, selected]);
+  const pickItems = useMemo<PickItem[]>(() => {
+    if (!adding || !doc) return [];
+    const comps: PickItem[] =
+      mayAdd(grant, "componentRef") && insertTarget(doc, selected, "componentRef")
+        ? Object.entries(components).map(([cid, c]) => ({
+            key: `c:${cid}`,
+            group: "Components",
+            title: c.title || cid,
+            description: `${c.sections?.length ?? 0} section${c.sections?.length === 1 ? "" : "s"} · edits update every copy`,
+            icon: schema.get("componentRef")?.icon,
+            onPick: () => addInstance(cid),
+          }))
+        : [];
+    const blocks: PickItem[] = addable
+      .filter((t) => t !== "componentRef")
+      .map((t) => ({ key: t, group: "Blocks", title: blockMeta(t)?.title ?? t, description: blockMeta(t)?.description, icon: schema.get(t)?.icon, onPick: () => doAdd(t) }));
+    return [...comps, ...blocks];
+  }, [adding, addInstance, addable, components, doAdd, doc, grant, schema, selected]);
+  // The selected block's image field: where a click in the image library goes.
+  const imageField = target ? blockMeta(target.item._type)?.imageField : undefined;
   const invalid = validation.find((m) => m.level === "error");
   const publishDisabled = !may(grant, "publish")
     ? "Your role doesn't publish — a teammate will"
@@ -476,49 +527,103 @@ function PageEditor({
 
   return (
     <>
-      <aside style={{ ...column, borderRight: border, display: "flex", flexDirection: "column", gap: 12 }}>
-        <div>
-          <div style={heading}>{docType === "component" ? "Editing component ◆" : "Pages"}</div>
-          <select style={{ ...select_ }} value={id} onChange={(e) => onPage(e.target.value)}>
-            <optgroup label="Pages">
-              {pages.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.title || p.slug} — {pageHref(p.slug)}
-                </option>
-              ))}
-            </optgroup>
-            {Object.keys(components).length ? (
-              <optgroup label="Components">
-                {Object.entries(components).map(([cid, c]) => (
-                  <option key={cid} value={cid}>
-                    ◆ {c.title || cid}
-                  </option>
-                ))}
-              </optgroup>
-            ) : null}
-          </select>
+      <aside style={{ ...column, borderRight: border, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", gap: 4, padding: 3, border, borderRadius: STUDIO_RADIUS_CONTROL }}>
+          {/* Only the active tab shows its label, so three tabs fit the narrow column. */}
+          {(
+            [
+              ["layers", "Pages", DocumentsIcon, true],
+              ["components", "Components", ComponentIcon, FEATURES.components],
+              ["images", "Images", ImagesIcon, may(grant, "images")],
+            ] as const
+          ).map(([key, label, Icon, show]) =>
+            show ? (
+              <button key={key} type="button" title={label} aria-label={label} onClick={() => setLeftTab(key)} style={{ ...seg, ...(leftTab === key ? { ...chipOn, flex: 1 } : null) }}>
+                <Icon style={{ fontSize: 17 }} />
+                {leftTab === key ? label : null}
+              </button>
+            ) : null,
+          )}
         </div>
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div style={{ ...heading, flex: 1 }}>Layers</div>
+        {leftTab === "images" && may(grant, "images") ? (
+          <MediaLibrary
+            client={client}
+            target={imageField ? `the selected ${type?.title ?? target!.item._type}` : null}
+            upload={upload}
+            onPick={(assetId) => imageField && setImage(selected!, imageField, assetImage(assetId))}
+          />
+        ) : leftTab === "components" && FEATURES.components ? (
+          <div>
+            {Object.entries(components).map(([cid, c]) => (
+              <div
+                key={cid}
+                onClick={() => {
+                  onPage(cid);
+                  setLeftTab("layers");
+                }}
+                style={{ ...row, padding: "6px 8px", background: cid === id ? "color-mix(in srgb, currentColor 8%, transparent)" : "transparent" }}
+                title={c.title || cid}
+              >
+                <ComponentIcon style={{ fontSize: 17, flexShrink: 0 }} />
+                <span style={ellipsis}>{c.title || cid}</span>
+              </div>
+            ))}
+            {Object.keys(components).length ? null : <p style={{ margin: "4px 8px", fontSize: 12, opacity: 0.6 }}>No components yet. Select a section and use Make component.</p>}
           </div>
-          {doc ? (
-            <Layers
-              nodes={tree}
-              depth={0}
-              selected={selected}
-              selection={selection}
-              onSelect={(p, add) => (add ? toggle(p) : select(p, true))}
-              canDrag={canReorder}
-              onMove={(from, toArray, index) => {
-                // Reorder-only roles stay within the same list.
-                if (!canStructure && from.slice(0, from.lastIndexOf("[")) !== toArray) return setStatus("Your role can only reorder within the same group");
-                act((d) => move(d, from, toArray, index));
-              }}
-              canDrop={(type, arrayPath) => !!docRef.current && canPlace(docRef.current, type, arrayPath)}
+        ) : (
+          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+            <MenuButton
+              id="okapi-page-picker"
+              popover={{ placement: "bottom-start", matchReferenceWidth: true, portal: true }}
+              button={
+                <Button
+                  mode="ghost"
+                  width="fill"
+                  justify="flex-start"
+                  icon={docType === "component" ? ComponentIcon : pageIcon(pages.find((p) => p._id === id)?.slug)}
+                  iconRight={ChevronDownIcon}
+                  text={docType === "component" ? components[id]?.title || id : pages.find((p) => p._id === id)?.title || "Select a page"}
+                  textAlign="left"
+                />
+              }
+              menu={
+                <Menu style={{ maxHeight: 360, overflowY: "auto" }}>
+                  {pages.map((p) => (
+                    <MenuItem
+                      key={p._id}
+                      icon={pageIcon(p.slug)}
+                      pressed={p._id === id}
+                      onClick={() => onPage(p._id)}
+                      text={
+                        <span style={{ display: "flex", gap: 8, alignItems: "baseline", minWidth: 0 }}>
+                          <span style={ellipsis}>{p.title || p.slug}</span>
+                          <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.55, flexShrink: 0 }}>{pageHref(p.slug)}</span>
+                        </span>
+                      }
+                    />
+                  ))}
+                </Menu>
+              }
             />
-          ) : null}
-        </div>
+            {doc ? (
+              <Layers
+                nodes={tree}
+                depth={0}
+                selected={selected}
+                selection={selection}
+                iconOf={(t) => renderIcon(schema.get(t)?.icon)}
+                onSelect={(p, add) => (add ? toggle(p) : select(p, true))}
+                canDrag={canReorder}
+                onMove={(from, toArray, index) => {
+                  // Reorder-only roles stay within the same list.
+                  if (!canStructure && from.slice(0, from.lastIndexOf("[")) !== toArray) return setStatus("Your role can only reorder within the same group");
+                  act((d) => move(d, from, toArray, index));
+                }}
+                canDrop={(type, arrayPath) => !!docRef.current && canPlace(docRef.current, type, arrayPath)}
+              />
+            ) : null}
+          </div>
+        )}
       </aside>
 
       <main style={{ display: "flex", flexDirection: "column", minHeight: 0, background: "color-mix(in srgb, currentColor 6%, transparent)" }}>
@@ -536,26 +641,11 @@ function PageEditor({
             ↷
           </button>
           {canStructure && addable.length ? (
-            <button type="button" onClick={() => setAdding((a) => !a)} style={chip} title="Add a block after the selection (or inside it)">
+            <button type="button" onClick={() => setAdding(true)} style={chip} title="Add a block after the selection (or inside it)">
               + Add
             </button>
           ) : null}
-          {adding ? (
-            <div style={{ position: "absolute", top: 40, left: 220, zIndex: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 8, borderRadius: STUDIO_RADIUS_PANEL, border, background: "var(--card-bg-color, #fff)", color: "inherit", boxShadow: "0 8px 30px #0003", width: 300 }}>
-              {doc && mayAdd(grant, "componentRef") && insertTarget(doc, selected, "componentRef")
-                ? Object.entries(components).map(([cid, c]) => (
-                    <button key={cid} type="button" onClick={() => addInstance(cid)} style={{ ...chip, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      ◆ {c.title || cid}
-                    </button>
-                  ))
-                : null}
-              {addable.filter((t) => t !== "componentRef").map((t) => (
-                <button key={t} type="button" onClick={() => doAdd(t)} style={{ ...chip, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {blockMeta(t)?.title ?? t}
-                </button>
-              ))}
-            </div>
-          ) : null}
+          {adding ? <BlockPicker items={pickItems} onClose={() => setAdding(false)} /> : null}
           <span style={{ flex: 1 }} />
           <span style={{ opacity: 0.6, fontSize: 12 }}>{status ?? (!ready ? "Loading…" : draft && invalid ? `Can't publish yet: ${invalid.message}` : draft ? "Unpublished changes" : "Published")}</span>
           <button
@@ -724,7 +814,23 @@ function PageEditor({
             )}
           </>
         ) : (
-          <p style={{ opacity: 0.6, margin: 0 }}>Click anything on the canvas — or a layer — to edit it.</p>
+          <>
+            <p style={{ opacity: 0.6, margin: "0 0 16px" }}>Click anything on the canvas — or a layer — to edit it.</p>
+            {pageType && doc ? (
+              <>
+                <div style={{ ...heading, margin: "0 0 10px" }}>Page · SEO</div>
+                {/* Page-level fields aren't in the sections undo history: written straight to the draft. */}
+                <FieldList
+                  type={pageType}
+                  value={doc as Record<string, unknown>}
+                  basePath=""
+                  onChange={(p, v) => ops.patch.execute([v === undefined ? { unset: [p] } : { set: { [p]: v } }])}
+                  grant={grant}
+                />
+                <p style={{ opacity: 0.55, fontSize: 11, margin: "12px 0 0" }}>The slug (URL) is edited in Structure, where it is validated.</p>
+              </>
+            ) : null}
+          </>
         )}
         </div>
         )}
@@ -791,9 +897,11 @@ function Layers({
   onMove,
   canDrop,
   canDrag,
+  iconOf,
 }: {
   nodes: LayerNode[];
   depth: number;
+  iconOf: (type: string) => React.ReactNode;
   selected: string | null;
   onSelect: (path: string, add: boolean) => void;
   selection?: string[];
@@ -802,6 +910,18 @@ function Layers({
   canDrag: boolean;
 }) {
   const [over, setOver] = useState<{ path: string; zone: "before" | "after" | "inside" } | null>(null);
+  // Collapsed by default; the branch holding the selection opens itself.
+  const [open, setOpen] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const hit = nodes.find((n) => n.children.length && selected?.startsWith(n.path + "."));
+    if (hit && !open.has(hit.path)) setOpen((o) => new Set(o).add(hit.path));
+  }, [selected, nodes]); // eslint-disable-line react-hooks/exhaustive-deps
+  const flip = (path: string) =>
+    setOpen((o) => {
+      const next = new Set(o);
+      if (!next.delete(path)) next.add(path);
+      return next;
+    });
   const zoneOf = (e: React.DragEvent, n: LayerNode): "before" | "after" | "inside" => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const y = (e.clientY - r.top) / r.height;
@@ -812,6 +932,7 @@ function Layers({
     <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
       {nodes.map((n) => {
         const parentArray = n.path.slice(0, n.path.lastIndexOf("["));
+        const isOpen = open.has(n.path);
         return (
           <li key={n.path}>
             <div
@@ -844,13 +965,8 @@ function Layers({
               }}
               onClick={(e) => onSelect(n.path, e.shiftKey || e.metaKey || e.ctrlKey)}
               style={{
-                padding: `5px 8px 5px ${8 + depth * 14}px`,
-                borderRadius: STUDIO_RADIUS_CONTROL,
-                cursor: "pointer",
-                userSelect: "none",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                ...row,
+                paddingLeft: 4 + depth * 14,
                 fontWeight: n.type === "section" ? 600 : 400,
                 background: selected === n.path ? STUDIO_ACCENT : selection?.includes(n.path) ? `color-mix(in srgb, ${STUDIO_ACCENT} 55%, transparent)` : over?.path === n.path && over.zone === "inside" ? `color-mix(in srgb, ${STUDIO_ACCENT} 25%, transparent)` : "transparent",
                 color: selected === n.path || selection?.includes(n.path) ? "#fff" : "inherit",
@@ -859,10 +975,20 @@ function Layers({
               }}
               title={n.title}
             >
-              {n.title}
+              <span
+                style={{ ...caret, visibility: n.children.length ? "visible" : "hidden" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  flip(n.path);
+                }}
+              >
+                {isOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
+              </span>
+              <span style={{ display: "inline-flex", fontSize: 17, flexShrink: 0, opacity: 0.8 }}>{iconOf(n.type)}</span>
+              <span style={ellipsis}>{n.title}</span>
             </div>
-            {n.children.length ? (
-              <Layers nodes={n.children} depth={depth + 1} selected={selected} selection={selection} onSelect={onSelect} onMove={onMove} canDrop={canDrop} canDrag={canDrag} />
+            {n.children.length && isOpen ? (
+              <Layers nodes={n.children} depth={depth + 1} selected={selected} selection={selection} onSelect={onSelect} onMove={onMove} canDrop={canDrop} canDrag={canDrag} iconOf={iconOf} />
             ) : null}
           </li>
         );
@@ -871,9 +997,16 @@ function Layers({
   );
 }
 
+const pageIcon = (slug?: string) => (slug === "home" ? HomeIcon : DocumentIcon);
+const assetImage = (id: string) => ({ _type: "image", asset: { _type: "reference", _ref: id } });
+
 const border = "1px solid color-mix(in srgb, currentColor 14%, transparent)";
 const column = { padding: 12, overflowY: "auto", minHeight: 0 } as const;
 const heading = { fontWeight: 600, margin: "4px 4px 8px" } as const;
 const chip = { padding: "4px 10px", font: "inherit", fontSize: 12, color: "inherit", cursor: "pointer", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL, whiteSpace: "nowrap", flexShrink: 0 } as const;
 const chipOn = { background: STUDIO_ACCENT, borderColor: STUDIO_ACCENT, color: "#fff" } as const;
+const seg = { ...chip, padding: "4px 8px", border: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 13 } as const;
+const row = { display: "flex", alignItems: "center", gap: 6, padding: "5px 8px 5px 4px", borderRadius: STUDIO_RADIUS_CONTROL, cursor: "pointer", userSelect: "none", whiteSpace: "nowrap", minWidth: 0 } as const;
+const caret = { display: "inline-flex", width: 16, flexShrink: 0, justifyContent: "center", fontSize: 15, opacity: 0.6, cursor: "pointer" } as const;
+const ellipsis = { overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 } as const;
 const select_ = { width: "100%", padding: "6px 8px", font: "inherit", fontSize: 13, color: "inherit", background: "transparent", border, borderRadius: STUDIO_RADIUS_CONTROL } as const;

@@ -181,10 +181,16 @@ const pm = ["pnpm-lock.yaml:pnpm", "yarn.lock:yarn", "bun.lock:bun", "bun.lockb:
   .map((e) => e.split(":")).find(([f]) => existsSync(f))?.[1] ?? "npm";
 // pnpm doesn't hoist what @sanity/astro asks Vite to pre-bundle; unresolved, the
 // Studio re-optimizes mid-session (blank Studio, 504 Outdated Optimize Dep).
+// pnpm ≤ 9 reads it from .npmrc; 10 also from pnpm-workspace.yaml; 11+ only from there.
 if (pm === "pnpm") {
+  const hoist = ["lodash", "react-compiler-runtime"];
   const npmrc = read(".npmrc");
-  const need = ["public-hoist-pattern[]=lodash", "public-hoist-pattern[]=react-compiler-runtime"].filter((l) => !npmrc.includes(l));
+  const need = hoist.map((p) => `public-hoist-pattern[]=${p}`).filter((l) => !npmrc.includes(l));
   if (need.length) write(".npmrc", `${npmrc}${npmrc && !npmrc.endsWith("\n") ? "\n" : ""}${need.join("\n")}\n`);
+  const ws = read("pnpm-workspace.yaml");
+  const items = hoist.filter((p) => !new RegExp(`^\\s*- ["']?${p}["']?\\s*$`, "m").test(ws)).map((p) => `  - ${p}`).join("\n");
+  const key = /^publicHoistPattern:[ \t]*$/m;
+  if (items) write("pnpm-workspace.yaml", key.test(ws) ? ws.replace(key, `$&\n${items}`) : `${ws}${ws && !ws.endsWith("\n") ? "\n" : ""}publicHoistPattern:\n${items}\n`);
 }
 
 // Okapi's README (path A) → a short one for the project. A project's own README is left alone.

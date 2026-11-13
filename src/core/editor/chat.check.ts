@@ -1,4 +1,4 @@
-// Run: npx sanity exec src/core/editor/chat.check.ts  (also run by verify)
+// Run: pnpm exec sanity exec src/core/editor/chat.check.ts  (also run by verify)
 import assert from "node:assert/strict";
 
 import { applyOps, buildInstruction, describePage, parseAnswer, type Catalog } from "./chat.ts";

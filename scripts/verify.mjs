@@ -3,9 +3,9 @@
  * The checks that catch what breaks silently — after a Sanity upgrade, a core
  * change, or a misconfigured deploy. Adapter-agnostic.
  *
- *   npm run verify                         build + static-output checks
- *   npm run verify -- http://localhost:4321   …plus HTTP checks against a
- *                                          running server (dev or a deploy)
+ *   pnpm verify                         build + static-output checks
+ *   pnpm verify http://localhost:4321   …plus HTTP checks against a
+ *                                       running server (dev or a deploy)
  */
 import { execSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -13,7 +13,8 @@ import { join, sep } from "node:path";
 import { gzipSync } from "node:zlib";
 import { loadEnv } from "vite";
 
-const baseUrl = process.argv[2];
+// pnpm forwards a literal "--" (`pnpm verify -- <url>`).
+const baseUrl = process.argv.slice(2).find((a) => a !== "--");
 // Local binaries through the project's own package manager (npx would offer to
 // download from npm when a bin is missing).
 const pm = ["pnpm-lock.yaml:pnpm exec", "yarn.lock:yarn", "bun.lock:bunx", "bun.lockb:bunx"]

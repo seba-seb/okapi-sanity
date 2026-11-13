@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext } from "react";
 import type { ObjectSchemaType, SchemaType } from "sanity";
 
 import { plainToPt, ptToPlainIfSimple } from "./text";
@@ -19,6 +19,13 @@ export const PagesContext = createContext<Record<string, { id: string; title: st
 /** Uploads an image file and returns the image field value (`{_type:"image", asset}`). */
 export const UploadContext = createContext<((file: File) => Promise<unknown>) | null>(null);
 type Change = (path: string, value: unknown) => void;
+export type ImageValue = { _type?: string; asset?: { _ref?: string }; alt?: string } & Record<string, unknown>;
+/**
+ * The image control (MediaLibrary.tsx → ImageField: preview, the image's alt
+ * text, Replace from the library). Injected so this file stays free of Studio
+ * UI imports — scripts/check-editor-schema.ts loads it in Node.
+ */
+export const ImageFieldContext = createContext<React.ComponentType<{ value: ImageValue | undefined; onChange: (v: unknown) => void }> | null>(null);
 
 const isPT = (t: SchemaType) =>
   t.jsonType === "array" && (t as { of?: SchemaType[] }).of?.some((m) => m.name === "block");
@@ -98,7 +105,7 @@ export function FieldList({
   return (
     <div style={{ display: "grid", gap: 14 }}>
       {fields.map((f) => (
-        <FieldControl key={f.name} field={f} value={value?.[f.name]} parent={value} path={`${basePath}.${f.name}`} onChange={onChange} grant={grant} />
+        <FieldControl key={f.name} field={f} value={value?.[f.name]} parent={value} path={basePath ? `${basePath}.${f.name}` : f.name} onChange={onChange} grant={grant} />
       ))}
     </div>
   );
@@ -245,42 +252,11 @@ function ReferencePicker({ label, value, path, onChange, to }: { label: React.Re
 }
 
 function ImageControl({ label, value, path, onChange }: { label: React.ReactNode; value: unknown; path: string; onChange: Change }) {
-  const upload = useContext(UploadContext);
-  const [busy, setBusy] = useState(false);
-  const has = !!(value as { asset?: unknown } | undefined)?.asset;
+  const Field = useContext(ImageFieldContext);
   return (
     <div>
       {label}
-      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-        <label style={{ ...chip, display: "inline-block" }}>
-          {busy ? "Uploading…" : has ? "Replace image" : "Upload image"}
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            disabled={!upload || busy}
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (!file || !upload) return;
-              setBusy(true);
-              try {
-                // Keep sibling fields (alt, hotspot) — only the asset changes.
-                const img = (await upload(file)) as Record<string, unknown>;
-                onChange(path, { ...((value as Record<string, unknown>) ?? {}), ...img });
-              } finally {
-                setBusy(false);
-              }
-            }}
-          />
-        </label>
-        {has ? (
-          <button type="button" style={chip} onClick={() => onChange(path, undefined)}>
-            Remove
-          </button>
-        ) : null}
-      </div>
-      <span style={hint}>Or drop an image file on it in the canvas.</span>
+      {Field ? <Field value={value as ImageValue | undefined} onChange={(v) => onChange(path, v)} /> : <p style={muted}>Images are edited in the Okapi Editor.</p>}
     </div>
   );
 }

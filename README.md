@@ -12,7 +12,7 @@ that need JS (slider, 3D) hydrate.
   (`cp -R skills/okapi-astro ~/.claude/skills/`).
 - **It asks before it installs.** The agent asks which modules you want (slider,
   3D logo, reusable components, AI chat, who edits, example content) and runs
-  `npm run okapi:setup` with the answers: it keeps only those and records them in
+  `pnpm okapi:setup` with the answers: it keeps only those and records them in
   `src/okapi.config.json`. Okapi ships no animation library; projects that
   already animate keep their own.
 - **Rules** for working in the code: [`AGENTS.md`](AGENTS.md) (`CLAUDE.md` imports it).
@@ -26,10 +26,10 @@ It is also a complete Astro project (example blocks, theme, header/footer),
 which is what a new project starts from:
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env              # fill PUBLIC_SANITY_PROJECT_ID
-npm run dev                       # http://localhost:4321 · Studio at /studio
-npm run verify                    # unit checks + build + public JS budget
+pnpm dev                          # http://localhost:4321 · Studio at /studio
+pnpm verify                       # unit checks + build + public JS budget
 ```
 
 `http://localhost:4321` must be a CORS origin (with credentials) of the Sanity project.

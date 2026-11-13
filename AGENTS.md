@@ -43,7 +43,7 @@ src/pages/      Routes. /edit-canvas = the editor's canvas (data-free).
 skills/         okapi-astro: the Claude Code skill that starts a new project
 ```
 
-## What a project uses (`npm run okapi:setup`)
+## What a project uses (`pnpm okapi:setup`)
 
 At install time the agent asks which modules the person wants (INSTALL.md →
 Paso 0) and runs `scripts/okapi-setup.mjs` with the answers (`--dry-run` first,
@@ -67,7 +67,7 @@ Okapi repo itself. Checks (ops/chat/schema) pass with any combination.
   URLs are secrets: never ask for, print or write them.
 - **Core is shared.** A fix in `src/core` belongs to the starter first, then
   gets copied to projects. (When 3+ projects are live, extract core into a
-  private package so fixes arrive with `npm update`.)
+  private package so fixes arrive with `pnpm update`.)
 - **Every URL goes through `pageHref()` / `resolveLink()`** (`core/lib/routes.ts`).
   Links, sitemap, canonicals. Adding i18n later = changing those two functions.
   Both, and core's own routes (`/studio`, `/edit-canvas`, `/api/editor-chat`),
@@ -158,6 +158,23 @@ no caret jumps); layers tree with drag (before/after/inside); + Add, duplicate,
 delete, move, copy/paste between pages; undo/redo (typing coalesced); drop an
 image file on any image block/card/section or upload from the panel;
 device widths. Client view: content fields + reorder only.
+Nothing selected → the panel shows **Page · SEO** (title, meta title/description,
+social image, noindex; the slug stays in Structure, where it's validated). An
+image field shows a preview, the image's alt text and Replace… (opens the library,
+Upload inside; `ImageField` in MediaLibrary.tsx, injected via `ImageFieldContext`).
+**+ Add** opens a visual picker (`BlockPicker.tsx`): cards with the schema
+icon and `description` from `meta.ts`, library components first, search,
+Enter adds the first match. **Images** tab (left column, `MediaLibrary.tsx`,
+needs the `images` permission): the dataset's images (newest 60, search by file
+name), upload several at once; click one to put it in the selected block's
+`imageField` (alt text kept), or drag it onto any image on the canvas
+(`ASSET_MIME` → `dropAsset`, overrides inside instances). Reuses the asset —
+no second upload. Each thumbnail's ⋯ menu: size/dimensions, use in the selected block,
+rename + alt text, copy URL, download, delete (Sanity refuses if a document still
+uses it). **Alt text belongs to the image** (asset `altText`), not the block:
+`loadQuery` → `withImageAlt` (core/sanity/client.ts) puts it on every image value
+as `alt`, so blocks keep reading `image.alt`. A block's own `alt` is the fallback
+for older content.
 Rich text edits in place too: a floating bar (B, I, Link, Unlink; ⌘B ⌘I ⌘K) —
 `core/editor/richtext.ts` maps PT ⇄ editable HTML, keeping existing link
 targets (internal/external) via their markDef key; new links are external.
@@ -207,10 +224,10 @@ patches instead would mean diffing every op in `ops.ts`; not done yet.
   on the provider (Anthropic workspace / OpenAI project budget / OpenRouter key
   limit). Privacy: the page content and attached images go to that provider.
 - **Hosting:** `okapiAdapter()` (`core/astro/okapi.ts`, imported by astro.config) picks the adapter from where the build runs
-  (Vercel / Netlify built in; Cloudflare Pages needs `npm i @astrojs/cloudflare
+  (Vercel / Netlify built in; Cloudflare Pages needs `pnpm add @astrojs/cloudflare
   wrangler`) and only then injects `/api/editor-chat`; pages stay prerendered.
   Any other host = plain static output and the chat shows "not available".
-  `OKAPI_ADAPTER` overrides. In `npm run dev` the route always exists.
+  `OKAPI_ADAPTER` overrides. In `pnpm dev` the route always exists.
 - **Images in the chat** (📎, paste or drop; up to 3 per message): the browser
   uploads the original to Sanity with the person's session (only if their grant
   has `images`) and sends a ≤1024px JPEG copy so the model can see it. The model
@@ -257,7 +274,7 @@ Automated checks cover the canvas side only; these need a real login, in
 3. Drop an image on an Image block → uploads and shows.
 4. Make component from a section → edit text on an instance → only that
    instance changes; Reset override; Edit component → all instances change.
-5. Publish (with the user's OK: it goes live) → `npm run build` → the change is on the static page.
+5. Publish (with the user's OK: it goes live) → `pnpm build` → the change is on the static page.
 6. Log in as a client-role user (or "View as") → only what `okapi.policy.ts`
    allows is visible; the chat refuses the rest.
 7. ✦ Chat: "make the selected heading shorter" → applied, Undo reverts it.
@@ -267,7 +284,7 @@ Automated checks cover the canvas side only; these need a real login, in
 1. `src/blocks/<type>/schema.ts` (`defineType`, icon from `@sanity/icons`) and
    `src/blocks/<type>/<Type>.tsx` (receives `{ block, path, ctx }`; put
    `{...editable(ctx.documentId, ctx.documentType, path, block._type)}` on its root).
-2. Add `<type>: { title, slot?, margin?, js? }` to `blocks/meta.ts` (`js` if it
+2. Add `<type>: { title, description?, slot?, margin?, js? }` to `blocks/meta.ts` (`js` if it
    runs anything in the browser — see Rules).
 3. Register it in `blocks/schemas.ts` and `blocks/components.tsx` — the
    compiler errors until you do.
@@ -292,10 +309,10 @@ Follow `INSTALL.md` (any agent). Claude Code users can install the
 
 ## Commands
 
-- `npm run dev` — site on :4321, Studio + editor at `/studio` (hash routing:
+- `pnpm dev` — site on :4321, Studio + editor at `/studio` (hash routing:
   `#/editor`, `#/structure`). `astro dev` may daemonize: stop with
-  `npx astro dev stop`.
-- `npm run typecheck` · `npm run verify [-- <url>]` (also checks the public JS
+  `pnpm astro dev stop`.
+- `pnpm typecheck` · `pnpm verify [<url>]` (also checks the public JS
   budget: no visual-editing runtime, home ≤ 250 KB gzip)
 - `node scripts/generate-seed.mjs` — regenerate `sanity/seed.ndjson`.
 
@@ -308,7 +325,7 @@ Follow `INSTALL.md` (any agent). Claude Code users can install the
 - Blank Studio / canvas + `504 (Outdated Optimize Dep)` + "Failed to fetch
   dynamically imported module" = Vite re-optimized deps while the tab was
   open (any astro.config or lockfile change does it). Fix: stop the server,
-  `rm -rf node_modules/.vite`, `npm run dev`, then hard-reload the tab
+  `rm -rf node_modules/.vite`, `pnpm dev`, then hard-reload the tab
   (⌘⇧R). New client deps belong in `vite.optimizeDeps.include`.
 - A tab opened before a dev restart (or a deploy) requests lazy chunks by old
   hashes → 504/404 → blank Studio right after sign-in. `core/lib/staleChunkReload`

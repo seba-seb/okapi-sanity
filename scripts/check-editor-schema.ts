@@ -1,4 +1,4 @@
-// Run: npx sanity exec scripts/check-editor-schema.ts
+// Run: pnpm exec sanity exec scripts/check-editor-schema.ts
 // Phase-0 criterion: the schema-generated properties panel covers every field
 // of every block (no "unsupported"), recursing into object fields.
 import { createSchema, type ObjectSchemaType, type SchemaType } from "sanity";

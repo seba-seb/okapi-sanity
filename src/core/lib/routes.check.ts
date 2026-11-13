@@ -1,4 +1,4 @@
-// Run: npx sanity exec src/core/lib/routes.check.ts
+// Run: pnpm exec sanity exec src/core/lib/routes.check.ts
 import assert from "node:assert/strict";
 
 import { PAGES_BASE } from "../config.ts";

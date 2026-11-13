@@ -14,11 +14,15 @@ export const imageBlock = defineType({
       options: { hotspot: true },
       validation: (rule) => rule.required(),
       fields: [
+        // Alt text lives on the image (asset `altText`, edited in the Okapi Editor) and
+        // wins at render (core/sanity/client.ts → withImageAlt). This per-block field
+        // only shows for older content that still has a value.
         defineField({
           name: "alt",
-          title: "Alt text",
+          title: "Alt text (old, per block)",
           type: "string",
-          description: "Describe the image for screen readers and SEO.",
+          hidden: ({ value }) => !value,
+          description: "Used only if the image itself has no alt text. Edit alt on the image in the Okapi Editor.",
         }),
       ],
     }),

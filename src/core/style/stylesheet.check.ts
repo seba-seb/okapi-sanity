@@ -1,4 +1,4 @@
-// Run: npx sanity exec src/core/style/stylesheet.check.ts  (also run by verify)
+// Run: pnpm exec sanity exec src/core/style/stylesheet.check.ts  (also run by verify)
 import assert from "node:assert/strict";
 
 import { collectStyles, stylesheet } from "./stylesheet.ts";

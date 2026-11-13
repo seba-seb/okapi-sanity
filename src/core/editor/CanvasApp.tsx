@@ -8,7 +8,7 @@ import type { Page } from "@/core/lib/types";
 import { installStaleChunkReload } from "@/core/lib/staleChunkReload";
 import { blockMeta } from "@/blocks/meta";
 
-import { listen, post, type ToCanvas } from "./protocol";
+import { ASSET_MIME, listen, post, type ToCanvas } from "./protocol";
 import { htmlToPt, ptPlain, ptToHtml } from "./richtext";
 import { applyOverrides, splitInstancePath, type Override } from "@/core/render/overrides";
 import { STUDIO_ACCENT, STUDIO_ACCENT_SOFT, STUDIO_RADIUS_CONTROL } from "@/theme/studio";
@@ -306,22 +306,25 @@ export function CanvasApp() {
       return el;
     };
     const onDragOver = (e: DragEvent) => {
-      if (!e.dataTransfer?.types.includes("Files")) return;
+      const types = e.dataTransfer?.types ?? [];
+      if (!types.includes("Files") && !types.includes(ASSET_MIME)) return;
       const el = imageTarget(e.target);
       dropEl.current = el;
       if (el) {
         e.preventDefault();
-        e.dataTransfer.dropEffect = "copy";
+        e.dataTransfer!.dropEffect = "copy";
       }
     };
     const onDrop = (e: DragEvent) => {
       const el = imageTarget(e.target);
       dropEl.current = null;
       const file = [...(e.dataTransfer?.files ?? [])].find((f) => f.type.startsWith("image/"));
-      if (!el || !file) return;
+      const assetId = e.dataTransfer?.getData(ASSET_MIME);
+      if (!el || (!file && !assetId)) return;
       e.preventDefault();
       const path = el.getAttribute("data-sanity-path")!;
-      post(window.parent, { type: "drop", path, field: imageFieldOf(el.getAttribute("data-sanity-type"))!, file });
+      const field = imageFieldOf(el.getAttribute("data-sanity-type"))!;
+      post(window.parent, file ? { type: "drop", path, field, file } : { type: "dropAsset", path, field, assetId: assetId! });
       setSelected(path);
       post(window.parent, { type: "select", path });
     };

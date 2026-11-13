@@ -12,6 +12,8 @@
 export type BlockMeta = {
   /** Shown in the insert menus and on the Presentation overlay chip. */
   title: string;
+  /** One line under the title in the editor's + Add picker. */
+  description?: string;
   /** Array field children nest into. `accepts` omitted = any general block. */
   slot?: { field: string; accepts?: readonly string[] };
   /** Only placed at the page's top level (not offered inside containers). */
@@ -34,34 +36,37 @@ export type BlockMeta = {
 export type TextTarget = { sel?: string; field: string; kind: "pt" | "string"; multiline?: boolean };
 
 export const BLOCKS = {
-  section: { title: "Section", slot: { field: "content" }, topLevel: true, imageField: "backgroundImage" },
-  componentRef: { title: "Component", topLevel: true },
-  eyebrow: { title: "Eyebrow", margin: true, text: [{ field: "text", kind: "string" }] },
-  heading: { title: "Heading", margin: true, text: [{ field: "text", kind: "pt" }] },
-  paragraph: { title: "Paragraph", margin: true, text: [{ field: "text", kind: "pt", multiline: true }] },
-  buttonWrapper: { title: "Button Group", slot: { field: "buttons", accepts: ["button"] } },
-  button: { title: "Button", text: [{ sel: ".ok-btn__label", field: "label", kind: "string" }] },
-  imageBlock: { title: "Image", imageField: "image" },
-  loopingVideo: { title: "Looping Video" },
+  section: { title: "Section", description: "Full-width band with a theme and background", slot: { field: "content" }, topLevel: true, imageField: "backgroundImage" },
+  componentRef: { title: "Component", description: "An instance of a library component", topLevel: true },
+  eyebrow: { title: "Eyebrow", description: "Small label above a heading", margin: true, text: [{ field: "text", kind: "string" }] },
+  heading: { title: "Heading", description: "Title, H1–H6", margin: true, text: [{ field: "text", kind: "pt" }] },
+  paragraph: { title: "Paragraph", description: "Rich text: bold, italic, links", margin: true, text: [{ field: "text", kind: "pt", multiline: true }] },
+  buttonWrapper: { title: "Button Group", description: "One or more buttons in a row", slot: { field: "buttons", accepts: ["button"] } },
+  button: { title: "Button", description: "Link styled as a button", text: [{ sel: ".ok-btn__label", field: "label", kind: "string" }] },
+  imageBlock: { title: "Image", description: "Single image with alt text and ratio", imageField: "image" },
+  loopingVideo: { title: "Looping Video", description: "Muted video that plays on loop" },
   contentWrapper: {
     title: "Content",
+    description: "Eyebrow, heading, text and buttons together",
     slot: { field: "content", accepts: ["eyebrow", "heading", "paragraph", "buttonWrapper"] },
   },
   card: {
     title: "Card",
+    description: "Image, title and text, optionally a link",
     imageField: "image",
     text: [
       { sel: ".ok-card__title", field: "heading", kind: "string" },
       { sel: ".ok-card__text", field: "body", kind: "string", multiline: true },
     ],
   },
-  slider: { title: "Slider", slot: { field: "slides", accepts: ["card", "imageBlock"] }, js: true },
+  slider: { title: "Slider", description: "Carousel of cards or images", slot: { field: "slides", accepts: ["card", "imageBlock"] }, js: true },
   grid: {
     title: "Grid",
+    description: "Columns of cards, content or images",
     slot: { field: "items", accepts: ["card", "contentWrapper", "imageBlock", "logo3d"] },
   },
-  logo3d: { title: "3D Logo", js: true },
-  box: { title: "Box", slot: { field: "items" } },
+  logo3d: { title: "3D Logo", description: "Interactive WebGL logo", js: true },
+  box: { title: "Box", description: "Free layout: stack, row or grid", slot: { field: "items" } },
 } as const satisfies Record<string, BlockMeta>;
 
 export type BlockType = keyof typeof BLOCKS;

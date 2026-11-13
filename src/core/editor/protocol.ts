@@ -22,10 +22,14 @@ export type ToEditor =
   | { type: "move"; from: string; target: string; position: "before" | "after" }
   /** A file dropped on an image-bearing block. */
   | { type: "drop"; path: string; field: string; file: File }
+  /** An asset dragged from the editor's image library onto an image-bearing block. */
+  | { type: "dropAsset"; path: string; field: string; assetId: string }
   /** Shortcut pressed while focus is in the canvas. */
   | { type: "key"; key: string; mod: boolean; shift: boolean; alt: boolean };
 
 const TAG = "okapi-editor";
+/** Drag data type for an image-library asset (its `_id`), editor → canvas. */
+export const ASSET_MIME = "text/x-okapi-asset";
 type Envelope<T> = { tag: typeof TAG; msg: T };
 
 export function post<T extends ToCanvas | ToEditor>(target: Window | null | undefined, msg: T) {

@@ -72,7 +72,7 @@ encontraste. No cambies nada todavía.
 | `tsconfig.json` | `"jsx": "preserve"` (lo pone `astro add vue`) | ✅ | Pasa a `react-jsx` (B3); Vue y Svelte siguen compilando |
 | `output` y adapter | `output: "server"`, un adapter propio | ✅ | Se respetan: las páginas de Okapi son estáticas igual y el adapter del proyecto corre el chat (`okapi({ adapter })`, B3) |
 | `src/middleware.ts` | — | ✅ | Corre también en `/api/editor-chat`. Si exige login o redirige, que deje pasar `/studio`, `/edit-canvas` y `/api/editor-chat` |
-| `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` | otro gestor | ✅ | Se usa ese en todos los comandos de esta guía. Con pnpm, `okapi:setup` escribe un `.npmrc` para que el Studio no se quede en blanco |
+| `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` | otro gestor | ✅ | Se usa ese en todos los comandos de esta guía. Con pnpm, `okapi:setup` suma el hoist que necesita a `pnpm-workspace.yaml` (y `.npmrc`) para que el Studio no se quede en blanco |
 
 Siempre, aunque todo dé ✅, aclará: **las páginas que ya existen siguen en
 código.** El editor maneja las páginas nuevas que se armen ahí. Para editar
@@ -135,7 +135,7 @@ con lo suyo; si las quiere, se agregan en el código del proyecto, no en Okapi.
 
 Necesitás:
 - Node ≥ 22.12 y el gestor de paquetes que ya use el proyecto (npm, pnpm o
-  yarn). En un proyecto nuevo, npm.
+  yarn). En un proyecto nuevo, pnpm.
 - `git`.
 
 ## Camino A — proyecto nuevo
@@ -147,7 +147,7 @@ ejemplo, tema y header/footer que después se reemplazan.
 V=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/seba-seb/okapi-sanity 'v*' | sed -e 's|.*/||' -e '/-/d' | head -1)   # la última versión publicada
 git clone --depth 1 --branch "$V" https://github.com/seba-seb/okapi-sanity <carpeta>
 cd <carpeta> && rm -rf .git && git init -q
-npm install
+pnpm install
 ```
 
 Seguí con los **pasos comunes**.
@@ -505,7 +505,7 @@ escribe `src/okapi.config.json` y `src/okapi.policy.ts`, saca los archivos del
 repo de Okapi que el proyecto no necesita (`skills/`, `INSTALL.md`, el
 generador del seed; en el camino A cambia el README de Okapi por uno corto del
 proyecto) y corre el install del gestor del proyecto (con
-pnpm, antes escribe el `.npmrc` e instala sin pedir confirmación). Si el
+pnpm, antes suma el hoist a `pnpm-workspace.yaml` y `.npmrc` e instala sin pedir confirmación). Si el
 install no deja `node_modules/sanity`, falla.
 
 - Si falta alguna respuesta, el script no hace nada y dice cuál falta.
